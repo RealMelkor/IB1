@@ -10,12 +10,13 @@
 <h2>{{.Title}}</h2>
 {{range .Posts}}
 <div class="post" id="{{.Number}}">
-<p>Name 05/04/2022 (Wed) 03:01:14 No. {{.Number}}</p>
+<p><span class="name">{{.Name}}</span> {{.FormatTimestamp}} No. <a href="#{{.Number}}">{{.Number}}</a></p>
 {{if .Media}}
 <div class="container">
   <input type="checkbox" id="zoomCheck_{{.Number}}">
   <label for="zoomCheck_{{.Number}}">
-    <img src="/media/{{.Media}}" alt="{{.Number}}">
+    <img class="thumbnail" src="/thumbnail/{{.Thumbnail}}" alt="{{.Number}}">
+    <img class="media" loading="lazy" src="/media/{{.Media}}" alt="{{.Number}}">
   </label>
 </div>
 {{end}}

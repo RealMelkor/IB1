@@ -3,7 +3,6 @@ package web
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"log"
 	"strconv"
 	
 	"IB1/db"
@@ -54,14 +53,25 @@ func newThread(c *gin.Context) {
 		return 
 	}
 
+	name, hasName := c.GetPostForm("name")
 	title, hasTitle := c.GetPostForm("title")
 	content, hasContent := c.GetPostForm("content")
-	if !hasTitle || !hasContent { 
+	if !hasTitle || !hasContent || !hasName { 
 		htmlBadRequest(c, "invalid form")
 		return 
 	}
 
-	number, err := db.CreateThread(board, title, content)
+	media := ""
+	file, err := c.FormFile("media")
+	if err == nil { 
+		if media, err = uploadFile(c, file); err != nil { 
+			htmlBadRequest(c, err.Error())
+			return
+		}
+	}
+
+	number, err := db.CreateThread(board, title, name,
+				media, parseContent(content))
 	if err != nil { 
 		htmlInternalError(c, err.Error())
 		return
@@ -92,8 +102,9 @@ func newPost(c *gin.Context) {
 		return
 	}
 
-	content, exist := c.GetPostForm("content")
-	if !exist {
+	name, hasName := c.GetPostForm("name")
+	content, hasContent := c.GetPostForm("content")
+	if !hasName || !hasContent {
 		htmlBadRequest(c, "invalid form")
 		return
 	}
@@ -106,8 +117,9 @@ func newPost(c *gin.Context) {
 			return
 		}
 	}
-	
-	if _, err = db.CreatePost(thread, content, media, nil); err != nil {
+
+	_, err = db.CreatePost(thread, parseContent(content), name, media, nil)
+	if err != nil {
 		htmlInternalError(c, err.Error())
 		return
 	}
@@ -163,8 +175,8 @@ func Init() error {
 	r.POST("/:board", newThread)
 	r.GET("/:board/:thread", thread)
 	r.POST("/:board/:thread", newPost)
-	r.Static("/media", "./media")
+	r.Static("/media", mediaDir)
+	r.Static("/thumbnail", thumbnailDir)
 
-        log.Println("web server started")
 	return r.Run(":8080")
 }

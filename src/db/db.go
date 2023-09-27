@@ -4,9 +4,14 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/driver/sqlite"
 	"gorm.io/driver/mysql"
+	"html/template"
 	"sync"
 	"errors"
+	"time"
+	"strings"
 )
+
+const DefaultName = "Anonymous"
 
 type Board struct {
 	gorm.Model
@@ -28,14 +33,16 @@ type Thread struct {
 
 type Post struct {
 	gorm.Model
-	Content		string
+	Content		template.HTML
 	Media		string
 	From		string
+	Name		string
 	ThreadID	int
 	Thread		Thread
 	BoardID		int
 	Board		Board
 	Number		int
+	Timestamp	int64
 }
 
 const (
@@ -130,7 +137,8 @@ func CreateBoard(name string) error {
 	return nil
 }
 
-func CreateThread(board Board, title string, content string) (int, error) {
+func CreateThread(board Board, title string, name string, media string,
+		content template.HTML) (int, error) {
 	number := -1
 	err := db.Transaction(func(tx *gorm.DB) error {
 		var err error
@@ -138,7 +146,7 @@ func CreateThread(board Board, title string, content string) (int, error) {
 		ret := tx.Create(thread)
 		if ret.Error != nil { return ret.Error }
 		if err := ret.Find(&thread).Error; err != nil { return err }
-		number, err = CreatePost(*thread, content, "", tx)
+		number, err = CreatePost(*thread, content, name, media, tx)
 		if err != nil { return err }
 		err = tx.Model(thread).Update("Number", number).Error
 		return err
@@ -147,9 +155,10 @@ func CreateThread(board Board, title string, content string) (int, error) {
 }
 
 var newPostLock sync.Mutex
-func CreatePost(thread Thread, content string, media string,
-			custom *gorm.DB) (int, error) {
+func CreatePost(thread Thread, content template.HTML, name string,
+		media string, custom *gorm.DB) (int, error) {
 	if custom == nil { custom = db }
+	if name == "" { name = DefaultName }
 	if dbType == TYPE_SQLITE {
 		newPostLock.Lock()
 	}
@@ -163,9 +172,9 @@ func CreatePost(thread Thread, content string, media string,
 		if err != nil { return err }
 
 		ret := tx.Create(&Post{
-			Board: thread.Board, Thread: thread,
-			Content: content, Number: thread.Board.Posts,
-			Media: media,
+			Board: thread.Board, Thread: thread, Name: name,
+			Content: content, Timestamp: time.Now().Unix(),
+			Number: thread.Board.Posts, Media: media,
 		})
 		if ret.Error != nil { return err }
 
@@ -177,4 +186,17 @@ func CreatePost(thread Thread, content string, media string,
 		newPostLock.Unlock()
 	}
 	return number, err
+}
+
+func (post Post) FormatTimestamp() string {
+	// TODO: should be 09/27/23 (Wed) 16:35:52
+	tm := time.Unix(post.Timestamp, 0)
+	return tm.UTC().Format(time.RFC850)
+}
+
+func (post Post) Thumbnail() string {
+	if post.Media == "" { return "" }
+	i := strings.LastIndex(post.Media, ".")
+	if i < 1 { return "" }
+	return post.Media[0:i] + ".png"
 }

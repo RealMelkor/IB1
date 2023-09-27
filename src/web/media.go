@@ -15,6 +15,7 @@ import (
 )
 
 const mediaDir = "./media"
+const thumbnailDir = "./thumbnail"
 const tmpDir = "./tmp"
 
 func uniqueRandomName() (string, error) {
@@ -74,7 +75,13 @@ func uploadFile(c *gin.Context, file *multipart.FileHeader) (string, error) {
 
 	hash, err := sha256sum(out)
 	if err != nil { return "", err }
-	err = os.Rename(out, mediaDir + "/" + hash + "." + extension)
+	media := mediaDir + "/" + hash + "." + extension
+	err = os.Rename(out, media)
 	if err != nil { return "", err }
+
+	cmd = exec.Command("ffmpegthumbnailer", "-i", media, "-o",
+		thumbnailDir + "/" + hash + ".png")
+	if _, err := cmd.Output(); err != nil { return "", err }
+
 	return hash + "." + extension, err
 }

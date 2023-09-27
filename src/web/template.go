@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"html/template"
 	"bytes"
+	"strings"
 
 	"IB1/db"
 )
@@ -98,4 +99,10 @@ func renderThread(thread db.Thread) (string, error) {
 	if err != nil { return "", err }
 	
 	return buf.String(), nil
+}
+
+func parseContent(content string) template.HTML {
+	content = template.HTMLEscapeString(content)
+	content = strings.Replace(content, "\n", "<br>", -1)
+	return template.HTML(content)
 }

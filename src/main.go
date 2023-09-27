@@ -4,10 +4,11 @@ import (
 	"log"
 	"IB1/web"
 	"IB1/db"
-	"math/rand"
-	"time"
 )
 
+/*
+	"math/rand"
+	"time"
 func randString() string {
 	letters := "abcdefghijklmnopqrstuvwxyz"
 	length := rand.Intn(20) + 5
@@ -34,6 +35,7 @@ func floodPosts(thread db.Thread) {
 		}
 	}
 }
+*/
 
 func main() {
 
