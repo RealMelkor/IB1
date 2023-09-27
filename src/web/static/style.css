@@ -1,0 +1,35 @@
+body {
+	background-color: #222;
+	padding: 0;
+}
+
+h1 {
+	color: gray;
+}
+
+input[type=checkbox] {
+	display: none;
+}
+
+.container img {
+	width: 200px;
+	margin-left: 20px;
+	cursor: zoom-in;
+}
+
+input[type=checkbox]:checked ~ label > img {
+	width: auto;
+	cursor: zoom-out;
+}
+
+.post {
+	padding: 3px;
+	padding-left: 15px;
+	margin-left: 10px;
+	margin-bottom: 10px;
+	background-color: #aaa;
+}
+
+.content {
+	margin-left: 10px;
+}

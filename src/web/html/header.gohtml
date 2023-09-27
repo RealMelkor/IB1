@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="{{.Lang}}">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="description" content="{{.Title}}">
+		<title>{{.Title}}</title>
+    <link rel="stylesheet" type="text/css" href="/static/style.css">
+		<link rel="icon" type="image/png" href="/static/favicon.png">
+  </head>
+  <body>
+    <div id="header">
+			<a href="/"><h1>{{.Title}}</h1></a>
+			{{range .Boards}}
+			<a href="/{{.Name}}">/{{.Name}}/</a>
+			{{end}}
+    </div>
+		<div id="main">

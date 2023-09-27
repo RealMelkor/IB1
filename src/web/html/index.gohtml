@@ -1,0 +1,7 @@
+{{template "header"}}
+{{range .Boards}}
+<div>
+	<a href="{{$.Name}}/">/{{.Name}}/</a>
+</div>
+{{end}}
+{{template "footer"}}

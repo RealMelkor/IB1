@@ -1,0 +1,24 @@
+<form method="post" enctype="multipart/form-data">
+	<label for="name">Name:</label><br>
+	<input type="text" id="name" name="name"><br>
+	<label for="content">Comment:</label><br>
+	<textarea rows="5" cols="30" id="content" name="content"></textarea><br>
+	<label for="media">File:</label><br>
+	<input type="file" id="media" name="media"><br>
+	<input type="submit" value="New Reply">
+</form> 
+<h2>{{.Title}}</h2>
+{{range .Posts}}
+<div class="post" id="{{.Number}}">
+<p>Name 05/04/2022 (Wed) 03:01:14 No. {{.Number}}</p>
+{{if .Media}}
+<div class="container">
+  <input type="checkbox" id="zoomCheck_{{.Number}}">
+  <label for="zoomCheck_{{.Number}}">
+    <img src="/media/{{.Media}}" alt="{{.Number}}">
+  </label>
+</div>
+{{end}}
+<p class="content">{{.Content}}</p>
+</div>
+{{end}}
