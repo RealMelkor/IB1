@@ -11,12 +11,12 @@ input[type=checkbox] {
 	display: none;
 }
 
-.container img {
+.media-container img {
 	margin-left: 20px;
 	cursor: zoom-in;
 }
 
-.container .media {
+.media-container .media {
 	display: none;
 }
 
@@ -45,4 +45,21 @@ input[type=checkbox]:checked ~ label > .thumbnail {
 .name {
 	color: #117743;
 	font-weight: bold;
+}
+
+
+.timestamp .timestamp-age {
+	display: inline;
+}
+
+.timestamp:hover .timestamp-age {
+	display: none;
+}
+
+.timestamp .timestamp-date {
+	display: none;
+}
+
+.timestamp:hover .timestamp-date {
+	display: inline;
 }

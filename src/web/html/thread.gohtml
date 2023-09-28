@@ -1,3 +1,4 @@
+<div class="post">
 <form method="post" enctype="multipart/form-data">
 	<label for="name">Name:</label><br>
 	<input type="text" id="name" name="name"><br>
@@ -7,12 +8,20 @@
 	<input type="file" id="media" name="media"><br>
 	<input type="submit" value="New Reply">
 </form> 
+</div>
 <h2>{{.Title}}</h2>
 {{range .Posts}}
 <div class="post" id="{{.Number}}">
-<p><span class="name">{{.Name}}</span> {{.FormatTimestamp}} No. <a href="#{{.Number}}">{{.Number}}</a></p>
+<p>
+	<span class="name">{{.Name}}</span>
+	<span class="timestamp">
+		<span class="timestamp-age">{{.FormatAge}}</span>
+		<span class="timestamp-date">{{.FormatTimestamp}}</span>
+	</span>
+	No. <a href="#{{.Number}}">{{.Number}}</a>
+</p>
 {{if .Media}}
-<div class="container">
+<div class="media-container">
   <input type="checkbox" id="zoomCheck_{{.Number}}">
   <label for="zoomCheck_{{.Number}}">
     <img class="thumbnail" src="/thumbnail/{{.Thumbnail}}" alt="{{.Number}}">

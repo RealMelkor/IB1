@@ -8,7 +8,6 @@ import (
 	"sync"
 	"errors"
 	"time"
-	"strings"
 )
 
 const DefaultName = "Anonymous"
@@ -186,17 +185,4 @@ func CreatePost(thread Thread, content template.HTML, name string,
 		newPostLock.Unlock()
 	}
 	return number, err
-}
-
-func (post Post) FormatTimestamp() string {
-	// TODO: should be 09/27/23 (Wed) 16:35:52
-	tm := time.Unix(post.Timestamp, 0)
-	return tm.UTC().Format(time.RFC850)
-}
-
-func (post Post) Thumbnail() string {
-	if post.Media == "" { return "" }
-	i := strings.LastIndex(post.Media, ".")
-	if i < 1 { return "" }
-	return post.Media[0:i] + ".png"
 }
