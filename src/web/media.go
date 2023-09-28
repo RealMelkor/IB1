@@ -2,6 +2,7 @@ package web
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/h2non/bimg"
 	"mime/multipart"
 	"crypto/rand"
 	"crypto/sha256"
@@ -11,7 +12,6 @@ import (
 	"errors"
 	"io"
 	"os"
-	"os/exec"
 )
 
 const mediaDir = "./media"
@@ -50,6 +50,44 @@ var extensions = map[string]bool{
 	"mp4": true,
 }
 
+func cleanImage(in string, out string) error {
+
+	buffer, err := bimg.Read(in)
+	if err != nil { return err }
+
+	img, err := bimg.NewImage(buffer).Process(
+			bimg.Options{StripMetadata: true})
+	if err != nil { return err }
+
+	bimg.Write(out, img)
+	return nil
+}
+
+func thumbnail(in string, out string) error {
+
+	buffer, err := bimg.Read(in)
+	if err != nil { return err }
+
+	img := bimg.NewImage(buffer)
+
+	size, err := img.Size()
+	if err != nil { return err }
+	w := size.Width
+	h := size.Height
+	if w > h {
+		h = h * 200 / w
+		w = 200
+	} else {
+		w = w * 200 / h
+		h = 200
+	}
+
+	newImage, err := img.Resize(w, h)
+	if err != nil { return err }
+
+	return bimg.Write(out, newImage)
+}
+
 func uploadFile(c *gin.Context, file *multipart.FileHeader) (string, error) {
 
 	// verify extension
@@ -69,19 +107,19 @@ func uploadFile(c *gin.Context, file *multipart.FileHeader) (string, error) {
 
 	// clean up the metadata
 	out := tmpDir + "/clean_" + name + "." + extension
-	cmd := exec.Command("ffmpeg", "-i", path, out)
-	if _, err := cmd.Output(); err != nil { return "", err }
+	if err := cleanImage(path, out); err != nil { return "", err }
 	os.Remove(path)
 
+	// rename to the sha256 hash of itself
 	hash, err := sha256sum(out)
 	if err != nil { return "", err }
 	media := mediaDir + "/" + hash + "." + extension
 	err = os.Rename(out, media)
 	if err != nil { return "", err }
 
-	cmd = exec.Command("ffmpegthumbnailer", "-i", media, "-o",
-		thumbnailDir + "/" + hash + ".png")
-	if _, err := cmd.Output(); err != nil { return "", err }
+	// create thumbnail
+	err = thumbnail(media, thumbnailDir + "/" + hash + ".png"); 
+	if err != nil { return "", err }
 
 	return hash + "." + extension, err
 }

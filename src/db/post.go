@@ -1,16 +1,19 @@
 package db
 
 import (
+	"gorm.io/gorm"
+	"html/template"
 	"strings"
 	"fmt"
 	"strconv"
 	"time"
+	"sync"
 )
 
 func (post Post) FormatTimestamp() string {
 	tm := time.Unix(post.Timestamp, 0).UTC()
 	return fmt.Sprintf("%02d/%02d/%d (%s) %02d:%02d:%02d UTC",
-		tm.Month(), tm.Day(), tm.Year() % 1000,
+		tm.Month(), tm.Day(), tm.Year(),
 		tm.Weekday().String()[0:3],
 		tm.Hour(), tm.Minute(), tm.Second())
 }
@@ -54,4 +57,38 @@ func (post Post) Thumbnail() string {
 	i := strings.LastIndex(post.Media, ".")
 	if i < 1 { return "" }
 	return post.Media[0:i] + ".png"
+}
+
+var newPostLock sync.Mutex
+func CreatePost(thread Thread, content template.HTML, name string,
+		media string, custom *gorm.DB) (int, error) {
+	if custom == nil { custom = db }
+	if name == "" { name = DefaultName }
+	if dbType == TYPE_SQLITE {
+		newPostLock.Lock()
+	}
+	number := -1
+	err := custom.Transaction(func(tx *gorm.DB) error {
+
+		tx.Select("Posts").Find(&thread.Board)
+
+		err := tx.Model(&thread.Board).
+			Update("Posts", thread.Board.Posts + 1).Error
+		if err != nil { return err }
+
+		ret := tx.Create(&Post{
+			Board: thread.Board, Thread: thread, Name: name,
+			Content: content, Timestamp: time.Now().Unix(),
+			Number: thread.Board.Posts, Media: media,
+		})
+		if ret.Error != nil { return err }
+
+		number = thread.Board.Posts
+
+		return nil
+	})
+	if dbType == TYPE_SQLITE {
+		newPostLock.Unlock()
+	}
+	return number, err
 }

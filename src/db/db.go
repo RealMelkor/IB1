@@ -5,9 +5,7 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/driver/mysql"
 	"html/template"
-	"sync"
 	"errors"
-	"time"
 )
 
 const DefaultName = "Anonymous"
@@ -150,39 +148,5 @@ func CreateThread(board Board, title string, name string, media string,
 		err = tx.Model(thread).Update("Number", number).Error
 		return err
 	})
-	return number, err
-}
-
-var newPostLock sync.Mutex
-func CreatePost(thread Thread, content template.HTML, name string,
-		media string, custom *gorm.DB) (int, error) {
-	if custom == nil { custom = db }
-	if name == "" { name = DefaultName }
-	if dbType == TYPE_SQLITE {
-		newPostLock.Lock()
-	}
-	number := -1
-	err := custom.Transaction(func(tx *gorm.DB) error {
-
-		tx.Select("Posts").Find(&thread.Board)
-
-		err := tx.Model(&thread.Board).
-			Update("Posts", thread.Board.Posts + 1).Error
-		if err != nil { return err }
-
-		ret := tx.Create(&Post{
-			Board: thread.Board, Thread: thread, Name: name,
-			Content: content, Timestamp: time.Now().Unix(),
-			Number: thread.Board.Posts, Media: media,
-		})
-		if ret.Error != nil { return err }
-
-		number = thread.Board.Posts
-
-		return nil
-	})
-	if dbType == TYPE_SQLITE {
-		newPostLock.Unlock()
-	}
 	return number, err
 }

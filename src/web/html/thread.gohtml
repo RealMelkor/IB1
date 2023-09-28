@@ -14,10 +14,7 @@
 <div class="post" id="{{.Number}}">
 <p>
 	<span class="name">{{.Name}}</span>
-	<span class="timestamp">
-		<span class="timestamp-age">{{.FormatAge}}</span>
-		<span class="timestamp-date">{{.FormatTimestamp}}</span>
-	</span>
+	<abbr title="{{.FormatTimestamp}}">{{.FormatAge}}</abbr>
 	No. <a href="#{{.Number}}">{{.Number}}</a>
 </p>
 {{if .Media}}
