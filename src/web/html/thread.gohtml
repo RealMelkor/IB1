@@ -1,5 +1,8 @@
-<div class="post">
-<form method="post" enctype="multipart/form-data">
+<div class="form-container">
+<div class="post form">
+<label for="show-form" class="btn">Hide new-reply box</label>
+<input type="checkbox" id="show-form" checked>
+<form method="post" enctype="multipart/form-data" id="new-reply">
 	<label for="name">Name:</label><br>
 	<input type="text" id="name" name="name"><br>
 	<label for="content">Comment:</label><br>
@@ -8,6 +11,7 @@
 	<input type="file" id="media" name="media"><br>
 	<input type="submit" value="New Reply">
 </form> 
+</div>
 </div>
 <h2>{{.Title}}</h2>
 {{range .Posts}}
@@ -20,8 +24,8 @@
 </p>
 {{if .Media}}
 <div class="media-container">
-  <input type="checkbox" id="zoomCheck_{{.Number}}">
-  <label for="zoomCheck_{{.Number}}">
+  <input type="checkbox" class="zoom-check" id="zoom-check-{{.Number}}">
+  <label for="zoom-check-{{.Number}}">
     <img class="thumbnail" src="/thumbnail/{{.Thumbnail}}" alt="{{.Number}}">
     <img class="media" loading="lazy" src="/media/{{.Media}}" alt="{{.Number}}">
   </label>

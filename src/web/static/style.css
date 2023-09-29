@@ -7,10 +7,6 @@ h1 {
 	color: gray;
 }
 
-input[type=checkbox] {
-	display: none;
-}
-
 .media-container img {
 	margin-left: 20px;
 	cursor: zoom-in;
@@ -20,14 +16,38 @@ input[type=checkbox] {
 	display: none;
 }
 
-input[type=checkbox]:checked ~ label > .media {
+.zoom-check {
+	display: none;
+}
+
+.zoom-check:checked ~ label > .media {
 	width: auto;
 	display: block;
 	cursor: zoom-out;
 }
 
-input[type=checkbox]:checked ~ label > .thumbnail {
+.zoom-check:checked ~ label > .thumbnail {
 	display: none;
+}
+
+#show-form:checked~#new-reply {
+	display: none;
+}
+
+.form {
+	position: -webkit-sticky;
+        position: sticky;
+        top: 10px;
+	left: 100%;
+	margin-right: 10px;
+	width: 245px;
+}
+
+.form-container {
+        top: 10px;
+	height: 0;
+	position: -webkit-sticky;
+        position: sticky;
 }
 
 .post {
@@ -39,6 +59,12 @@ input[type=checkbox]:checked ~ label > .thumbnail {
 	background-color: #d6daf0;
 	width: auto;
 	display: inline-block;
+}
+
+.post img {
+	float: left;
+	margin-right: 25px;
+	margin-bottom: 10px;
 }
 
 .content a {
