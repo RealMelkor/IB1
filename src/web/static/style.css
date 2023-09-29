@@ -33,9 +33,20 @@ input[type=checkbox]:checked ~ label > .thumbnail {
 .post {
 	padding: 3px;
 	padding-left: 15px;
+	padding-right: 15px;
 	margin-left: 10px;
 	margin-bottom: 10px;
-	background-color: #aaa;
+	background-color: #d6daf0;
+	width: auto;
+	display: inline-block;
+}
+
+.content a {
+	color: #D00;
+}
+
+.content .green-text {
+	color: #789922;
 }
 
 .content {

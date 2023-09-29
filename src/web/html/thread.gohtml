@@ -11,10 +11,11 @@
 </div>
 <h2>{{.Title}}</h2>
 {{range .Posts}}
+<div>
 <div class="post" id="{{.Number}}">
 <p>
 	<span class="name">{{.Name}}</span>
-	<abbr title="{{.FormatTimestamp}}">{{.FormatAge}}</abbr>
+	<abbr title="{{.FormatAge}}">{{.FormatTimestamp}}</abbr>
 	No. <a href="#{{.Number}}">{{.Number}}</a>
 </p>
 {{if .Media}}
@@ -27,5 +28,6 @@
 </div>
 {{end}}
 <p class="content">{{.Content}}</p>
+</div>
 </div>
 {{end}}
