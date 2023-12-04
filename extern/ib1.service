@@ -1,0 +1,12 @@
+[Unit]
+Description=IB1 server
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/IB1
+PrivateTmp=true
+User=ib
+Group=ib
+
+[Install]
+WantedBy=multi-user.target

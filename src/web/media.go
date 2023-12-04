@@ -46,8 +46,8 @@ var extensions = map[string]bool{
 	"jpg": true,
 	"jpeg": true,
 	"webp": true,
-	"webm": true,
-	"mp4": true,
+	"webm": false,
+	"mp4": false,
 }
 
 func cleanImage(in string, out string) error {

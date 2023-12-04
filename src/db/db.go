@@ -12,9 +12,11 @@ const DefaultName = "Anonymous"
 
 type Board struct {
 	gorm.Model
-	Name	string `gorm:"unique"`
-	Threads	[]Thread
-	Posts	int
+	Name		string `gorm:"unique"`
+	LongName	string
+	Description	string
+	Threads		[]Thread
+	Posts		int
 }
 var Boards map[string]Board
 
@@ -42,6 +44,10 @@ type Post struct {
 	Timestamp	int64
 }
 
+type PostReference struct {
+	gorm.Model
+}
+
 const (
 	TYPE_SQLITE = iota
 	TYPE_MYSQL
@@ -54,7 +60,7 @@ func Init() error {
 
 	Boards = map[string]Board{}
 
-	dbType = TYPE_MYSQL
+	dbType = TYPE_SQLITE
 
 	var err error
 	if dbType == TYPE_MYSQL {
@@ -72,15 +78,19 @@ func Init() error {
 
 	db.AutoMigrate(&Board{}, &Thread{}, &Post{})
 
-	if err := CreateBoard("a"); err != nil { return err }
-	if err := CreateBoard("b"); err != nil { return err }
+	if err := CreateBoard("a", "fun", "the first board"); err != nil {
+		return err
+	}
+	if err := CreateBoard("b", "random", "the second board"); err != nil {
+		return err
+	}
 
 	return nil
 }
 
 func GetBoard(name string) (Board, error) {
 	var board Board
-	if err := db.First(&board, "name = ?", name).Error; err != nil {
+	if err := db.First(&board, "Name = ?", name).Error; err != nil {
 		return Board{}, err
 	}
 	if err := RefreshBoard(&board); err != nil {
@@ -123,10 +133,12 @@ func GetBoards() ([]Board, error) {
 	return boards, err
 }
 
-func CreateBoard(name string) error {
+func CreateBoard(name string, longName string, description string) error {
 	var board Board
 	if err := db.First(&board, "Name = ?", name).Error; err != nil {
-		ret := db.Create(&Board{Name: name})
+		ret := db.Create(&Board{Name: name,
+				Description: description,
+				LongName: longName})
 		if ret.Error == nil { return ret.Error }
 		if ret.Find(&board).Error != nil { return ret.Error }
 	}

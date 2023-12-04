@@ -59,6 +59,10 @@ func (post Post) Thumbnail() string {
 	return post.Media[0:i] + ".png"
 }
 
+func (post Post) ReferredBy() string {
+	return ""
+}
+
 var newPostLock sync.Mutex
 func CreatePost(thread Thread, content template.HTML, name string,
 		media string, custom *gorm.DB) (int, error) {
@@ -91,4 +95,14 @@ func CreatePost(thread Thread, content template.HTML, name string,
 		newPostLock.Unlock()
 	}
 	return number, err
+}
+
+func GetPost(thread Thread, number int) (Post, error) {
+	var post Post
+	err := db.First(
+		&post, "thread_id = ?, number = ?", thread.ID, number).Error;
+	if err != nil {
+		return Post{}, err
+	}
+	return post, nil
 }
