@@ -1,0 +1,20 @@
+<h2 class="board-title">/{{.Name}}/ - {{.LongName}}</h2>
+<p class="board-title">{{.Description}}</p>
+{{ template "top" .Name }}
+<form method="post" enctype="multipart/form-data">
+	<label for="name">Name:</label><br>
+	<input type="text" id="name" name="name"><br>
+	<label for="title">Subject:</label><br>
+	<input type="text" id="title" name="title"><br>
+	<label for="content">Comment:</label><br>
+	<input type="text" id="content" name="content"><br>
+	<label for="media">File:</label><br>
+	<input type="file" id="media" name="media"><br>
+	<input type="submit" value="New Topic">
+</form> 
+{{range .Threads}}
+<div>
+	<a href="{{$.Name}}/{{.Number}}">{{.Title}}</a>
+</div>
+{{end}}
+{{ template "bottom" .Name }}

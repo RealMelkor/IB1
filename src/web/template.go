@@ -22,11 +22,20 @@ var footerRaw string
 //go:embed html/index.gohtml
 var indexRaw string
 
+//go:embed html/board.gohtml
+var boardRaw string
+
 //go:embed html/catalog.gohtml
 var catalogRaw string
 
 //go:embed html/thread.gohtml
 var threadRaw string
+
+//go:embed html/top.gohtml
+var topRaw string
+
+//go:embed html/bottom.gohtml
+var bottomRaw string
 
 //go:embed static/favicon.png
 var favicon string
@@ -36,17 +45,30 @@ var stylesheet string
 
 var header string
 var footer string
+var boardTemplate *template.Template
 var catalogTemplate *template.Template
 var threadTemplate *template.Template
 var indexTemplate *template.Template
 
 func initTemplate() error {
 
-	tmpl, err := template.New("catalog").Parse(catalogRaw)
+	_, err := template.New("top").Parse(topRaw)
+	if err != nil { return err }
+	//boardTemplate = tmpl
+
+	_, err = template.New("bottom").Parse(bottomRaw)
+	if err != nil { return err }
+	//boardTemplate = tmpl
+
+	tmpl, err := template.New("board").Parse(topRaw + bottomRaw + boardRaw)
+	if err != nil { return err }
+	boardTemplate = tmpl
+
+	tmpl, err = template.New("catalog").Parse(topRaw + bottomRaw + catalogRaw)
 	if err != nil { return err }
 	catalogTemplate = tmpl
 
-	tmpl, err = template.New("thread").Parse(threadRaw)
+	tmpl, err = template.New("thread").Parse(topRaw + bottomRaw + threadRaw)
 	if err != nil { return err }
 	threadTemplate = tmpl
 
@@ -110,6 +132,16 @@ func renderIndex() (string, error) {
 	var buf bytes.Buffer
 
 	err := indexTemplate.Execute(&buf, db.Boards)
+	if err != nil { return "", err }
+	
+	return buf.String(), nil
+}
+
+func renderBoard(board db.Board) (string, error) {
+
+	var buf bytes.Buffer
+
+	err := boardTemplate.Execute(&buf, board)
 	if err != nil { return "", err }
 	
 	return buf.String(), nil

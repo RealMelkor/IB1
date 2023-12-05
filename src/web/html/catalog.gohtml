@@ -1,18 +1,15 @@
-<h2>/{{.Name}}/ - {{.LongName}}</h2>
-<p>{{.Description}}</p>
-<form method="post" enctype="multipart/form-data">
-	<label for="name">Name:</label><br>
-	<input type="text" id="name" name="name"><br>
-	<label for="title">Subject:</label><br>
-	<input type="text" id="title" name="title"><br>
-	<label for="content">Comment:</label><br>
-	<input type="text" id="content" name="content"><br>
-	<label for="media">File:</label><br>
-	<input type="file" id="media" name="media"><br>
-	<input type="submit" value="New Topic">
-</form> 
+<h2 class="board-title">/{{.Name}}/ - {{.LongName}}</h2>
+<p class="board-title">{{.Description}}</p>
+{{ template "top" .Name }}
+<div class="catalog">
 {{range .Threads}}
-<div>
-	<a href="{{$.Name}}/{{.Number}}">{{.Title}}</a>
+<div class="thread">
+	<a href="{{.Number}}">
+    		<img src="/thumbnail/{{(index .Posts 0).Thumbnail}}" alt="{{.Number}}">
+	</a>
+	<p class="title">{{.Title}}</p>
+	<p>{{ (index .Posts 0).Content }}</p>
 </div>
 {{end}}
+</div>
+{{ template "bottom" .Name }}

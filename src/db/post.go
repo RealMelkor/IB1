@@ -100,7 +100,7 @@ func CreatePost(thread Thread, content template.HTML, name string,
 func GetPost(thread Thread, number int) (Post, error) {
 	var post Post
 	err := db.First(
-		&post, "thread_id = ?, number = ?", thread.ID, number).Error;
+		&post, "thread_id = ? AND number = ?", thread.ID, number).Error;
 	if err != nil {
 		return Post{}, err
 	}

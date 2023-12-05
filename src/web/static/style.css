@@ -104,6 +104,22 @@ h1 {
 	font-size: 10pt;
 }
 
+.catalog {
+	display: flex;
+	margin: 20px;
+}
+
+.thread img {
+	width: 150px;
+}
+
+.thread {
+	display: inline;
+	width: 150px;
+	text-align: center;
+	padding: 20px;
+}
+
 @media (prefers-color-scheme: dark) {
 	body {
 		background-color: #1d1f20;

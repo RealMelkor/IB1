@@ -3,6 +3,8 @@ Description=IB1 server
 After=network.target
 
 [Service]
+Environment="GIN_MODE=release"
+StandardOutput=append:/var/log/ib1.log
 ExecStart=/usr/local/bin/IB1
 WorkingDirectory=/home/ib
 PrivateTmp=true

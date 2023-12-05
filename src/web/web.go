@@ -38,12 +38,34 @@ func index(c *gin.Context) {
 	c.Data(http.StatusOK, "text/html", res)
 }
 
+func boardIndex(c *gin.Context) {
+	boardName := c.Param("board")
+	board, err := db.GetBoard(boardName)
+	if err != nil { 
+		htmlInternalError(c, err.Error())
+		return
+	}
+	res, err := renderBoard(board)
+	if err != nil { 
+		htmlInternalError(c, err.Error())
+		return
+	}
+	htmlOK(c, res)
+}
+
 func catalog(c *gin.Context) {
 	boardName := c.Param("board")
 	board, err := db.GetBoard(boardName)
 	if err != nil { 
 		htmlInternalError(c, err.Error())
 		return
+	}
+	for i, v := range board.Threads {
+		post, err := db.GetPost(v, v.Number)
+		if err != nil {
+			htmlInternalError(c, err.Error())
+		}
+		board.Threads[i].Posts = append(board.Threads[i].Posts, post)
 	}
 	catalog, err := renderCatalog(board)
 	if err != nil { 
@@ -190,7 +212,8 @@ func Init() error {
 		}
 		c.Data(http.StatusOK, "text/css", b)
 	})
-	r.GET("/:board", catalog)
+	r.GET("/:board", boardIndex)
+	r.GET("/:board/catalog", catalog)
 	r.POST("/:board", newThread)
 	r.GET("/:board/:thread", thread)
 	r.POST("/:board/:thread", newPost)

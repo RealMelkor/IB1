@@ -113,7 +113,8 @@ func RefreshBoard(board *Board) error {
 
 func GetThread(board Board, number int) (Thread, error) {
 	var thread Thread
-	ret := db.Where(&Thread{Number: number, Board: board}).First(&thread)
+	ret := db.First(&thread, "board_id = ? AND number = ?",
+			board.ID, number)
 	if ret.Error != nil { return Thread{}, ret.Error }
 	if err := RefreshThread(&thread); err != nil { return Thread{}, err }
 	thread.Board = board
