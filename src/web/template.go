@@ -37,6 +37,9 @@ var topRaw string
 //go:embed html/bottom.gohtml
 var bottomRaw string
 
+//go:embed html/newthread.gohtml
+var newThreadRaw string
+
 //go:embed static/favicon.png
 var favicon string
 
@@ -52,23 +55,17 @@ var indexTemplate *template.Template
 
 func initTemplate() error {
 
-	_, err := template.New("top").Parse(topRaw)
-	if err != nil { return err }
-	//boardTemplate = tmpl
+	blocks := topRaw + bottomRaw + newThreadRaw
 
-	_, err = template.New("bottom").Parse(bottomRaw)
-	if err != nil { return err }
-	//boardTemplate = tmpl
-
-	tmpl, err := template.New("board").Parse(topRaw + bottomRaw + boardRaw)
+	tmpl, err := template.New("board").Parse(blocks + boardRaw)
 	if err != nil { return err }
 	boardTemplate = tmpl
 
-	tmpl, err = template.New("catalog").Parse(topRaw + bottomRaw + catalogRaw)
+	tmpl, err = template.New("catalog").Parse(blocks + catalogRaw)
 	if err != nil { return err }
 	catalogTemplate = tmpl
 
-	tmpl, err = template.New("thread").Parse(topRaw + bottomRaw + threadRaw)
+	tmpl, err = template.New("thread").Parse(blocks + threadRaw)
 	if err != nil { return err }
 	threadTemplate = tmpl
 

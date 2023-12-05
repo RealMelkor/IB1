@@ -1,0 +1,15 @@
+{{define "newthread"}}
+<div class="new-thread">
+<form action="/{{.}}" method="post" enctype="multipart/form-data">
+	<label for="name">Name:</label><br>
+	<input type="text" id="name" name="name"><br>
+	<label for="title">Subject:</label><br>
+	<input type="text" id="title" name="title"><br>
+	<label for="content">Comment:</label><br>
+	<textarea rows="5" cols="30" id="content" name="content" required="required"></textarea><br>
+	<label for="media">File:</label><br>
+	<input type="file" id="media" name="media" required="required"><br>
+	<input type="submit" value="New Topic">
+</form> 
+</div>
+{{end}}

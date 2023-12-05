@@ -1,5 +1,6 @@
 <h2 class="board-title">/{{.Name}}/ - {{.LongName}}</h2>
 <p class="board-title">{{.Description}}</p>
+{{ template "newthread" .Name }}
 {{ template "top" .Name }}
 <div class="catalog">
 {{range .Threads}}
