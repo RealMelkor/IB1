@@ -1,3 +1,11 @@
+<h2 class="board-title">/{{.Board.Name}}/ - {{.Board.Description}}</h2>
+<div class="separator"></div>
+<div class="bar">
+[<a href="/{{.Board.Name}}">Catalog</a>]
+[<a href="#footer">Bottom</a>]
+[<a href="./{{.Number}}">Update</a>]
+</div>
+<div class="separator"></div>
 <div class="form-container">
 <div class="post form">
 <label for="show-form" class="btn">Hide new-reply box</label>
@@ -13,11 +21,13 @@
 </form> 
 </div>
 </div>
-<h2>{{.Title}}</h2>
 {{range .Posts}}
 <div>
 <div class="post" id="{{.Number}}">
 <p>
+{{if .Title}}
+	<span class="title">{{.Title}}</span>
+{{end}}
 	<span class="name">{{.Name}}</span>
 	<abbr title="{{.FormatAge}}">{{.FormatTimestamp}}</abbr>
 	No. <a href="#{{.Number}}">{{.Number}}</a>
@@ -35,3 +45,10 @@
 </div>
 </div>
 {{end}}
+<div class="separator"></div>
+<div class="bar">
+[<a href="/{{.Board.Name}}">Catalog</a>]
+[<a href="#">Top</a>]
+[<a href="./{{.Number}}">Update</a>]
+</div>
+<div class="separator"></div>

@@ -1,7 +1,5 @@
-{{template "header"}}
-{{range .Boards}}
+{{range .}}
 <div>
-	<a href="{{$.Name}}/">/{{.Name}}/</a>
+	<p><a href="{{.Name}}/">/{{.Name}}/</a> - {{.Description}}</p>
 </div>
 {{end}}
-{{template "footer"}}

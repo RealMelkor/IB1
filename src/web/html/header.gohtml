@@ -9,10 +9,17 @@
 		<link rel="icon" type="image/png" href="/static/favicon.png">
   </head>
   <body>
-    <div id="header">
-			<a href="/"><h1>{{.Title}}</h1></a>
-			{{range .Boards}}
-			<a href="/{{.Name}}">/{{.Name}}/</a>
+    <div class="bar" id="header">
+			[
+			{{range $i, $e := .Boards}}
+			{{if $i}}
+			/
 			{{end}}
+			<a href="/{{.Name}}">{{.Name}}</a>
+			{{end}}
+			]
+			<div style="float: right;">
+			[<a href="/">Home</a>]
+			</div>
     </div>
 		<div id="main">

@@ -25,8 +25,17 @@ func htmlBadRequest(c *gin.Context, data string) {
 	html(c, http.StatusBadRequest, data)
 }
 
+func internalError(c *gin.Context, data string) {
+	c.Data(http.StatusBadRequest, "text/plain", []byte(data))
+}
+
 func index(c *gin.Context) {
-	htmlOK(c, "")
+	res, err := minifyIndex()
+	if err != nil {
+		internalError(c, err.Error())
+		return
+	}
+	c.Data(http.StatusOK, "text/html", res)
 }
 
 func catalog(c *gin.Context) {
@@ -151,6 +160,7 @@ func thread(c *gin.Context) {
 		htmlInternalError(c, err.Error())
 		return
 	}
+	thread.Posts[0].Title = thread.Title
 	data, err = renderThread(thread)
 	if err != nil { 
 		htmlInternalError(c, err.Error())
@@ -165,11 +175,20 @@ func Init() error {
 	if err := initTemplate(); err != nil { return err }
 
 	r.GET("/", index)
+	r.GET("/favicon.ico", func(c *gin.Context) {
+		c.Data(http.StatusNotFound, "text/plain", []byte("Not Found"))
+	})
 	r.GET("/static/favicon.png", func(c *gin.Context) {
-		c.Data(200, "image/png", []byte(favicon))
+		c.Data(http.StatusOK, "image/png", []byte(favicon))
 	})
 	r.GET("/static/style.css", func(c *gin.Context) {
-		c.Data(200, "text/css", []byte(stylesheet))
+		b, err := minifyStylesheet()
+		if err != nil {
+			c.Data(http.StatusInternalServerError, "text/plain",
+				[]byte(err.Error()))
+			return
+		}
+		c.Data(http.StatusOK, "text/css", b)
 	})
 	r.GET("/:board", catalog)
 	r.POST("/:board", newThread)

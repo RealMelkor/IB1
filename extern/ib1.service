@@ -4,6 +4,7 @@ After=network.target
 
 [Service]
 ExecStart=/usr/local/bin/IB1
+WorkingDirectory=/home/ib
 PrivateTmp=true
 User=ib
 Group=ib
