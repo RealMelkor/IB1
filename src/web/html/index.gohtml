@@ -1,5 +1,15 @@
+<h1 class="board-title">IB1</h1>
+<div class="boards">
+	<table>
+	<tr>
+		<th>Board</th>
+		<th>Description</th>
+	</tr>
 {{range .}}
-<div>
-	<p><a href="{{.Name}}/">/{{.Name}}/</a> - {{.Description}}</p>
-</div>
+	<tr>
+		<td><a href="{{.Name}}/">/{{.Name}}/ - {{.LongName}}</a></td>
+		<td>{{.Description}}</td>
+	</tr>
 {{end}}
+	</table>
+</div>

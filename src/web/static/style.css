@@ -112,7 +112,8 @@ h1 {
 }
 
 .thread img {
-	width: 150px;
+	max-width: 150px;
+	max-height: 200px;
 }
 
 .thread {
@@ -138,6 +139,34 @@ h1 {
 	width: 300px;
 }
 
+.boards table {
+	width: 300px;
+	border: 2px solid black;
+	margin: auto;
+}
+
+.boards th {
+	background-color: #9988ee;
+}
+
+.boards td {
+	background-color: #d6daf0;
+}
+
+.boards h2 {
+	text-align: center;
+	font-size: 16pt;
+	margin: 3px;
+}
+
+.boards a {
+	text-decoration: none;
+}
+
+.boards a:hover {
+	color: red;
+}
+
 @media (prefers-color-scheme: dark) {
 	body {
 		background-color: #1d1f20;
@@ -159,5 +188,11 @@ h1 {
 	}
 	.name {
 		color: #7fedb5;
+	}
+	.boards th {
+		background-color: #211174;
+	}
+	.boards td {
+		background-color: #282b2d;
 	}
 }
