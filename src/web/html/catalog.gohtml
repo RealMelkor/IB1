@@ -8,6 +8,7 @@
 	<a href="{{.Number}}">
     		<img src="/thumbnail/{{(index .Posts 0).Thumbnail}}" alt="{{.Number}}">
 	</a>
+	<p class="thread-info">R: {{.Replies}} / I: {{.Images}}</p>
 	<p class="title">{{.Title}}</p>
 	<p>{{ (index .Posts 0).Content }}</p>
 </div>

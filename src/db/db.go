@@ -28,6 +28,8 @@ type Thread struct {
 	Posts	[]Post
 	Alive	bool
 	Number	int
+	Replies	int `gorm:"-:all"`
+	Images	int `gorm:"-:all"`
 }
 
 type Post struct {

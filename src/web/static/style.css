@@ -125,6 +125,12 @@ h1 {
 	overflow: hidden;
 }
 
+.thread-info {
+	margin: 0;
+	font-size: 9pt;
+	font-weight: bold;
+}
+
 .new-thread {
 	width: 300px;
 	margin-left: auto;

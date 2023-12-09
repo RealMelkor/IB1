@@ -18,14 +18,6 @@ func htmlOK(c *gin.Context, data string) {
 	html(c, http.StatusOK, data)
 }
 
-/*func htmlInternalError(c *gin.Context, data string) {
-	html(c, http.StatusInternalServerError, data)
-}
-
-func htmlBadRequest(c *gin.Context, data string) {
-	html(c, http.StatusBadRequest, data)
-}*/
-
 func internalError(c *gin.Context, data string) {
 	c.Data(http.StatusBadRequest, "text/plain", []byte(data))
 }
@@ -67,11 +59,19 @@ func catalog(c *gin.Context) {
 		return
 	}
 	for i, v := range board.Threads {
-		post, err := db.GetPost(v, v.Number)
+		err := db.RefreshThread(&v)
 		if err != nil {
 			internalError(c, err.Error())
+			return
 		}
-		board.Threads[i].Posts = append(board.Threads[i].Posts, post)
+		v.Replies = len(v.Posts) - 1
+		v.Images = -1
+		for _, post := range v.Posts {
+			if post.Media != "" {
+				v.Images++
+			}
+		}
+		board.Threads[i] = v
 	}
 	catalog, err := renderCatalog(board)
 	if err != nil { 
