@@ -137,11 +137,22 @@ h1 {
 	margin-right: auto;
 }
 
-.new-thread input {
+.new-thread th {
+	background-color: #9988ee;
+	font-size: 10pt;
+	border: 1px solid black;
+}
+
+.new-thread td input {
 	width: 300px;
 }
 
-.new-thread textarea {
+.new-thread-btn {
+	margin-left: 100%;
+	width: 90px;
+}
+
+.new-thread td textarea {
 	width: 300px;
 }
 
@@ -200,5 +211,8 @@ h1 {
 	}
 	.boards td {
 		background-color: #282b2d;
+	}
+	.new-thread th {
+		background-color: #211174;
 	}
 }
