@@ -7,6 +7,7 @@ import (
 	"log"
 	
 	"IB1/db"
+	"IB1/config"
 )
 
 func html(c *gin.Context, code int, data string) {
@@ -25,6 +26,10 @@ func internalError(c *gin.Context, data string) {
 func badRequest(c *gin.Context, data string) {
 	log.Println(data)
 	c.Data(http.StatusBadRequest, "text/plain", []byte("bad request"))
+}
+
+func badRequestExplicit(c *gin.Context, data string) {
+	c.Data(http.StatusBadRequest, "text/plain", []byte(data))
 }
 
 func index(c *gin.Context) {
@@ -48,6 +53,7 @@ func boardIndex(c *gin.Context) {
 		internalError(c, err.Error())
 		return
 	}
+	captchaNew(c)
 	htmlOK(c, res)
 }
 
@@ -78,6 +84,7 @@ func catalog(c *gin.Context) {
 		internalError(c, err.Error())
 		return
 	}
+	captchaNew(c)
 	htmlOK(c, catalog)
 }
 
@@ -94,8 +101,20 @@ func newThread(c *gin.Context) {
 	title, hasTitle := c.GetPostForm("title")
 	content, hasContent := c.GetPostForm("content")
 	if !hasTitle || !hasContent || !hasName || content == "" { 
-		badRequest(c, "invalid form")
+		badRequestExplicit(c, "invalid form")
 		return 
+	}
+
+	if config.Cfg.Captcha.Enabled {
+		captcha, hasCaptcha := c.GetPostForm("captcha")
+		if !hasCaptcha {
+			badRequestExplicit(c, "invalid form")
+			return
+		}
+		if !captchaVerify(c, captcha) {
+			badRequestExplicit(c, "wrong captcha")
+			return
+		}
 	}
 
 	media := ""
@@ -147,6 +166,17 @@ func newPost(c *gin.Context) {
 		badRequest(c, "invalid form")
 		return
 	}
+	if config.Cfg.Captcha.Enabled {
+		captcha, hasCaptcha := c.GetPostForm("captcha")
+		if !hasCaptcha {
+			badRequestExplicit(c, "invalid form")
+			return
+		}
+		if !captchaVerify(c, captcha) {
+			badRequestExplicit(c, "wrong captcha")
+			return
+		}
+	}
 
 	media := ""
 	file, err := c.FormFile("media")
@@ -196,6 +226,7 @@ func thread(c *gin.Context) {
 		internalError(c, err.Error())
 		return
 	}
+	captchaNew(c)
 	htmlOK(c, data)
 }
 
@@ -220,6 +251,9 @@ func Init() error {
 		}
 		c.Data(http.StatusOK, "text/css", b)
 	})
+	if config.Cfg.Captcha.Enabled {
+		r.GET("/captcha", captchaImage)
+	}
 	r.GET("/:board", boardIndex)
 	r.GET("/:board/catalog", catalog)
 	r.POST("/:board", newThread)

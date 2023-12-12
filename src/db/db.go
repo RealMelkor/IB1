@@ -89,7 +89,7 @@ func Init() error {
 	db.AutoMigrate(&Board{}, &Thread{}, &Post{})
 
 	for _, v := range config.Cfg.Boards {
-		if _, err := GetBoard(v.Name); err == nil { continue }
+		if !v.Enabled { continue }
 		err := CreateBoard(v.Name, v.Title, v.Description)
 		if err != nil { return err }
 	}

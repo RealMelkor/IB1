@@ -1,9 +1,9 @@
-<h2 class="board-title">/{{.Name}}/ - {{.LongName}}</h2>
-<p class="board-title">{{.Description}}</p>
-{{ template "newthread" .Name }}
-{{ template "top" .Name }}
+<h2 class="board-title">/{{.Board.Name}}/ - {{.Board.LongName}}</h2>
+<p class="board-title">{{.Board.Description}}</p>
+{{ template "newthread" . }}
+{{ template "top" .Board.Name }}
 <div class="catalog">
-{{range .Threads}}
+{{range .Board.Threads}}
 <div class="thread">
 	<a href="{{.Number}}">
     		<img src="/thumbnail/{{(index .Posts 0).Thumbnail}}" alt="{{.Number}}">
@@ -14,4 +14,4 @@
 </div>
 {{end}}
 </div>
-{{ template "bottom" .Name }}
+{{ template "bottom" .Board.Name }}

@@ -1,3 +1,5 @@
+web:
+  domain: "localhost"
 database:
   type: "sqlite" # supported : sqlite, mysql
   url: "ib1.db" # connection string or sqlite database path

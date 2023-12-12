@@ -7,6 +7,11 @@
 <form method="post" enctype="multipart/form-data" id="new-reply">
 	<label for="name">Name:</label><br>
 	<input type="text" id="name" name="name"><br>
+{{if .Captcha}}
+	<label for="captcha">Captcha:</label><br>
+	<img loading="lazy" src="/captcha" alt="captcha"><br>
+	<input type="text" id="captcha" name="captcha" required="required"><br>
+{{end}}
 	<label for="content">Comment:</label><br>
 	<textarea rows="5" cols="30" id="content" name="content"></textarea><br>
 	<label for="media">File:</label><br>
@@ -15,12 +20,12 @@
 </form> 
 </div>
 </div>
-{{range .Posts}}
+{{range .Thread.Posts}}
 <div>
-<div class="post" id="{{.Number}}">
+<div class="post" id="{{.Thread.Number}}">
 <p>
-{{if .Title}}
-	<span class="title">{{.Title}}</span>
+{{if .Thread.Title}}
+	<span class="title">{{.Thread.Title}}</span>
 {{end}}
 	<span class="name">{{.Name}}</span>
 	<abbr title="{{.FormatAge}}">{{.FormatTimestamp}}</abbr>

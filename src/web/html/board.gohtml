@@ -1,10 +1,10 @@
-<h2 class="board-title">/{{.Name}}/ - {{.LongName}}</h2>
-<p class="board-title">{{.Description}}</p>
-{{ template "newthread" .Name }}
-{{ template "top" .Name }}
-{{range .Threads}}
+<h2 class="board-title">/{{.Board.Name}}/ - {{.Board.LongName}}</h2>
+<p class="board-title">{{.Board.Description}}</p>
+{{ template "newthread" . }}
+{{ template "top" .Board.Name }}
+{{range .Board.Threads}}
 <div>
-	<a href="{{$.Name}}/{{.Number}}">{{.Title}}</a>
+	<a href="{{$.Board.Name}}/{{.Number}}">{{.Title}}</a>
 </div>
 {{end}}
-{{ template "bottom" .Name }}
+{{ template "bottom" .Board.Name }}

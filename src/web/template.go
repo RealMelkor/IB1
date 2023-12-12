@@ -11,6 +11,7 @@ import (
 	"strconv"
 
 	"IB1/db"
+	"IB1/config"
 )
 
 //go:embed html/header.gohtml
@@ -138,7 +139,15 @@ func renderBoard(board db.Board) (string, error) {
 
 	var buf bytes.Buffer
 
-	err := boardTemplate.Execute(&buf, board)
+	data := struct {
+		Board	db.Board
+		Captcha	bool
+	}{
+		Board: board,
+		Captcha: config.Cfg.Captcha.Enabled,
+	}
+
+	err := boardTemplate.Execute(&buf, data)
 	if err != nil { return "", err }
 	
 	return buf.String(), nil
@@ -148,7 +157,15 @@ func renderCatalog(board db.Board) (string, error) {
 
 	var buf bytes.Buffer
 
-	err := catalogTemplate.Execute(&buf, board)
+	data := struct {
+		Board	db.Board
+		Captcha	bool
+	}{
+		Board: board,
+		Captcha: config.Cfg.Captcha.Enabled,
+	}
+
+	err := catalogTemplate.Execute(&buf, data)
 	if err != nil { return "", err }
 	
 	return buf.String(), nil
@@ -158,7 +175,17 @@ func renderThread(thread db.Thread) (string, error) {
 
 	var buf bytes.Buffer
 
-	err := threadTemplate.Execute(&buf, thread)
+	data := struct {
+		Board	db.Board
+		Thread	db.Thread
+		Captcha	bool
+	}{
+		Board: thread.Board,
+		Thread: thread,
+		Captcha: config.Cfg.Captcha.Enabled,
+	}
+
+	err := threadTemplate.Execute(&buf, data)
 	if err != nil { return "", err }
 	
 	return buf.String(), nil

@@ -5,6 +5,9 @@ import "github.com/kkyr/fig"
 var Cfg Config
 
 type Config struct {
+	Web struct {
+		Domain		string `validate:"required"`
+	}
 	Database struct {
                 Type            string `validate:"required"`
                 Url             string `validate:"required"`
