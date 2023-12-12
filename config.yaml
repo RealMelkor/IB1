@@ -1,0 +1,18 @@
+database:
+  type: "sqlite" # supported : sqlite, mysql
+  url: "ib1.db" # connection string or sqlite database path
+captcha:
+  enabled: true # enable captcha
+boards:
+  - enabled: true
+    name: "b"
+    title: "random"
+    description: "Random stuff"
+  - enabled: true
+    name: "a"
+    title: "fun zone"
+    description: "Second board"
+  - enabled: true
+    name: "x"
+    title: "paranormal"
+    description: "Schizo central"

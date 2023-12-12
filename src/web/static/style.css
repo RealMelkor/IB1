@@ -139,7 +139,7 @@ h1 {
 
 #new-thread-check ~ label > p > span {
 	cursor: pointer;
-	color: blue;
+	color: #3391ff;
 	text-align: center;
 }
 

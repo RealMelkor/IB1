@@ -6,6 +6,7 @@ import (
 	"gorm.io/driver/mysql"
 	"html/template"
 	"errors"
+	"IB1/config"
 )
 
 const DefaultName = "Anonymous"
@@ -63,29 +64,34 @@ func Init() error {
 
 	Boards = map[string]Board{}
 
-	dbType = TYPE_SQLITE
+	switch config.Cfg.Database.Type {
+	case "mysql":
+		dbType = TYPE_MYSQL
+	case "sqlite":
+		dbType = TYPE_SQLITE
+	default:
+		return errors.New("unknown database " +
+				config.Cfg.Database.Type)
+	}
 
 	var err error
 	if dbType == TYPE_MYSQL {
-		dsn := "root:mypassword@tcp(0.0.0.0:3306)/" +
-			"test?charset=utf8mb4&parseTime=True&loc=Local"
+		dsn := config.Cfg.Database.Url
 		db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	} else if dbType == TYPE_SQLITE {
-		db, err = gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
+		db, err = gorm.Open(sqlite.Open(config.Cfg.Database.Url),
+				&gorm.Config{})
 	} else {
-		return errors.New("Unknown database")
+		return errors.New("unknown database")
 	}
-	if err != nil {
-		return err
-	}
+	if err != nil { return err }
 
 	db.AutoMigrate(&Board{}, &Thread{}, &Post{})
 
-	if err := CreateBoard("a", "fun", "the first board"); err != nil {
-		return err
-	}
-	if err := CreateBoard("b", "random", "the second board"); err != nil {
-		return err
+	for _, v := range config.Cfg.Boards {
+		if _, err := GetBoard(v.Name); err == nil { continue }
+		err := CreateBoard(v.Name, v.Title, v.Description)
+		if err != nil { return err }
 	}
 
 	return nil
