@@ -1,11 +1,12 @@
-<h1 class="board-title">IB1</h1>
+<h1 class="board-title">{{.Title}}</h1>
+<p class="board-title">{{.Description}}</p>
 <div class="boards">
 	<table>
 	<tr>
 		<th>Board</th>
 		<th>Description</th>
 	</tr>
-{{range .}}
+{{range .Boards}}
 	<tr>
 		<td><a href="/{{.Name}}">/{{.Name}}/ - {{.LongName}}</a></td>
 		<td>{{.Description}}</td>

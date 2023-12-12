@@ -1,11 +1,16 @@
+home:
+  title: "IB1" # title on the main page
+  description: "An imageboard that doesn't require Javascript." # description on the main page
+  language: "en" # html lang attribute
 web:
-  domain: "localhost"
+  domain: "localhost" # domain name, required for cookies
+  listener: "localhost:8080" # address and port to listen on
 database:
   type: "sqlite" # supported : sqlite, mysql
   url: "ib1.db" # connection string or sqlite database path
 captcha:
   enabled: true # enable captcha
-boards:
+boards: # list of boards
   - enabled: true
     name: "b"
     title: "random"

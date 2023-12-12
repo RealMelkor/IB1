@@ -95,8 +95,8 @@ func refreshTemplate() error {
 		Lang	string
 		Boards	[]db.Board
         }{
-                "IB1",
-                "en",
+                config.Cfg.Home.Title,
+                config.Cfg.Home.Language,
 		boards,
         }
 	err = tmpl.Execute(&buf, data)
@@ -129,7 +129,16 @@ func renderIndex() (string, error) {
 
 	var buf bytes.Buffer
 
-	err := indexTemplate.Execute(&buf, db.Boards)
+	data := struct {
+		Boards		map[string]db.Board
+		Title		string
+		Description	string
+	}{
+		Boards: db.Boards,
+		Title: config.Cfg.Home.Title,
+		Description: config.Cfg.Home.Description,
+	}
+	err := indexTemplate.Execute(&buf, data)
 	if err != nil { return "", err }
 	
 	return buf.String(), nil

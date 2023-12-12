@@ -262,5 +262,5 @@ func Init() error {
 	r.Static("/media", mediaDir)
 	r.Static("/thumbnail", thumbnailDir)
 
-	return r.Run(":8080")
+	return r.Run(config.Cfg.Web.Listener)
 }

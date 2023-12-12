@@ -5,12 +5,18 @@ import "github.com/kkyr/fig"
 var Cfg Config
 
 type Config struct {
+	Home struct {
+		Title		string	`validate:"required"`
+		Description	string	`validate:"required"`
+		Language	string	`validate:"required"`
+	}
 	Web struct {
-		Domain		string `validate:"required"`
+		Domain		string	`validate:"required"`
+		Listener	string	`validate:"required"`
 	}
 	Database struct {
-                Type            string `validate:"required"`
-                Url             string `validate:"required"`
+                Type            string	`validate:"required"`
+                Url             string	`validate:"required"`
         }
 	Captcha struct {
 		Enabled		bool
