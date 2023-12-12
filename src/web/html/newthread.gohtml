@@ -1,5 +1,10 @@
 {{define "newthread"}}
+<div class="separator"></div>
 <div class="new-thread">
+<input id="new-thread-check" type="checkbox">
+<label for="new-thread-check">
+<p>[<span>Start a New Thread</span>]</p>
+</label>
 <form action="/{{.}}" method="post" enctype="multipart/form-data">
 	<table>
 		<tr>
@@ -19,7 +24,7 @@
 			<td><input type="file" id="media" name="media" required="required"></td>
 		</tr>
 	</table>
-	<input class="new-thread-btn" type="submit" value="Post">
+	<input type="submit" value="Post">
 </form> 
 </div>
 {{end}}

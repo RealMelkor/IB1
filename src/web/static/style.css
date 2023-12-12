@@ -30,7 +30,7 @@ h1 {
 	display: none;
 }
 
-#show-form:checked~#new-reply {
+#show-form:checked ~ #new-reply {
 	display: none;
 }
 
@@ -95,7 +95,7 @@ h1 {
 }
 
 .separator {
-	border-bottom: 2px solid gray;
+	border-bottom: 1px solid gray;
 	margin-top: 10px;
 	margin-bottom: 10px;
 }
@@ -137,6 +137,37 @@ h1 {
 	margin-right: auto;
 }
 
+#new-thread-check ~ label > p > span {
+	cursor: pointer;
+	color: blue;
+	text-align: center;
+}
+
+#new-thread-check ~ label > p > span:hover {
+	color: red;
+}
+
+#new-thread-check ~ label > p {
+	text-align: center;
+	font-size: 16pt;
+}
+
+#new-thread-check:checked ~ label > p {
+	display: none;
+}
+
+#new-thread-check {
+	display: none;
+}
+
+#new-thread-check ~ form {
+	display: none;
+}
+
+#new-thread-check:checked ~ form {
+	display: inline;
+}
+
 .new-thread th {
 	background-color: #9988ee;
 	font-size: 10pt;
@@ -147,7 +178,7 @@ h1 {
 	width: 300px;
 }
 
-.new-thread-btn {
+.new-thread > form > input {
 	margin-left: 100%;
 	width: 90px;
 }
