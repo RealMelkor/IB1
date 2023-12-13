@@ -14,6 +14,10 @@ type Config struct {
 		Domain		string	`validate:"required"`
 		Listener	string	`validate:"required"`
 	}
+	Media struct {
+		Directory	string	`validate:"required"`
+		Thumbnail	string	`validate:"required"`
+	}
 	Database struct {
                 Type            string	`validate:"required"`
                 Url             string	`validate:"required"`

@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"log"
+	"os"
 	
 	"IB1/db"
 	"IB1/config"
@@ -231,6 +232,13 @@ func thread(c *gin.Context) {
 }
 
 func Init() error {
+
+	if err := os.MkdirAll(config.Cfg.Media.Directory, 0700); err != nil {
+		return err
+	}
+	if err := os.MkdirAll(config.Cfg.Media.Thumbnail, 0700); err != nil {
+		return err
+	}
 
 	r := gin.Default()
 	if err := initTemplate(); err != nil { return err }
