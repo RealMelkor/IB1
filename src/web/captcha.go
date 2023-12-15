@@ -9,7 +9,7 @@ import (
 
 func captchaNew(c *gin.Context) {
 	if !config.Cfg.Captcha.Enabled { return }
-	c.SetCookie("captcha", captcha.New(),
+	c.SetCookie("captcha", captcha.NewLen(config.Cfg.Captcha.Length),
 		int(captcha.Expiration.Seconds()), "/",
 		config.Cfg.Web.Domain, true, false)
 }

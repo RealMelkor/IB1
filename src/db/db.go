@@ -23,14 +23,14 @@ var Boards map[string]Board
 
 type Thread struct {
 	gorm.Model
-	Title	string
-	BoardID	int
-	Board	Board
-	Posts	[]Post
-	Alive	bool
-	Number	int
-	Replies	int `gorm:"-:all"`
-	Images	int `gorm:"-:all"`
+	Title		string
+	BoardID		int
+	Board		Board
+	Posts		[]Post
+	Alive		bool
+	Number		int
+	Replies		int `gorm:"-:all"`
+	Images		int `gorm:"-:all"`
 }
 
 type Post struct {
@@ -48,8 +48,10 @@ type Post struct {
 	Title		string `gorm:"-:all"`
 }
 
-type PostReference struct {
+type Reference struct {
 	gorm.Model
+	From		int
+	To		int
 }
 
 const (
@@ -109,10 +111,14 @@ func GetBoard(name string) (Board, error) {
 }
 
 func RefreshBoard(board *Board) error {
-	if err := db.Model(*board).Preload("Threads").Find(board).Error;
-			err != nil {
-		return err
-	}
+	err := db.Raw(
+		"SELECT b.* FROM posts a " +
+		"INNER JOIN threads b ON a.thread_id = b.id " +
+		"WHERE a.board_id = ? GROUP BY a.thread_id " +
+		"ORDER BY MAX(a.timestamp) DESC LIMIT ?;",
+		board.ID, config.Cfg.Board.MaxThreads).
+		Scan(&board.Threads).Error
+	if err != nil { return err }
 	for i := range board.Threads {
 		board.Threads[i].Board = *board
 	}

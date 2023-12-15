@@ -13,6 +13,9 @@ database:
   url: "ib1.db" # connection string or sqlite database path
 captcha:
   enabled: true # enable captcha
+  length: 7 # number of characters in the captcha
+board:
+  maxThreads: 40 # maximum of threads active in the catalog
 boards: # list of boards
   - enabled: true
     name: "b"

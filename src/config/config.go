@@ -24,6 +24,10 @@ type Config struct {
         }
 	Captcha struct {
 		Enabled		bool
+		Length		int `validate:"required"`
+	}
+	Board struct {
+		MaxThreads	int `validate:"required"`
 	}
 	Boards []struct {
 		Enabled		bool
