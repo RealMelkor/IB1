@@ -1,10 +1,10 @@
 {{define "thread-template"}}
 {{range .Posts}}
 <div>
-<div class="post" id="{{.Number}}">
+<div class="post {{if eq .Number $.Number}}post-first{{end}}" id="{{.Number}}">
 <p>
-{{if .Thread.Title}}
-	<span class="title">{{.Thread.Title}}</span>
+{{if eq .Number $.Number}}
+	<span class="title">{{$.Title}}</span>
 {{end}}
 	<span class="name">{{.Name}}</span>
 	<abbr title="{{.FormatAge}}">{{.FormatTimestamp}}</abbr>

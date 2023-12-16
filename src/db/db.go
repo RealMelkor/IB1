@@ -45,7 +45,6 @@ type Post struct {
 	Board		Board
 	Number		int
 	Timestamp	int64
-	Title		string `gorm:"-:all"`
 }
 
 type Reference struct {

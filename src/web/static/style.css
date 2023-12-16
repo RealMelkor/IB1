@@ -68,6 +68,12 @@ h1 {
 	margin-bottom: 10px;
 }
 
+.post-first {
+	background-color: inherit;
+	margin-top: -10px;
+	margin-left: -5px;
+}
+
 .post-link {
 	text-decoration: none;
 	color: inherit;

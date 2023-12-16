@@ -241,7 +241,6 @@ func thread(c *gin.Context) {
 		internalError(c, err.Error())
 		return
 	}
-	thread.Posts[0].Title = thread.Title
 	data, err = renderThread(thread)
 	if err != nil { 
 		internalError(c, err.Error())
