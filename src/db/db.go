@@ -101,10 +101,8 @@ func Init() error {
 }
 
 func GetBoard(name string) (Board, error) {
-	var board Board
-	if err := db.First(&board, "Name = ?", name).Error; err != nil {
-		return Board{}, err
-	}
+	board, ok := Boards[name]
+	if !ok { return board, errors.New("board not found") }
 	if err := RefreshBoard(&board); err != nil {
 		return Board{}, err
 	}
@@ -142,12 +140,6 @@ func RefreshThread(thread *Thread) error {
 		return err
 	}
 	return nil
-}
-
-func GetBoards() ([]Board, error) {
-	var boards []Board
-	err := db.Find(&boards).Error
-	return boards, err
 }
 
 func CreateBoard(name string, longName string, description string) error {

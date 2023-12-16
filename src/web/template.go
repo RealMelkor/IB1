@@ -84,14 +84,13 @@ func refreshTemplate() error {
 
 	var buf bytes.Buffer
 
-	m := minify.New()
-	m.AddFunc("text/html", mhtml.Minify)
-
 	tmpl, err := template.New("header").Parse(headerRaw)
 	if err != nil { return err }
 
-	boards, err := db.GetBoards()
-	if err != nil { return err }
+	var boards []db.Board
+	for _, v := range db.Boards {
+		boards = append([]db.Board{v}, boards...)
+	}
 
 	data := struct {
 		Title	string
@@ -107,6 +106,8 @@ func refreshTemplate() error {
 
 	header = buf.String()
 
+	m := minify.New()
+	m.AddFunc("text/html", mhtml.Minify)
 	res, err := m.String("text/html", header)
 	if err != nil { return err }
 	header = res
