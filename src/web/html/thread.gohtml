@@ -20,31 +20,5 @@
 </form> 
 </div>
 </div>
-{{range .Thread.Posts}}
-<div>
-<div class="post" id="{{.Number}}">
-<p>
-{{if .Thread.Title}}
-	<span class="title">{{.Thread.Title}}</span>
-{{end}}
-	<span class="name">{{.Name}}</span>
-	<abbr title="{{.FormatAge}}">{{.FormatTimestamp}}</abbr>
-	<a class="post-link" href="#{{.Number}}">No.{{.Number}}</a>
-	{{range .ReferredBy}}
-	<a class="post-ref" href="#{{.From}}">&gt;&gt;{{.From}}</a>
-	{{end}}
-</p>
-{{if .Media}}
-<div class="media-container">
-  <input type="checkbox" class="zoom-check" id="zoom-check-{{.Number}}">
-  <label for="zoom-check-{{.Number}}">
-    <img class="thumbnail" src="/thumbnail/{{.Thumbnail}}" alt="{{.Number}}">
-    <img class="media" loading="lazy" src="/media/{{.Media}}" alt="{{.Number}}">
-  </label>
-</div>
-{{end}}
-<p class="content">{{.Content}}</p>
-</div>
-</div>
-{{end}}
+{{ template "thread-template" .Thread }}
 {{ template "bottom" .Board.Name }}

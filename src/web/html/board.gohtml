@@ -2,9 +2,11 @@
 <p class="board-title">{{.Board.Description}}</p>
 {{ template "newthread" . }}
 {{ template "top" .Board.Name }}
-{{range .Board.Threads}}
-<div>
-	<a href="{{$.Board.Name}}/{{.Number}}">{{.Title}}</a>
-</div>
+{{range $i, $e := .Board.Threads}}
+{{if $i}}
+<div class="separator"></div>
+{{end}}
+{{ template "thread-template" . }}
+<a href="/{{$.Board.Name}}/{{.Number}}">View thread</a>
 {{end}}
 {{ template "bottom" .Board.Name }}

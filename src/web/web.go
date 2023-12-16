@@ -49,6 +49,21 @@ func boardIndex(c *gin.Context) {
 		internalError(c, err.Error())
 		return
 	}
+	if len(board.Threads) > 4 {
+		// TODO: support pages
+		board.Threads = board.Threads[0:4]
+	}
+	for i := range board.Threads {
+		if err := db.RefreshThread(&board.Threads[i]); err != nil {
+			internalError(c, err.Error())
+			return
+		}
+		if length := len(board.Threads[i].Posts); length > 5 {
+			posts := []db.Post{board.Threads[i].Posts[0]}
+			board.Threads[i].Posts = append(posts,
+				board.Threads[i].Posts[length - 4:]...)
+		}
+	}
 	res, err := renderBoard(board)
 	if err != nil { 
 		internalError(c, err.Error())

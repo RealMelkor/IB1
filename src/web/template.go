@@ -29,6 +29,9 @@ var boardRaw string
 //go:embed html/catalog.gohtml
 var catalogRaw string
 
+//go:embed html/threadtemplate.gohtml
+var threadTemplateRaw string
+
 //go:embed html/thread.gohtml
 var threadRaw string
 
@@ -56,7 +59,7 @@ var indexTemplate *template.Template
 
 func initTemplate() error {
 
-	blocks := topRaw + bottomRaw + newThreadRaw
+	blocks := topRaw + bottomRaw + newThreadRaw + threadTemplateRaw
 
 	tmpl, err := template.New("board").Parse(blocks + boardRaw)
 	if err != nil { return err }
