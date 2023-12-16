@@ -51,7 +51,9 @@ type Post struct {
 type Reference struct {
 	gorm.Model
 	From		int
-	To		int
+	PostID		int
+	ThreadID	int
+	Thread		Thread
 }
 
 const (
@@ -88,7 +90,7 @@ func Init() error {
 	}
 	if err != nil { return err }
 
-	db.AutoMigrate(&Board{}, &Thread{}, &Post{})
+	db.AutoMigrate(&Board{}, &Thread{}, &Post{}, &Reference{})
 
 	for _, v := range config.Cfg.Boards {
 		if !v.Enabled { continue }

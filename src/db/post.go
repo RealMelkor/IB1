@@ -59,8 +59,12 @@ func (post Post) Thumbnail() string {
 	return post.Media[0:i] + ".png"
 }
 
-func (post Post) ReferredBy() string {
-	return ""
+func (post Post) ReferredBy() []Reference {
+	var refs []Reference
+	err := db.Where("thread_id = ? AND post_id = ?",
+			post.ThreadID, post.Number).Find(&refs).Error
+	if err != nil { return nil }
+	return refs
 }
 
 var newPostLock sync.Mutex
@@ -97,12 +101,17 @@ func CreatePost(thread Thread, content template.HTML, name string,
 	return number, err
 }
 
-func GetPost(thread Thread, number int) (Post, error) {
+func GetPost(threadID uint, number int) (Post, error) {
 	var post Post
 	err := db.First(
-		&post, "thread_id = ? AND number = ?", thread.ID, number).Error;
+		&post, "thread_id = ? AND number = ?", threadID, number).Error
 	if err != nil {
 		return Post{}, err
 	}
 	return post, nil
+}
+
+func CreateReference(thread uint, from int, to int) error {
+	ref := Reference{ThreadID: int(thread), PostID: to, From: from}
+	return db.Create(&ref).Error
 }

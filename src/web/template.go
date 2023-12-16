@@ -200,8 +200,21 @@ func renderThread(thread db.Thread) (string, error) {
 	return buf.String(), nil
 }
 
-func addLinks(content string) string {
+func removeDuplicateInt(intSlice []int) []int {
+	allKeys := make(map[int]bool)
+	list := []int{}
+	for _, item := range intSlice {
+		if _, value := allKeys[item]; !value {
+			allKeys[item] = true
+			list = append(list, item)
+		}
+	}
+	return list
+}
+
+func addLinks(content string, thread uint) (string, []int) {
 	const quote = "&gt;&gt;"
+	var refs []int
 	for i := strings.Index(content, quote); i >= 0 &&
 			i + len(quote) < len(content); {
 
@@ -214,18 +227,21 @@ func addLinks(content string) string {
 		for ; j < length; j++ {
 			if (content[j] < '0' || content[j] > '9') { break }
 		}
-		if (j >= length && content[j] != ' ' && content[j] != '\n' &&
+		if (j < length && content[j] != ' ' && content[j] != '\n' &&
 				content[j] == '\t') {
 			continue
 		}
 		number := content[i:j]
-		_, err := strconv.Atoi(number)
+		n, err := strconv.Atoi(number)
 		if err != nil { continue }
+		if _, err := db.GetPost(thread, n); err != nil { continue }
+		refs = append(refs, n)
 		str := "<a href=\"#" + number + "\">&gt;&gt;" + number + "</a>"
 		content = content[:i - len(quote)] + str + content[j:]
 		i += len(str) - len(quote)
 	}
-	return content
+
+	return content, removeDuplicateInt(refs)
 }
 
 func addGreentext(content string) string {
@@ -247,12 +263,12 @@ func addGreentext(content string) string {
 	return content
 }
 
-func parseContent(content string) template.HTML {
+func parseContent(content string, thread uint) (template.HTML, []int) {
 	content = template.HTMLEscapeString(content)
 	content = strings.Replace(content, "\n", "<br>", -1)
-	content = addLinks(content)
+	content, refs := addLinks(content, thread)
 	content = addGreentext(content)
-	return template.HTML(content)
+	return template.HTML(content), refs
 }
 
 var stylesheetCached []byte = nil

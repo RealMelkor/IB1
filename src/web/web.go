@@ -129,8 +129,8 @@ func newThread(c *gin.Context) {
 		return
 	}
 
-	number, err := db.CreateThread(board, title, name,
-				media, parseContent(content))
+	parsed, _ := parseContent(content, 0)
+	number, err := db.CreateThread(board, title, name, media, parsed)
 	if err != nil { 
 		internalError(c, err.Error())
 		return
@@ -188,10 +188,15 @@ func newPost(c *gin.Context) {
 		}
 	}
 
-	_, err = db.CreatePost(thread, parseContent(content), name, media, nil)
+	parsed, refs := parseContent(content, thread.ID)
+	number, err := db.CreatePost(thread, parsed, name, media, nil)
 	if err != nil {
 		internalError(c, err.Error())
 		return
+	}
+
+	for _, v := range refs {
+		db.CreateReference(thread.ID, number, v)
 	}
 
 	c.Redirect(http.StatusFound, c.Request.URL.Path)
