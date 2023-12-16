@@ -1,7 +1,7 @@
 {{define "thread-template"}}
 {{range .Posts}}
 <div>
-<div class="post {{if eq .Number $.Number}}post-first{{end}}" id="{{.Number}}">
+<div class="post" id="{{.Number}}">
 <p>
 {{if eq .Number $.Number}}
 	<span class="title">{{$.Title}}</span>
