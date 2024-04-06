@@ -11,12 +11,12 @@ import (
 	"IB1/config"
 )
 
-func html(c *gin.Context, code int, data string) {
+func html(c *gin.Context, code int, data []byte) {
 	c.Data(code, "text/html; charset=utf-8",
-		[]byte(header + data + footer))
+		append(header, append(data, footer...)...))
 }
 
-func htmlOK(c *gin.Context, data string) {
+func htmlOK(c *gin.Context, data []byte) {
 	html(c, http.StatusOK, data)
 }
 
@@ -219,7 +219,6 @@ func newPost(c *gin.Context) {
 
 func thread(c *gin.Context) {
 
-	var data string
 	var thread db.Thread
 	var board db.Board
 
@@ -241,7 +240,7 @@ func thread(c *gin.Context) {
 		internalError(c, err.Error())
 		return
 	}
-	data, err = renderThread(thread)
+	data, err := renderThread(thread)
 	if err != nil { 
 		internalError(c, err.Error())
 		return
@@ -267,7 +266,7 @@ func Init() error {
 		c.Data(http.StatusNotFound, "text/plain", []byte("Not Found"))
 	})
 	r.GET("/static/favicon.png", func(c *gin.Context) {
-		c.Data(http.StatusOK, "image/png", []byte(favicon))
+		c.Data(http.StatusOK, "image/png", favicon)
 	})
 	r.GET("/static/style.css", func(c *gin.Context) {
 		b, err := minifyStylesheet()

@@ -1,7 +1,7 @@
 package web
 
 import (
-	_ "embed"
+	"embed"
 	"html/template"
 	"github.com/tdewolff/minify/v2"
 	"github.com/tdewolff/minify/v2/css"
@@ -14,78 +14,31 @@ import (
 	"IB1/config"
 )
 
-//go:embed html/header.gohtml
-var headerRaw string
+//go:embed html/*.gohtml
+var templatesFS embed.FS
 
-//go:embed html/footer.gohtml
-var footerRaw string
-
-//go:embed html/index.gohtml
-var indexRaw string
-
-//go:embed html/board.gohtml
-var boardRaw string
-
-//go:embed html/catalog.gohtml
-var catalogRaw string
-
-//go:embed html/threadtemplate.gohtml
-var threadTemplateRaw string
-
-//go:embed html/thread.gohtml
-var threadRaw string
-
-//go:embed html/top.gohtml
-var topRaw string
-
-//go:embed html/bottom.gohtml
-var bottomRaw string
-
-//go:embed html/newthread.gohtml
-var newThreadRaw string
+//go:embed static/*
+var static embed.FS
 
 //go:embed static/favicon.png
-var favicon string
+var favicon []byte
 
-//go:embed static/style.css
-var stylesheet string
+var footer []byte
+var header []byte
 
-var header string
-var footer string
-var boardTemplate *template.Template
-var catalogTemplate *template.Template
-var threadTemplate *template.Template
-var indexTemplate *template.Template
+var templates *template.Template
 
 func initTemplate() error {
-
-	blocks := topRaw + bottomRaw + newThreadRaw + threadTemplateRaw
-
-	tmpl, err := template.New("board").Parse(blocks + boardRaw)
+	var err error
+	templates, err = template.New("gmi").
+				ParseFS(templatesFS, "html/*.gohtml")
 	if err != nil { return err }
-	boardTemplate = tmpl
-
-	tmpl, err = template.New("catalog").Parse(blocks + catalogRaw)
-	if err != nil { return err }
-	catalogTemplate = tmpl
-
-	tmpl, err = template.New("thread").Parse(blocks + threadRaw)
-	if err != nil { return err }
-	threadTemplate = tmpl
-
-	tmpl, err = template.New("index").Parse(indexRaw)
-	if err != nil { return err }
-	indexTemplate = tmpl
-
 	return refreshTemplate()
 }
 
 func refreshTemplate() error {
 
 	var buf bytes.Buffer
-
-	tmpl, err := template.New("header").Parse(headerRaw)
-	if err != nil { return err }
 
 	var boards []db.Board
 	for _, v := range db.Boards {
@@ -101,35 +54,29 @@ func refreshTemplate() error {
                 config.Cfg.Home.Language,
 		boards,
         }
-	err = tmpl.Execute(&buf, data)
-	if err != nil { return err }
 
-	header = buf.String()
+	err := templates.Lookup("header.gohtml").Execute(&buf, data)
+	if err != nil { return err }
 
 	m := minify.New()
 	m.AddFunc("text/html", mhtml.Minify)
-	res, err := m.String("text/html", header)
+	res, err := m.Bytes("text/html", buf.Bytes())
 	if err != nil { return err }
 	header = res
 
 	buf.Reset()
 
-	tmpl, err = template.New("footer").Parse(footerRaw)
+	err = templates.Lookup("footer.gohtml").Execute(&buf, data)
 	if err != nil { return err }
 
-	err = tmpl.Execute(&buf, nil)
-	if err != nil { return err }
-
-	footer = buf.String()
-
-	res, err = m.String("text/html", footer)
+	res, err = m.Bytes("text/html", buf.Bytes())
 	if err != nil { return err }
 	footer = res
 
 	return nil
 }
 
-func renderIndex() (string, error) {
+func renderIndex() ([]byte, error) {
 
 	var buf bytes.Buffer
 
@@ -142,13 +89,13 @@ func renderIndex() (string, error) {
 		Title: config.Cfg.Home.Title,
 		Description: config.Cfg.Home.Description,
 	}
-	err := indexTemplate.Execute(&buf, data)
-	if err != nil { return "", err }
-	
-	return buf.String(), nil
+	err := templates.Lookup("index.gohtml").Execute(&buf, data)
+	if err != nil { return nil, err }
+
+	return buf.Bytes(), nil
 }
 
-func renderBoard(board db.Board) (string, error) {
+func renderBoard(board db.Board) ([]byte, error) {
 
 	var buf bytes.Buffer
 
@@ -160,13 +107,13 @@ func renderBoard(board db.Board) (string, error) {
 		Captcha: config.Cfg.Captcha.Enabled,
 	}
 
-	err := boardTemplate.Execute(&buf, data)
-	if err != nil { return "", err }
+	err := templates.Lookup("board.gohtml").Execute(&buf, data)
+	if err != nil { return nil, err }
 	
-	return buf.String(), nil
+	return buf.Bytes(), nil
 }
 
-func renderCatalog(board db.Board) (string, error) {
+func renderCatalog(board db.Board) ([]byte, error) {
 
 	var buf bytes.Buffer
 
@@ -178,13 +125,13 @@ func renderCatalog(board db.Board) (string, error) {
 		Captcha: config.Cfg.Captcha.Enabled,
 	}
 
-	err := catalogTemplate.Execute(&buf, data)
-	if err != nil { return "", err }
+	err := templates.Lookup("catalog.gohtml").Execute(&buf, data)
+	if err != nil { return nil, err }
 	
-	return buf.String(), nil
+	return buf.Bytes(), nil
 }
 
-func renderThread(thread db.Thread) (string, error) {
+func renderThread(thread db.Thread) ([]byte, error) {
 
 	var buf bytes.Buffer
 
@@ -198,10 +145,10 @@ func renderThread(thread db.Thread) (string, error) {
 		Captcha: config.Cfg.Captcha.Enabled,
 	}
 
-	err := threadTemplate.Execute(&buf, data)
-	if err != nil { return "", err }
+	err := templates.Lookup("thread.gohtml").Execute(&buf, data)
+	if err != nil { return nil, err }
 	
-	return buf.String(), nil
+	return buf.Bytes(), nil
 }
 
 func removeDuplicateInt(intSlice []int) []int {
@@ -280,7 +227,9 @@ func minifyStylesheet() ([]byte, error) {
 	if stylesheetCached == nil {
 		m := minify.New()
 		m.AddFunc("text/css", css.Minify)
-		res, err := m.String("text/css", stylesheet)
+		data, err := static.ReadFile("static/style.css")
+		if err != nil { return nil, err }
+		res, err := m.String("text/css", string(data))
 		if err != nil { return nil, err }
 		stylesheetCached = []byte(res)
 	}
@@ -294,9 +243,9 @@ func minifyIndex() ([]byte, error) {
 		if err != nil { return nil, err }
 		m := minify.New()
 		m.AddFunc("text/html", mhtml.Minify)
-		res, err := m.String("text/html", tmp)
+		res, err := m.Bytes("text/html", tmp)
 		if err != nil { return nil, err }
-		indexCache = []byte(header + res + footer)
+		indexCache = append(header, append(res, footer...)...)
 	}
 	return indexCache, nil
 }
