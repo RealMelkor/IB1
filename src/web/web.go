@@ -21,28 +21,6 @@ func render(template string, data any, c *gin.Context) error {
 	return nil
 }
 
-func writeHeader(c *gin.Context, code int) {
-	c.Writer.WriteHeader(code)
-	c.Writer.Header().Add("Content-Type", "text/html; charset=utf-8")
-	c.Writer.Write(header)
-}
-
-func writeFooter(c *gin.Context) {
-	c.Writer.Write(footer)
-}
-
-func html(c *gin.Context, code int, data []byte) {
-	c.Writer.WriteHeader(code)
-	c.Writer.Header().Add("Content-Type", "text/html; charset=utf-8")
-	c.Writer.Write(header)
-	c.Writer.Write(data)
-	c.Writer.Write(footer)
-}
-
-func htmlOK(c *gin.Context, data []byte) {
-	html(c, http.StatusOK, data)
-}
-
 func internalError(c *gin.Context, data string) {
 	c.Data(http.StatusBadRequest, "text/plain", []byte(data))
 }
@@ -286,13 +264,7 @@ func Init() error {
 		c.Data(http.StatusOK, "image/png", favicon)
 	})
 	r.GET("/static/style.css", func(c *gin.Context) {
-		b, err := minifyStylesheet()
-		if err != nil {
-			c.Data(http.StatusInternalServerError, "text/plain",
-				[]byte(err.Error()))
-			return
-		}
-		c.Data(http.StatusOK, "text/css", b)
+		c.Data(http.StatusOK, "text/css", stylesheet)
 	})
 	if config.Cfg.Captcha.Enabled {
 		r.GET("/captcha", captchaImage)

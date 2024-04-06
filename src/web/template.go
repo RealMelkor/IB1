@@ -35,6 +35,7 @@ func initTemplate() error {
 	templates, err = template.New("gmi").
 				ParseFS(templatesFS, "html/*.gohtml")
 	if err != nil { return err }
+	if err := minifyStylesheet(); err != nil { return err }
 	return refreshTemplate()
 }
 
@@ -203,18 +204,16 @@ func parseContent(content string, thread uint) (template.HTML, []int) {
 	return template.HTML(content), refs
 }
 
-var stylesheetCached []byte = nil
-func minifyStylesheet() ([]byte, error) {
-	if stylesheetCached == nil {
-		m := minify.New()
-		m.AddFunc("text/css", css.Minify)
-		data, err := static.ReadFile("static/style.css")
-		if err != nil { return nil, err }
-		res, err := m.String("text/css", string(data))
-		if err != nil { return nil, err }
-		stylesheetCached = []byte(res)
-	}
-	return stylesheetCached, nil
+var stylesheet []byte = nil
+func minifyStylesheet() error {
+	m := minify.New()
+	m.AddFunc("text/css", css.Minify)
+	data, err := static.ReadFile("static/style.css")
+	if err != nil { return err }
+	res, err := m.Bytes("text/css", data)
+	if err != nil { return err }
+	stylesheet = res
+	return nil
 }
 
 var indexCache[]byte = nil
