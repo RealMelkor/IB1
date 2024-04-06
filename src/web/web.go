@@ -11,9 +11,32 @@ import (
 	"IB1/config"
 )
 
+func render(template string, data any, c *gin.Context) error {
+	c.Writer.WriteHeader(http.StatusOK)
+	c.Writer.Header().Add("Content-Type", "text/html; charset=utf-8")
+	c.Writer.Write(header)
+	err := templates.Lookup(template).Execute(c.Writer, data)
+	if err != nil { return err }
+	c.Writer.Write(footer)
+	return nil
+}
+
+func writeHeader(c *gin.Context, code int) {
+	c.Writer.WriteHeader(code)
+	c.Writer.Header().Add("Content-Type", "text/html; charset=utf-8")
+	c.Writer.Write(header)
+}
+
+func writeFooter(c *gin.Context) {
+	c.Writer.Write(footer)
+}
+
 func html(c *gin.Context, code int, data []byte) {
-	c.Data(code, "text/html; charset=utf-8",
-		append(header, append(data, footer...)...))
+	c.Writer.WriteHeader(code)
+	c.Writer.Header().Add("Content-Type", "text/html; charset=utf-8")
+	c.Writer.Write(header)
+	c.Writer.Write(data)
+	c.Writer.Write(footer)
 }
 
 func htmlOK(c *gin.Context, data []byte) {
@@ -64,13 +87,11 @@ func boardIndex(c *gin.Context) {
 				board.Threads[i].Posts[length - 4:]...)
 		}
 	}
-	res, err := renderBoard(board)
-	if err != nil { 
+	captchaNew(c)
+	if err := renderBoard(board, c); err != nil {
 		internalError(c, err.Error())
 		return
 	}
-	captchaNew(c)
-	htmlOK(c, res)
 }
 
 func catalog(c *gin.Context) {
@@ -95,13 +116,11 @@ func catalog(c *gin.Context) {
 		}
 		board.Threads[i] = v
 	}
-	catalog, err := renderCatalog(board)
-	if err != nil { 
+	captchaNew(c)
+	if err := renderCatalog(board, c); err != nil {
 		internalError(c, err.Error())
 		return
 	}
-	captchaNew(c)
-	htmlOK(c, catalog)
 }
 
 func newThread(c *gin.Context) {
@@ -240,13 +259,11 @@ func thread(c *gin.Context) {
 		internalError(c, err.Error())
 		return
 	}
-	data, err := renderThread(thread)
-	if err != nil { 
+	captchaNew(c)
+	if err := renderThread(thread, c); err != nil {
 		internalError(c, err.Error())
 		return
 	}
-	captchaNew(c)
-	htmlOK(c, data)
 }
 
 func Init() error {

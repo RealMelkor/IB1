@@ -3,12 +3,14 @@ package web
 import (
 	"embed"
 	"html/template"
-	"github.com/tdewolff/minify/v2"
-	"github.com/tdewolff/minify/v2/css"
-	mhtml "github.com/tdewolff/minify/v2/html"
 	"bytes"
 	"strings"
 	"strconv"
+
+	"github.com/tdewolff/minify/v2"
+	"github.com/tdewolff/minify/v2/css"
+	"github.com/gin-gonic/gin"
+	mhtml "github.com/tdewolff/minify/v2/html"
 
 	"IB1/db"
 	"IB1/config"
@@ -95,10 +97,7 @@ func renderIndex() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func renderBoard(board db.Board) ([]byte, error) {
-
-	var buf bytes.Buffer
-
+func renderBoard(board db.Board, c *gin.Context) error {
 	data := struct {
 		Board	db.Board
 		Captcha	bool
@@ -106,17 +105,10 @@ func renderBoard(board db.Board) ([]byte, error) {
 		Board: board,
 		Captcha: config.Cfg.Captcha.Enabled,
 	}
-
-	err := templates.Lookup("board.gohtml").Execute(&buf, data)
-	if err != nil { return nil, err }
-	
-	return buf.Bytes(), nil
+	return render("board.gohtml", data, c)
 }
 
-func renderCatalog(board db.Board) ([]byte, error) {
-
-	var buf bytes.Buffer
-
+func renderCatalog(board db.Board, c *gin.Context) error {
 	data := struct {
 		Board	db.Board
 		Captcha	bool
@@ -124,17 +116,10 @@ func renderCatalog(board db.Board) ([]byte, error) {
 		Board: board,
 		Captcha: config.Cfg.Captcha.Enabled,
 	}
-
-	err := templates.Lookup("catalog.gohtml").Execute(&buf, data)
-	if err != nil { return nil, err }
-	
-	return buf.Bytes(), nil
+	return render("catalog.gohtml", data, c)
 }
 
-func renderThread(thread db.Thread) ([]byte, error) {
-
-	var buf bytes.Buffer
-
+func renderThread(thread db.Thread, c *gin.Context) error {
 	data := struct {
 		Board	db.Board
 		Thread	db.Thread
@@ -144,11 +129,7 @@ func renderThread(thread db.Thread) ([]byte, error) {
 		Thread: thread,
 		Captcha: config.Cfg.Captcha.Enabled,
 	}
-
-	err := templates.Lookup("thread.gohtml").Execute(&buf, data)
-	if err != nil { return nil, err }
-	
-	return buf.Bytes(), nil
+	return render("thread.gohtml", data, c)
 }
 
 func removeDuplicateInt(intSlice []int) []int {
@@ -178,8 +159,8 @@ func addLinks(content string, thread uint) (string, []int) {
 		for ; j < length; j++ {
 			if (content[j] < '0' || content[j] > '9') { break }
 		}
-		if (j < length && content[j] != ' ' && content[j] != '\n' &&
-				content[j] == '\t') {
+		if j < length && content[j] != ' ' && content[j] != '\n' &&
+				content[j] == '\t' {
 			continue
 		}
 		number := content[i:j]
