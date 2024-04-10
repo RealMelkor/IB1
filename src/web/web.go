@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"log"
 	"os"
+	"errors"
 	
 	"IB1/db"
 	"IB1/config"
@@ -101,6 +102,33 @@ func catalog(c *gin.Context) {
 	}
 }
 
+func checkCaptcha(c *gin.Context) bool {
+	if config.Cfg.Captcha.Enabled {
+		captcha, hasCaptcha := c.GetPostForm("captcha")
+		if !hasCaptcha {
+			badRequestExplicit(c, "invalid form")
+			return false
+		}
+		if !captchaVerify(c, captcha) {
+			badRequestExplicit(c, "wrong captcha")
+			return false
+		}
+	}
+	return true
+}
+
+func verifyCaptcha(c *gin.Context) error {
+	if !config.Cfg.Captcha.Enabled { return nil }
+	captcha, hasCaptcha := c.GetPostForm("captcha")
+	if !hasCaptcha {
+		return errors.New("invalid form")
+	}
+	if !captchaVerify(c, captcha) {
+		return errors.New("wrong captcha")
+	}
+	return nil
+}
+
 func newThread(c *gin.Context) {
 
 	boardName := c.Param("board")
@@ -118,17 +146,7 @@ func newThread(c *gin.Context) {
 		return 
 	}
 
-	if config.Cfg.Captcha.Enabled {
-		captcha, hasCaptcha := c.GetPostForm("captcha")
-		if !hasCaptcha {
-			badRequestExplicit(c, "invalid form")
-			return
-		}
-		if !captchaVerify(c, captcha) {
-			badRequestExplicit(c, "wrong captcha")
-			return
-		}
-	}
+	if !checkCaptcha(c) { return }
 
 	media := ""
 	file, err := c.FormFile("media")
@@ -179,17 +197,8 @@ func newPost(c *gin.Context) {
 		badRequest(c, "invalid form")
 		return
 	}
-	if config.Cfg.Captcha.Enabled {
-		captcha, hasCaptcha := c.GetPostForm("captcha")
-		if !hasCaptcha {
-			badRequestExplicit(c, "invalid form")
-			return
-		}
-		if !captchaVerify(c, captcha) {
-			badRequestExplicit(c, "wrong captcha")
-			return
-		}
-	}
+
+	if !checkCaptcha(c) { return }
 
 	media := ""
 	file, err := c.FormFile("media")
@@ -244,6 +253,33 @@ func thread(c *gin.Context) {
 	}
 }
 
+func login(c *gin.Context) {
+	captchaNew(c)
+	if err := renderLogin(c, ""); err != nil {
+		internalError(c, err.Error())
+		return
+	}
+}
+
+func loginAs(c *gin.Context) {
+	name := c.PostForm("username")
+	password := c.PostForm("password")
+	err := verifyCaptcha(c)
+	var token string
+	if err == nil { token, err = db.Login(name, password) }
+	if err != nil {
+		captchaNew(c)
+		if err := renderLogin(c, err.Error()); err != nil {
+			internalError(c, err.Error())
+			return
+		}
+		return
+	}
+	c.SetCookie("session_token", token, 0, "/", config.Cfg.Web.Domain,
+			false, true)
+	c.Redirect(http.StatusFound, "/")
+}
+
 func Init() error {
 
 	if err := os.MkdirAll(config.Cfg.Media.Directory, 0700); err != nil {
@@ -274,6 +310,8 @@ func Init() error {
 	r.POST("/:board", newThread)
 	r.GET("/:board/:thread", thread)
 	r.POST("/:board/:thread", newPost)
+	r.GET("/login", login)
+	r.POST("/login", loginAs)
 	r.Static("/media", mediaDir)
 	r.Static("/thumbnail", thumbnailDir)
 

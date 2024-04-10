@@ -11,7 +11,7 @@ type Config struct {
 		Language	string	`validate:"required"`
 	}
 	Web struct {
-		Domain		string	`validate:"required"`
+		Domain		string	`default:"localhost"`
 		Listener	string	`validate:"required"`
 	}
 	Media struct {
@@ -25,6 +25,9 @@ type Config struct {
 	Captcha struct {
 		Enabled		bool
 		Length		int `validate:"required"`
+	}
+	Post struct {
+		DefaultName	string `default:"Anonymous"`
 	}
 	Board struct {
 		MaxThreads	int `validate:"required"`

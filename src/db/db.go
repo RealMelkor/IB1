@@ -9,8 +9,6 @@ import (
 	"IB1/config"
 )
 
-const DefaultName = "Anonymous"
-
 type Board struct {
 	gorm.Model
 	Name		string `gorm:"unique"`
@@ -55,6 +53,19 @@ type Reference struct {
 	Thread		Thread
 }
 
+type Account struct {
+	gorm.Model
+	Name		string `gorm:"unique"`
+	Password	string
+	Rank		int
+}
+
+type Session struct {
+	AccountID	uint
+	Account		Account
+	Token		string `gorm:"unique"`
+}
+
 const (
 	TYPE_SQLITE = iota
 	TYPE_MYSQL
@@ -89,7 +100,8 @@ func Init() error {
 	}
 	if err != nil { return err }
 
-	db.AutoMigrate(&Board{}, &Thread{}, &Post{}, &Reference{})
+	db.AutoMigrate(&Board{}, &Thread{}, &Post{},
+			&Reference{}, &Account{}, &Session{})
 
 	for _, v := range config.Cfg.Boards {
 		if !v.Enabled { continue }

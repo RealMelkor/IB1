@@ -133,6 +133,17 @@ func renderThread(thread db.Thread, c *gin.Context) error {
 	return render("thread.gohtml", data, c)
 }
 
+func renderLogin(c *gin.Context, err string) error {
+	data := struct {
+		LoginError	string
+		Captcha		bool
+	}{
+		LoginError: err,
+		Captcha: config.Cfg.Captcha.Enabled,
+	}
+	return render("login.gohtml", data, c)
+}
+
 func removeDuplicateInt(intSlice []int) []int {
 	allKeys := make(map[int]bool)
 	list := []int{}

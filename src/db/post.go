@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"time"
 	"sync"
+
+	"IB1/config"
 )
 
 func (post Post) FormatTimestamp() string {
@@ -71,7 +73,7 @@ var newPostLock sync.Mutex
 func CreatePost(thread Thread, content template.HTML, name string,
 		media string, custom *gorm.DB) (int, error) {
 	if custom == nil { custom = db }
-	if name == "" { name = DefaultName }
+	if name == "" { name = config.Cfg.Post.DefaultName }
 	if dbType == TYPE_SQLITE {
 		newPostLock.Lock()
 	}
