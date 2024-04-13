@@ -43,6 +43,7 @@ type Post struct {
 	Board		Board
 	Number		int
 	Timestamp	int64
+	IP		string
 }
 
 type Reference struct {

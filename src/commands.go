@@ -29,7 +29,8 @@ func parseArguments() error {
 		if err != nil { return err }
 		password, err := askPassword()
 		if err != nil { return err }
-		db.CreateAccount(os.Args[2], password, rank)
+		err = db.CreateAccount(os.Args[2], password, rank)
+		if err != nil { return err }
 	default:
 		return errors.New("unknown command: " + os.Args[1])
 	}

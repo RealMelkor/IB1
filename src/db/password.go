@@ -60,7 +60,7 @@ const maxPassword = 128
 const minEntropyBits = 40
 
 func isPasswordValid(password string) error {
-	if len(password) < 6 {
+	if len(password) < 5 {
 		return errors.New("the password is too short")
 	}
 	return nil

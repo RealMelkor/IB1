@@ -16,7 +16,13 @@ func render(template string, data any, c *gin.Context) error {
 	c.Writer.WriteHeader(http.StatusOK)
 	c.Writer.Header().Add("Content-Type", "text/html; charset=utf-8")
 	c.Writer.Write(header)
-	err := templates.Lookup(template).Execute(c.Writer, data)
+	token, err := c.Cookie("session_token")
+	if err == nil && token != "" {
+		// TODO: execute template instead
+		c.Writer.Write([]byte(
+			"<p style=\"float: right;\">" + token[:10] + "</p>"))
+	}
+	err = templates.Lookup(template).Execute(c.Writer, data)
 	if err != nil { return err }
 	c.Writer.Write(footer)
 	return nil
@@ -266,7 +272,10 @@ func loginAs(c *gin.Context) {
 	password := c.PostForm("password")
 	err := verifyCaptcha(c)
 	var token string
-	if err == nil { token, err = db.Login(name, password) }
+	if err == nil {
+		token, err = db.Login(name, password)
+		if err != nil { err = errors.New("invalid credentials") }
+	}
 	if err != nil {
 		captchaNew(c)
 		if err := renderLogin(c, err.Error()); err != nil {
