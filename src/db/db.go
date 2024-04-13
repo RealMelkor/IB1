@@ -148,11 +148,7 @@ func GetThread(board Board, number int) (Thread, error) {
 }
 
 func RefreshThread(thread *Thread) error {
-	if err := db.Model(*thread).Preload("Posts").Find(thread).Error;
-			err != nil {
-		return err
-	}
-	return nil
+	return db.Model(*thread).Preload("Posts").Find(thread).Error;
 }
 
 func CreateBoard(name string, longName string, description string) error {

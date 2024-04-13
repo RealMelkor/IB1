@@ -3,14 +3,12 @@ package web
 import (
 	"embed"
 	"html/template"
-	"bytes"
 	"strings"
 	"strconv"
 
 	"github.com/tdewolff/minify/v2"
 	"github.com/tdewolff/minify/v2/css"
 	"github.com/gin-gonic/gin"
-	mhtml "github.com/tdewolff/minify/v2/html"
 
 	"IB1/db"
 	"IB1/config"
@@ -25,9 +23,6 @@ var static embed.FS
 //go:embed static/favicon.png
 var favicon []byte
 
-var footer []byte
-var header []byte
-
 var templates *template.Template
 
 func initTemplate() error {
@@ -36,75 +31,59 @@ func initTemplate() error {
 				ParseFS(templatesFS, "html/*.gohtml")
 	if err != nil { return err }
 	if err := minifyStylesheet(); err != nil { return err }
-	return refreshTemplate()
+	return nil
 }
 
-func refreshTemplate() error {
-
-	var buf bytes.Buffer
-
+func header(c *gin.Context) any {
 	var boards []db.Board
 	for _, v := range db.Boards {
 		boards = append([]db.Board{v}, boards...)
 	}
-
+	username := ""
+	token, _ := c.Cookie("session_token")
+	if token != "" {
+		account, err := db.GetAccountFromToken(token)
+		if err == nil { username = account.Name }
+	}
 	data := struct {
 		Title	string
 		Lang	string
+		Account	string
 		Boards	[]db.Board
-        }{
-                config.Cfg.Home.Title,
-                config.Cfg.Home.Language,
+	}{
+		config.Cfg.Home.Title,
+		config.Cfg.Home.Language,
+		username,
 		boards,
-        }
-
-	err := templates.Lookup("header.gohtml").Execute(&buf, data)
-	if err != nil { return err }
-
-	m := minify.New()
-	m.AddFunc("text/html", mhtml.Minify)
-	res, err := m.Bytes("text/html", buf.Bytes())
-	if err != nil { return err }
-	header = res
-
-	buf.Reset()
-
-	err = templates.Lookup("footer.gohtml").Execute(&buf, data)
-	if err != nil { return err }
-
-	res, err = m.Bytes("text/html", buf.Bytes())
-	if err != nil { return err }
-	footer = res
-
-	return nil
+	}
+	return data
 }
 
-func renderIndex() ([]byte, error) {
-
-	var buf bytes.Buffer
-
+func renderIndex(c *gin.Context) error {
 	data := struct {
 		Boards		map[string]db.Board
 		Title		string
 		Description	string
+		Header		any
 	}{
 		Boards: db.Boards,
 		Title: config.Cfg.Home.Title,
 		Description: config.Cfg.Home.Description,
+		Header: header(c),
 	}
-	err := templates.Lookup("index.gohtml").Execute(&buf, data)
-	if err != nil { return nil, err }
+	return render("index.gohtml", data, c)
 
-	return buf.Bytes(), nil
 }
 
 func renderBoard(board db.Board, c *gin.Context) error {
 	data := struct {
 		Board	db.Board
 		Captcha	bool
+		Header	any
 	}{
 		Board: board,
 		Captcha: config.Cfg.Captcha.Enabled,
+		Header: header(c),
 	}
 	return render("board.gohtml", data, c)
 }
@@ -113,9 +92,11 @@ func renderCatalog(board db.Board, c *gin.Context) error {
 	data := struct {
 		Board	db.Board
 		Captcha	bool
+		Header	any
 	}{
 		Board: board,
 		Captcha: config.Cfg.Captcha.Enabled,
+		Header: header(c),
 	}
 	return render("catalog.gohtml", data, c)
 }
@@ -125,10 +106,12 @@ func renderThread(thread db.Thread, c *gin.Context) error {
 		Board	db.Board
 		Thread	db.Thread
 		Captcha	bool
+		Header	any
 	}{
 		Board: thread.Board,
 		Thread: thread,
 		Captcha: config.Cfg.Captcha.Enabled,
+		Header: header(c),
 	}
 	return render("thread.gohtml", data, c)
 }
@@ -137,9 +120,11 @@ func renderLogin(c *gin.Context, err string) error {
 	data := struct {
 		LoginError	string
 		Captcha		bool
+		Header	any
 	}{
 		LoginError: err,
 		Captcha: config.Cfg.Captcha.Enabled,
+		Header: header(c),
 	}
 	return render("login.gohtml", data, c)
 }
@@ -225,18 +210,4 @@ func minifyStylesheet() error {
 	if err != nil { return err }
 	stylesheet = res
 	return nil
-}
-
-var indexCache[]byte = nil
-func minifyIndex() ([]byte, error) {
-	if indexCache == nil {
-		tmp, err := renderIndex()
-		if err != nil { return nil, err }
-		m := minify.New()
-		m.AddFunc("text/html", mhtml.Minify)
-		res, err := m.Bytes("text/html", tmp)
-		if err != nil { return nil, err }
-		indexCache = append(header, append(res, footer...)...)
-	}
-	return indexCache, nil
 }

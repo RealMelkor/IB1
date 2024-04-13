@@ -1,3 +1,4 @@
+{{ template "header" .Header }}
 <h2 class="board-title">/{{.Board.Name}}/ - {{.Board.LongName}}</h2>
 {{ template "top" .Board.Name }}
 <div class="form-container">
@@ -22,3 +23,4 @@
 </div>
 {{ template "thread-template" .Thread }}
 {{ template "bottom" .Board.Name }}
+{{ template "footer" . }}

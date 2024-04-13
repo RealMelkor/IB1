@@ -15,16 +15,8 @@ import (
 func render(template string, data any, c *gin.Context) error {
 	c.Writer.WriteHeader(http.StatusOK)
 	c.Writer.Header().Add("Content-Type", "text/html; charset=utf-8")
-	c.Writer.Write(header)
-	token, err := c.Cookie("session_token")
-	if err == nil && token != "" {
-		// TODO: execute template instead
-		c.Writer.Write([]byte(
-			"<p style=\"float: right;\">" + token[:10] + "</p>"))
-	}
-	err = templates.Lookup(template).Execute(c.Writer, data)
+	err := templates.Lookup(template).Execute(c.Writer, data)
 	if err != nil { return err }
-	c.Writer.Write(footer)
 	return nil
 }
 
@@ -42,12 +34,10 @@ func badRequestExplicit(c *gin.Context, data string) {
 }
 
 func index(c *gin.Context) {
-	res, err := minifyIndex()
-	if err != nil {
+	if err := renderIndex(c); err != nil {
 		internalError(c, err.Error())
 		return
 	}
-	c.Data(http.StatusOK, "text/html", res)
 }
 
 func boardIndex(c *gin.Context) {
@@ -289,6 +279,16 @@ func loginAs(c *gin.Context) {
 	c.Redirect(http.StatusFound, "/")
 }
 
+func disconnect(c *gin.Context) {
+	token, err := c.Cookie("session_token")
+	if err == nil || token != "" {
+		db.Disconnect(token)
+		c.SetCookie("session_token", "", 0, "/",
+			config.Cfg.Web.Domain, false, true)
+	}
+	c.Redirect(http.StatusFound, "/")
+}
+
 func Init() error {
 
 	if err := os.MkdirAll(config.Cfg.Media.Directory, 0700); err != nil {
@@ -319,6 +319,7 @@ func Init() error {
 	r.POST("/:board", newThread)
 	r.GET("/:board/:thread", thread)
 	r.POST("/:board/:thread", newPost)
+	r.GET("/disconnect", disconnect)
 	r.GET("/login", login)
 	r.POST("/login", loginAs)
 	r.Static("/media", mediaDir)

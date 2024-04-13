@@ -1,3 +1,4 @@
+{{ template "header" .Header }}
 <h2 class="board-title">Login</h2>
 <div class="new-thread">
 	<form action="/login" method="POST">
@@ -25,3 +26,4 @@
 		<input class="btn" type="submit" value="Login">
 	</form>
 </div>
+{{ template "footer" . }}

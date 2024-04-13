@@ -33,6 +33,24 @@ func createSession(account Account) (string, error) {
 	return token, err
 }
 
+var sessions = map[string]Account{}
+
+func GetAccountFromToken(token string) (Account, error) {
+	account, ok := sessions[token]
+	if ok { return account, nil }
+	var session Session
+	err := db.Model(session).Preload("Account").
+		First(&session, "token = ?", token).Error
+	if err == nil { sessions[token] = session.Account }
+	return session.Account, err
+}
+
+func Disconnect(token string) error {
+	err := db.Where("token = ?", token).Delete(&Session{}).Error
+	if err == nil { delete(sessions, token) }
+	return err
+}
+
 func CreateAccount(name string, password string, rank int) error {
 	hash, err := hashPassword(password)
 	if err != nil { return err }

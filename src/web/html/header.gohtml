@@ -1,3 +1,4 @@
+{{define "header"}}
 <!DOCTYPE html>
 <html lang="{{.Lang}}">
   <head>
@@ -19,7 +20,12 @@
 			{{end}}
 			]
 			<div style="float: right;">
+			{{if .Account}}
+			<span>Logged in as {{.Account}}</span>
+			[<a href="/disconnect">Disconnect</a>]
+			{{end}}
 			[<a href="/">Home</a>]
 			</div>
     </div>
 		<div id="main">
+{{end}}
