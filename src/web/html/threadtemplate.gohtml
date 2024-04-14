@@ -1,8 +1,8 @@
 {{define "thread-template"}}
 {{range .Thread.Posts}}
-{{if not .Disabled}}
+{{if (or (not .Disabled) $.Account.Logged)}}
 <div>
-<div class="post" id="{{.Number}}">
+<div class="post{{if .Disabled}} post-hidden{{end}}" id="{{.Number}}">
 <p>
 {{if eq .Number $.Thread.Number}}
 	<span class="title">{{$.Thread.Title}}</span>
@@ -12,9 +12,9 @@
 	<a class="post-link" href="#{{.Number}}">No.{{.Number}}</a>
 	{{if $.Account.Logged}}
 	[<span class="ip">IP: {{.IP}}</span>]
-	[<a class="action" href="hide/{{.Number}}">Hide</a>]
-	[<a class="action" href="remove/{{.Number}}">Remove</a>]
-	[<a class="action" href="ban/{{.IP}}">Ban</a>]
+	[<a class="action" href="/{{$.Thread.Board.Name}}/hide/{{.Number}}">{{if .Disabled}}Unhide{{else}}Hide{{end}}</a>]
+	[<a class="action" href="/{{$.Thread.Board.Name}}/remove/{{.Number}}">Remove</a>]
+	[<a class="action" href="/{{$.Thread.Board.Name}}/ban/{{.IP}}">Ban</a>]
 	{{end}}
 	{{range .ReferredBy}}
 	<a class="post-ref" href="#{{.From}}">&gt;&gt;{{.From}}</a>

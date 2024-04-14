@@ -115,12 +115,29 @@ func GetPost(threadID uint, number int) (Post, error) {
 	return post, nil
 }
 
+func GetPostFromBoard(board string, number int) (Post, error) {
+	b, ok := Boards[board]
+	if !ok { return Post{}, errors.New("board not found") }
+	var post Post
+	err := db.Model(post).Preload("Thread").First(
+		&post, "board_id = ? AND number = ?", b.ID, number).Error
+	return post, err
+}
+
 func CreateReference(thread uint, from int, to int) error {
 	ref := Reference{ThreadID: int(thread), PostID: to, From: from}
 	return db.Create(&ref).Error
 }
 
-func Hide(board string, id int) error {
+func Hide(board string, id int, reverse bool) error {
+	b, ok := Boards[board]
+	if !ok { return errors.New("board not found") }
+	return db.Model(&Post{}).
+		Where("board_id = ? AND number = ?", b.ID, id).
+		Update("Disabled", !reverse).Error
+}
+
+func Remove(board string, id int) error {
 	b, ok := Boards[board]
 	if !ok { return errors.New("board not found") }
 	return db.Where("board_id = ? AND number = ?", b.ID, id).

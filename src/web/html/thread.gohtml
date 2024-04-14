@@ -8,7 +8,7 @@
 <form method="post" enctype="multipart/form-data" id="new-reply">
 	<label for="name">Name:</label><br>
 	<input type="text" id="name" name="name"><br>
-{{if .Captcha}}
+{{if and .Captcha (not .Header.Account.Logged)}}
 	<label for="captcha">Captcha:</label><br>
 	<img loading="lazy" src="/captcha" alt="captcha"><br>
 	<input type="text" id="captcha" name="captcha" required="required"><br>

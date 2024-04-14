@@ -100,6 +100,8 @@ func catalog(c *gin.Context) {
 
 func checkCaptcha(c *gin.Context) bool {
 	if config.Cfg.Captcha.Enabled {
+		_, err := loggedAs(c)
+		if err == nil { return true }
 		captcha, hasCaptcha := c.GetPostForm("captcha")
 		if !hasCaptcha {
 			badRequestExplicit(c, "invalid form")
@@ -252,6 +254,11 @@ func thread(c *gin.Context) {
 }
 
 func login(c *gin.Context) {
+	_, err := loggedAs(c)
+	if err == nil {
+		c.Redirect(http.StatusFound, "/")
+		return
+	}
 	captchaNew(c)
 	if err := renderLogin(c, ""); err != nil {
 		internalError(c, err.Error())
@@ -260,9 +267,14 @@ func login(c *gin.Context) {
 }
 
 func loginAs(c *gin.Context) {
+	_, err := loggedAs(c)
+	if err == nil {
+		c.Redirect(http.StatusFound, "/")
+		return
+	}
 	name := c.PostForm("username")
 	password := c.PostForm("password")
-	err := verifyCaptcha(c)
+	err = verifyCaptcha(c)
 	var token string
 	if err == nil {
 		token, err = db.Login(name, password)
@@ -281,6 +293,14 @@ func loginAs(c *gin.Context) {
 	c.Redirect(http.StatusFound, "/")
 }
 
+func loggedAs(c *gin.Context) (db.Account, error) {
+	token, _ := c.Cookie("session_token")
+	if token == "" {
+		return db.Account{}, errors.New("not logged in")
+	}
+	return db.GetAccountFromToken(token)
+}
+
 func disconnect(c *gin.Context) {
 	token, err := c.Cookie("session_token")
 	if err == nil || token != "" {
@@ -291,18 +311,49 @@ func disconnect(c *gin.Context) {
 	c.Redirect(http.StatusFound, "/")
 }
 
+func remove(c *gin.Context) {
+	var err error
+	for {
+		var id int
+		var post db.Post
+		board := c.Param("board")
+		id, err = strconv.Atoi(c.Param("id"))
+		if err != nil { break }
+
+		post, err = db.GetPostFromBoard(board, id)
+		if err != nil { break }
+		err = db.Remove(board, id)
+		if err != nil { break }
+		err = os.Remove(config.Cfg.Media.Directory + "/" + post.Media)
+		if err != nil { break }
+		err = os.Remove(config.Cfg.Media.Thumbnail + "/" +
+					post.Thumbnail())
+		if err != nil { break }
+
+		c.Redirect(http.StatusFound, "/" + board + "/" +
+				strconv.Itoa(post.Thread.Number))
+		return
+	}
+	badRequest(c, err.Error())
+}
+
 func hide(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		badRequest(c, err.Error())
+	var err error
+	for {
+		var id int
+		var post db.Post
+		id, err = strconv.Atoi(c.Param("id"))
+		if err != nil { break }
+		board := c.Param("board")
+		post, err = db.GetPostFromBoard(board, id)
+		if err != nil { break }
+		err = db.Hide(board, id, post.Disabled)
+		if err != nil { break }
+		c.Redirect(http.StatusFound, "/" + board + "/" +
+				strconv.Itoa(post.Thread.Number))
 		return
 	}
-	board := c.Param("board")
-	if err := db.Hide(board, id); err != nil {
-		badRequest(c, err.Error())
-		return
-	}
-	c.Redirect(http.StatusFound, "/" + board)
+	badRequest(c, err.Error())
 }
 
 func Init() error {
@@ -337,10 +388,10 @@ func Init() error {
 	r.POST("/:board/:thread", newPost)
 	r.GET("/disconnect", disconnect)
 	r.GET("/login", login)
-	r.GET("/:board/remove/:id", login)
+	r.POST("/login", loginAs)
+	r.GET("/:board/remove/:id", remove)
 	r.GET("/:board/hide/:id", hide)
 	r.GET("/:board/ban/:ip", login)
-	r.POST("/login", loginAs)
 	r.Static("/media", mediaDir)
 	r.Static("/thumbnail", thumbnailDir)
 

@@ -23,6 +23,8 @@
 			{{if .Logged}}
 			<span>Logged in as {{.Account.Name}}</span>
 			[<a href="/disconnect">Disconnect</a>]
+			{{else}}
+			[<a href="/login">Login</a>]
 			{{end}}
 			[<a href="/">Home</a>]
 			</div>
