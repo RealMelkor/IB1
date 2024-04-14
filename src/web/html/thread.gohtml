@@ -21,6 +21,6 @@
 </form> 
 </div>
 </div>
-{{ template "thread-template" .Thread }}
+{{ template "thread-template" (thread .Thread .Header.Account) }}
 {{ template "bottom" .Board.Name }}
 {{ template "footer" . }}

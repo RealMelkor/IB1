@@ -1,14 +1,21 @@
 {{define "thread-template"}}
-{{range .Posts}}
+{{range .Thread.Posts}}
+{{if not .Disabled}}
 <div>
 <div class="post" id="{{.Number}}">
 <p>
-{{if eq .Number $.Number}}
-	<span class="title">{{$.Title}}</span>
+{{if eq .Number $.Thread.Number}}
+	<span class="title">{{$.Thread.Title}}</span>
 {{end}}
 	<span class="name">{{.Name}}</span>
 	<abbr title="{{.FormatAge}}">{{.FormatTimestamp}}</abbr>
 	<a class="post-link" href="#{{.Number}}">No.{{.Number}}</a>
+	{{if $.Account.Logged}}
+	[<span class="ip">IP: {{.IP}}</span>]
+	[<a class="action" href="hide/{{.Number}}">Hide</a>]
+	[<a class="action" href="remove/{{.Number}}">Remove</a>]
+	[<a class="action" href="ban/{{.IP}}">Ban</a>]
+	{{end}}
 	{{range .ReferredBy}}
 	<a class="post-ref" href="#{{.From}}">&gt;&gt;{{.From}}</a>
 	{{end}}
@@ -25,5 +32,6 @@
 <p class="content">{{.Content}}</p>
 </div>
 </div>
+{{end}}
 {{end}}
 {{end}}

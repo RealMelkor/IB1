@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 		<meta name="description" content="{{.Title}}">
 		<title>{{.Title}}</title>
-    <link rel="stylesheet" type="text/css" href="/static/style.css">
+		<link rel="stylesheet" type="text/css" href="/static/style.css">
 		<link rel="icon" type="image/png" href="/static/favicon.png">
   </head>
   <body>
@@ -20,8 +20,8 @@
 			{{end}}
 			]
 			<div style="float: right;">
-			{{if .Account}}
-			<span>Logged in as {{.Account}}</span>
+			{{if .Logged}}
+			<span>Logged in as {{.Account.Name}}</span>
 			[<a href="/disconnect">Disconnect</a>]
 			{{end}}
 			[<a href="/">Home</a>]

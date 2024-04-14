@@ -27,7 +27,18 @@ var templates *template.Template
 
 func initTemplate() error {
 	var err error
-	templates, err = template.New("gmi").
+	funcs := template.FuncMap{
+		"thread": func(thread db.Thread, account db.Account) any {
+			data := struct {
+				Account db.Account
+				Thread db.Thread
+			}{
+				Account: account, Thread: thread,
+			}
+			return data
+		},
+	}
+	templates, err = template.New("gmi").Funcs(funcs).
 				ParseFS(templatesFS, "html/*.gohtml")
 	if err != nil { return err }
 	if err := minifyStylesheet(); err != nil { return err }
@@ -39,21 +50,26 @@ func header(c *gin.Context) any {
 	for _, v := range db.Boards {
 		boards = append([]db.Board{v}, boards...)
 	}
-	username := ""
+	var account db.Account
+	account.Logged = false
+	logged := false
 	token, _ := c.Cookie("session_token")
 	if token != "" {
-		account, err := db.GetAccountFromToken(token)
-		if err == nil { username = account.Name }
+		var err error
+		account, err = db.GetAccountFromToken(token)
+		if err == nil { logged = true }
 	}
 	data := struct {
 		Title	string
 		Lang	string
-		Account	string
+		Logged	bool
+		Account	db.Account
 		Boards	[]db.Board
 	}{
 		config.Cfg.Home.Title,
 		config.Cfg.Home.Language,
-		username,
+		logged,
+		account,
 		boards,
 	}
 	return data

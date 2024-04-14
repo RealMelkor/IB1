@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"time"
 	"sync"
+	"errors"
 
 	"IB1/config"
 )
@@ -71,7 +72,7 @@ func (post Post) ReferredBy() []Reference {
 
 var newPostLock sync.Mutex
 func CreatePost(thread Thread, content template.HTML, name string,
-		media string, custom *gorm.DB) (int, error) {
+		media string, ip string, custom *gorm.DB) (int, error) {
 	if custom == nil { custom = db }
 	if name == "" { name = config.Cfg.Post.DefaultName }
 	if dbType == TYPE_SQLITE {
@@ -90,6 +91,7 @@ func CreatePost(thread Thread, content template.HTML, name string,
 			Board: thread.Board, Thread: thread, Name: name,
 			Content: content, Timestamp: time.Now().Unix(),
 			Number: thread.Board.Posts, Media: media,
+			IP: ip,
 		})
 		if ret.Error != nil { return err }
 
@@ -116,4 +118,11 @@ func GetPost(threadID uint, number int) (Post, error) {
 func CreateReference(thread uint, from int, to int) error {
 	ref := Reference{ThreadID: int(thread), PostID: to, From: from}
 	return db.Create(&ref).Error
+}
+
+func Hide(board string, id int) error {
+	b, ok := Boards[board]
+	if !ok { return errors.New("board not found") }
+	return db.Where("board_id = ? AND number = ?", b.ID, id).
+			Delete(&Post{}).Error
 }

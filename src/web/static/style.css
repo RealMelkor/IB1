@@ -105,6 +105,14 @@ h1 {
 	font-weight: bold;
 }
 
+.ip {
+	font-size: 10pt;
+}
+
+.action {
+	font-size: 10pt;
+}
+
 .title {
 	color: #0f0c5d;
 	font-weight: bold;

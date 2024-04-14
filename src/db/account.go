@@ -41,7 +41,10 @@ func GetAccountFromToken(token string) (Account, error) {
 	var session Session
 	err := db.Model(session).Preload("Account").
 		First(&session, "token = ?", token).Error
-	if err == nil { sessions[token] = session.Account }
+	if err == nil {
+		session.Account.Logged = true
+		sessions[token] = session.Account
+	}
 	return session.Account, err
 }
 

@@ -156,7 +156,8 @@ func newThread(c *gin.Context) {
 	}
 
 	parsed, _ := parseContent(content, 0)
-	number, err := db.CreateThread(board, title, name, media, parsed)
+	number, err := db.CreateThread(board, title, name, media,
+					c.ClientIP(), parsed)
 	if err != nil { 
 		internalError(c, err.Error())
 		return
@@ -206,7 +207,8 @@ func newPost(c *gin.Context) {
 	}
 
 	parsed, refs := parseContent(content, thread.ID)
-	number, err := db.CreatePost(thread, parsed, name, media, nil)
+	number, err := db.CreatePost(thread, parsed, name, media,
+					c.ClientIP(), nil)
 	if err != nil {
 		internalError(c, err.Error())
 		return
@@ -289,6 +291,20 @@ func disconnect(c *gin.Context) {
 	c.Redirect(http.StatusFound, "/")
 }
 
+func hide(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		badRequest(c, err.Error())
+		return
+	}
+	board := c.Param("board")
+	if err := db.Hide(board, id); err != nil {
+		badRequest(c, err.Error())
+		return
+	}
+	c.Redirect(http.StatusFound, "/" + board)
+}
+
 func Init() error {
 
 	if err := os.MkdirAll(config.Cfg.Media.Directory, 0700); err != nil {
@@ -321,6 +337,9 @@ func Init() error {
 	r.POST("/:board/:thread", newPost)
 	r.GET("/disconnect", disconnect)
 	r.GET("/login", login)
+	r.GET("/:board/remove/:id", login)
+	r.GET("/:board/hide/:id", hide)
+	r.GET("/:board/ban/:ip", login)
 	r.POST("/login", loginAs)
 	r.Static("/media", mediaDir)
 	r.Static("/thumbnail", thumbnailDir)
