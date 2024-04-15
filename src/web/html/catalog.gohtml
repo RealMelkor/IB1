@@ -5,7 +5,8 @@
 {{ template "top" .Board.Name }}
 <div class="catalog">
 {{range .Board.Threads}}
-<div class="thread">
+{{if (or (not (index .Posts 0).Disabled) $.Header.Account.Logged)}}
+<div class="thread{{if (index .Posts 0).Disabled}} thread-hidden{{end}}">
 	<a href="{{.Number}}">
     		<img src="/thumbnail/{{(index .Posts 0).Thumbnail}}" alt="{{.Number}}">
 	</a>
@@ -13,6 +14,7 @@
 	<p class="title">{{.Title}}</p>
 	<p class="content">{{ (index .Posts 0).Content }}</p>
 </div>
+{{end}}
 {{end}}
 </div>
 {{ template "bottom" .Board.Name }}

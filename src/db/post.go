@@ -138,8 +138,14 @@ func Hide(board string, id int, reverse bool) error {
 }
 
 func Remove(board string, id int) error {
-	b, ok := Boards[board]
-	if !ok { return errors.New("board not found") }
-	return db.Where("board_id = ? AND number = ?", b.ID, id).
-			Delete(&Post{}).Error
+	post, err := GetPostFromBoard(board, id)
+	if err != nil { return err }
+	if post.Thread.Number != post.Number {
+		return db.Unscoped().Delete(&Post{}, post.ID).Error
+	}
+	err = db.Unscoped().Where("board_id = ? AND thread_id = ?",
+		post.BoardID, post.ThreadID).Delete(&Post{}).Error
+	if err != nil { return err }
+	db.Unscoped().Delete(&Thread{}, post.ThreadID)
+	return err
 }

@@ -158,6 +158,10 @@ h1 {
 	overflow: hidden;
 }
 
+.thread-hidden {
+	border: 2px solid #99c;
+}
+
 .thread-info {
 	margin: 0;
 	font-size: 9pt;

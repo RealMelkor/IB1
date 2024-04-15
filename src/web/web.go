@@ -246,6 +246,12 @@ func thread(c *gin.Context) {
 		internalError(c, err.Error())
 		return
 	}
+	if thread.Posts[0].Disabled {
+		if _, err := loggedAs(c); err != nil {
+			badRequest(c, "not found")
+			return
+		}
+	}
 	captchaNew(c)
 	if err := renderThread(thread, c); err != nil {
 		internalError(c, err.Error())
@@ -324,14 +330,25 @@ func remove(c *gin.Context) {
 		if err != nil { break }
 		err = db.Remove(board, id)
 		if err != nil { break }
-		err = os.Remove(config.Cfg.Media.Directory + "/" + post.Media)
-		if err != nil { break }
-		err = os.Remove(config.Cfg.Media.Thumbnail + "/" +
-					post.Thumbnail())
-		if err != nil { break }
+		/*
+		TODO: verify if media is used by another post
+		if post.Media != "" {
+			err = os.Remove(
+				config.Cfg.Media.Directory + "/" + post.Media)
+			if err != nil { break }
+		}
+		if post.Thumbnail() != "" {
+			err = os.Remove(config.Cfg.Media.Thumbnail + "/" +
+						post.Thumbnail())
+			if err != nil { break }
+		}
+		*/
 
-		c.Redirect(http.StatusFound, "/" + board + "/" +
-				strconv.Itoa(post.Thread.Number))
+		dst := "/" + board
+		if id != post.Thread.Number {
+			dst += "/" + strconv.Itoa(post.Thread.Number)
+		}
+		c.Redirect(http.StatusFound, dst)
 		return
 	}
 	badRequest(c, err.Error())

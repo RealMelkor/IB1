@@ -125,6 +125,7 @@ func GetBoard(name string) (Board, error) {
 }
 
 func RefreshBoard(board *Board) error {
+	board.Threads = []Thread{}
 	err := db.Raw(
 		"SELECT b.* FROM posts a " +
 		"INNER JOIN threads b ON a.thread_id = b.id " +
