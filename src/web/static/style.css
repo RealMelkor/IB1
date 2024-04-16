@@ -254,6 +254,10 @@ h1 {
 	color: red;
 }
 
+.error p {
+	text-align: center;
+}
+
 @media (prefers-color-scheme: dark) {
 	body {
 		background-color: #1d1f20;

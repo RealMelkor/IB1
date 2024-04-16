@@ -69,6 +69,13 @@ type Session struct {
 	Token		string `gorm:"unique"`
 }
 
+type Ban struct {
+	IP		string
+	Expiry		int64
+}
+
+var BanList = map[string]Ban{}
+
 const (
 	TYPE_SQLITE = iota
 	TYPE_MYSQL
@@ -103,7 +110,7 @@ func Init() error {
 	}
 	if err != nil { return err }
 
-	db.AutoMigrate(&Board{}, &Thread{}, &Post{},
+	db.AutoMigrate(&Board{}, &Thread{}, &Post{}, &Ban{},
 			&Reference{}, &Account{}, &Session{})
 
 	for _, v := range config.Cfg.Boards {
@@ -111,6 +118,8 @@ func Init() error {
 		err := CreateBoard(v.Name, v.Title, v.Description)
 		if err != nil { return err }
 	}
+
+	if err := LoadBanList(); err != nil { return err }
 
 	return nil
 }

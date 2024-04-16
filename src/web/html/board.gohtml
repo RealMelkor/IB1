@@ -4,11 +4,13 @@
 {{ template "newthread" . }}
 {{ template "top" .Board.Name }}
 {{range $i, $e := .Board.Threads}}
+{{if (or (not (index $e.Posts 0).Disabled) $.Header.Account.Logged)}}
 {{if $i}}
 <div class="separator"></div>
 {{end}}
 {{ template "thread-template" (thread . $.Header.Account) }}
 <a href="/{{$.Board.Name}}/{{.Number}}">View thread</a>
+{{end}}
 {{end}}
 {{ template "bottom" .Board.Name }}
 {{ template "footer" . }}

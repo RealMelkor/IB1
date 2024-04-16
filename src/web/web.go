@@ -4,7 +4,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
-	"log"
 	"os"
 	"errors"
 	
@@ -24,13 +23,25 @@ func internalError(c *gin.Context, data string) {
 	c.Data(http.StatusBadRequest, "text/plain", []byte(data))
 }
 
-func badRequest(c *gin.Context, data string) {
-	log.Println(data)
-	c.Data(http.StatusBadRequest, "text/plain", []byte("bad request"))
+func badRequest(c *gin.Context, info string) {
+	data := struct {
+		Error	string
+		Header	any
+	}{
+		Error: info,
+		Header: header(c),
+	}
+	render("error.gohtml", data, c)
 }
 
-func badRequestExplicit(c *gin.Context, data string) {
-	c.Data(http.StatusBadRequest, "text/plain", []byte(data))
+func isBanned(c *gin.Context) bool {
+	_, err := loggedAs(c)
+	if err == nil { return false }
+	if err := db.IsBanned(c.RemoteIP()); err != nil {
+		badRequest(c, err.Error())
+		return true
+	}
+	return false
 }
 
 func index(c *gin.Context) {
@@ -104,11 +115,11 @@ func checkCaptcha(c *gin.Context) bool {
 		if err == nil { return true }
 		captcha, hasCaptcha := c.GetPostForm("captcha")
 		if !hasCaptcha {
-			badRequestExplicit(c, "invalid form")
+			badRequest(c, "invalid form")
 			return false
 		}
 		if !captchaVerify(c, captcha) {
-			badRequestExplicit(c, "wrong captcha")
+			badRequest(c, "wrong captcha")
 			return false
 		}
 	}
@@ -129,6 +140,8 @@ func verifyCaptcha(c *gin.Context) error {
 
 func newThread(c *gin.Context) {
 
+	if isBanned(c) { return }
+
 	boardName := c.Param("board")
 	board, err := db.GetBoard(boardName)
 	if err != nil { 
@@ -140,7 +153,7 @@ func newThread(c *gin.Context) {
 	title, hasTitle := c.GetPostForm("title")
 	content, hasContent := c.GetPostForm("content")
 	if !hasTitle || !hasContent || !hasName || content == "" { 
-		badRequestExplicit(c, "invalid form")
+		badRequest(c, "invalid form")
 		return 
 	}
 
@@ -170,6 +183,8 @@ func newThread(c *gin.Context) {
 }
 
 func newPost(c *gin.Context) {
+
+	if isBanned(c) { return }
 
 	boardName := c.Param("board")
 	board, err := db.GetBoard(boardName)
@@ -373,6 +388,17 @@ func hide(c *gin.Context) {
 	badRequest(c, err.Error())
 }
 
+func ban(c *gin.Context) {
+	board := c.Param("board")
+	ip := c.Param("ip")
+	if err := db.BanIP(ip); err != nil {
+		badRequest(c, err.Error())
+		return
+	}
+	c.Redirect(http.StatusFound, "/" + board)
+	return
+}
+
 func Init() error {
 
 	if err := os.MkdirAll(config.Cfg.Media.Directory, 0700); err != nil {
@@ -408,7 +434,7 @@ func Init() error {
 	r.POST("/login", loginAs)
 	r.GET("/:board/remove/:id", remove)
 	r.GET("/:board/hide/:id", hide)
-	r.GET("/:board/ban/:ip", login)
+	r.GET("/:board/ban/:ip", ban)
 	r.Static("/media", mediaDir)
 	r.Static("/thumbnail", thumbnailDir)
 
