@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"IB1/db"
 	"IB1/config"
-	"log"
 
 	"github.com/gin-gonic/gin"
 )
@@ -43,7 +42,6 @@ func canSetConfig(c *gin.Context, f func(c *gin.Context) error) func(
 
 func setDefaultTheme(c *gin.Context) error {
 	theme, ok := c.GetPostForm("theme")
-	log.Println(theme, ok)
         if !ok { return errors.New("invalid form9") }
         _, ok = getThemesTable()[theme]
         if !ok { return errors.New("invalid theme") }
@@ -61,7 +59,7 @@ func updateConfig(c *gin.Context) error {
 	config.Cfg.Home.Description = description
 	captcha, _ := c.GetPostForm("captcha")
 	config.Cfg.Captcha.Enabled = captcha == "on"
-	return nil
+	return db.UpdateConfig()
 }
 
 func createBoard(c *gin.Context) error {

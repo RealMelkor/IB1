@@ -1,6 +1,6 @@
 package config
 
-import "github.com/kkyr/fig"
+import "encoding/json"
 
 var Cfg Config
 
@@ -18,6 +18,7 @@ type Config struct {
 	Media struct {
 		Directory	string	`validate:"required"`
 		Thumbnail	string	`validate:"required"`
+		InDatabase	bool
 	}
 	Database struct {
                 Type            string	`validate:"required"`
@@ -35,11 +36,27 @@ type Config struct {
 	}
 }
 
-func LoadConfig() error {
-        err := fig.Load(
-                &Cfg,
-                fig.File("config.yaml"),
-                fig.Dirs(".", "/etc/ib1", "/usr/local/etc/ib1"),
-        )
-        return err
+func LoadDefault() {
+	Cfg.Home.Title = "IB1"
+	Cfg.Home.Description = "An imageboard that does not require Javascript."
+	Cfg.Home.Language = "en"
+	Cfg.Home.Theme = "default"
+	Cfg.Web.Domain = "localhost"
+	Cfg.Web.Listener = ":8080"
+	Cfg.Database.Type = "sqlite"
+	Cfg.Database.Url = "ib1.db"
+	Cfg.Captcha.Enabled = true
+	Cfg.Captcha.Length = 7
+	Cfg.Board.MaxThreads = 40
+	Cfg.Media.Directory = "./media"
+	Cfg.Media.Thumbnail = "./thumbnail"
+	Cfg.Media.InDatabase = true
+}
+
+func LoadConfig(data []byte) error {
+        return json.Unmarshal(data, &Cfg)
+}
+
+func GetRaw() ([]byte, error) {
+	return json.Marshal(&Cfg)
 }

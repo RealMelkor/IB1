@@ -9,6 +9,12 @@ import (
 	"IB1/config"
 )
 
+
+type Config struct {
+	gorm.Model
+	Data		[]byte
+}
+
 type Board struct {
 	gorm.Model
 	Name		string `gorm:"unique"`
@@ -89,6 +95,7 @@ func Init() error {
 
 	Boards = map[string]Board{}
 
+	config.LoadDefault()
 	switch config.Cfg.Database.Type {
 	case "mysql":
 		dbType = TYPE_MYSQL
@@ -112,12 +119,38 @@ func Init() error {
 	if err != nil { return err }
 
 	db.AutoMigrate(&Board{}, &Thread{}, &Post{}, &Ban{},
-			&Reference{}, &Account{}, &Session{})
+			&Reference{}, &Account{}, &Session{}, &Config{})
 
 	if err := LoadBoards(); err != nil { return err }
 	if err := LoadBanList(); err != nil { return err }
+	if err := LoadConfig(); err != nil { return err }
 
 	return nil
+}
+
+func newConfig() error {
+	config.LoadDefault()
+	return UpdateConfig()
+}
+
+func LoadConfig() error {
+	var cfg Config
+	if err := db.First(&cfg).Error; err != nil {
+		return newConfig()
+	}
+	if err := config.LoadConfig(cfg.Data); err != nil {
+		return newConfig()
+	}
+	return nil
+}
+
+func UpdateConfig() error {
+	var cfg Config
+	var err error
+	db.Exec("DELETE FROM configs")
+	cfg.Data, err = config.GetRaw()
+	if err != nil { return err }
+	return db.Create(&cfg).Error
 }
 
 func GetBoard(name string) (Board, error) {

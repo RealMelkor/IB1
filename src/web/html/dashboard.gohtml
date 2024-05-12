@@ -1,5 +1,35 @@
 {{ template "header" .Header }}
 <div class="boards">
+	<form method="POST" action="/config/update">
+	<table>
+		<tr>
+			<td>Default theme</td>
+			<td>
+				<select name="theme">
+{{range .Themes}}
+					<option {{if eq $.Config.Home.Theme .}}selected="selected"{{end}}value="{{.}}">{{.}}</option>
+{{end}}
+				</select>
+			</td>
+		</tr>
+		<tr>
+			<td>Website title</td>
+			<td><input type="text" name="title" value="{{.Config.Home.Title}}" required></td>
+		</tr>
+		<tr>
+			<td>Website description</td>
+			<td><input type="text" name="description" value="{{.Config.Home.Description}}" required></td>
+		</tr>
+		<tr>
+			<td>Enable captcha</td>
+			<td><input type="checkbox" name="captcha" {{if .Config.Captcha.Enabled}}checked{{end}}></td>
+		</tr>
+	</table>
+	<div>
+		<input class="input-center" type="submit" value="Update">
+	</div>
+	</form>
+	<div style="padding: 30px;"></div>
 	<table>
 	<tr>
 		<th>Enabled</th>
@@ -30,37 +60,7 @@
 		<td><input type="submit" value="Create"></td>
 </form>
 	</tr>
+	</table>
 
-	</table>
-	<div style="padding: 30px;"></div>
-	<form method="POST" action="/config/update">
-	<table>
-		<tr>
-			<td>Default theme</td>
-			<td>
-				<select name="theme">
-{{range .Themes}}
-					<option {{if eq $.Config.Home.Theme .}}selected="selected"{{end}}value="{{.}}">{{.}}</option>
-{{end}}
-				</select>
-			</td>
-		</tr>
-		<tr>
-			<td>Website title</td>
-			<td><input type="text" name="title" value="{{.Config.Home.Title}}" required></td>
-		</tr>
-		<tr>
-			<td>Website description</td>
-			<td><input type="text" name="description" value="{{.Config.Home.Description}}" required></td>
-		</tr>
-		<tr>
-			<td>Enable captcha</td>
-			<td><input type="checkbox" name="captcha" {{if .Config.Captcha.Enabled}}checked{{end}}></td>
-		</tr>
-	</table>
-	<div>
-		<input class="input-center" type="submit" value="Update">
-	</div>
-	</form>
 </div>
 {{ template "footer" . }}

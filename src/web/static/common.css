@@ -247,6 +247,7 @@ body {
 
 .input-center {
 	margin: 50%;
+	margin-bottom: 0;
 	margin-top: 10px;
 }
 
