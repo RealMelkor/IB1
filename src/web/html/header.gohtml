@@ -1,16 +1,17 @@
 {{define "header"}}
 <!DOCTYPE html>
 <html lang="{{.Lang}}">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<meta name="description" content="{{.Title}}">
 		<title>{{.Title}}</title>
-		<link rel="stylesheet" type="text/css" href="/static/style.css">
+		<link rel="stylesheet" type="text/css" href="/static/common.css">
+		<link rel="stylesheet" type="text/css" href="/static/{{.Theme}}.css">
 		<link rel="icon" type="image/png" href="/static/favicon.png">
-  </head>
-  <body>
-    <div class="bar" id="header">
+	</head>
+	<body>
+	<div class="bar">
 			[
 			{{range $i, $e := .Boards}}
 			{{if $i}}
@@ -22,12 +23,27 @@
 			<div style="float: right;">
 			{{if .Logged}}
 			<span>Logged in as {{.Account.Name}}</span>
+			[<a href="/dashboard">Dashboard</a>]
 			[<a href="/disconnect">Disconnect</a>]
 			{{else}}
 			[<a href="/login">Login</a>]
 			{{end}}
 			[<a href="/">Home</a>]
 			</div>
-    </div>
-		<div id="main">
+	</div>
+
+	<div class="bar bar-second">
+		<form method="POST" action="/config/client/theme?origin={{.Url}}">
+			<label>Theme:</label>
+			<select name="theme">
+		{{range .Themes}}
+			<option {{if eq $.Theme .}}selected="selected"{{end}}value="{{.}}">{{.}}</option>
+		{{end}}
+			</select>
+			<input type="submit" value="Update">
+		</form>
+	</div>
+	<br>
+	<div id="main">
+		<br>
 {{end}}

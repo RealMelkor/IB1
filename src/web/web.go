@@ -51,6 +51,13 @@ func index(c *gin.Context) {
 	}
 }
 
+func dashboard(c *gin.Context) {
+	if err := renderDashboard(c); err != nil {
+		internalError(c, err.Error())
+		return
+	}
+}
+
 func boardIndex(c *gin.Context) {
 	boardName := c.Param("board")
 	board, err := db.GetBoard(boardName)
@@ -418,8 +425,16 @@ func Init() error {
 	r.GET("/static/favicon.png", func(c *gin.Context) {
 		c.Data(http.StatusOK, "image/png", favicon)
 	})
-	r.GET("/static/style.css", func(c *gin.Context) {
+	r.GET("/static/common.css", func(c *gin.Context) {
 		c.Data(http.StatusOK, "text/css", stylesheet)
+	})
+	r.GET("/static/:file", func(c *gin.Context) {
+		data, err := static.ReadFile("static/" + c.Param("file"))
+		if err != nil {
+			internalError(c, "file not found")
+			return
+		}
+		c.Data(http.StatusOK, "text/css", data)
 	})
 	if config.Cfg.Captcha.Enabled {
 		r.GET("/captcha", captchaImage)
@@ -435,6 +450,14 @@ func Init() error {
 	r.GET("/:board/remove/:id", remove)
 	r.GET("/:board/hide/:id", hide)
 	r.GET("/:board/ban/:ip", ban)
+	r.GET("/dashboard", dashboard)
+	r.POST("/config/client/theme", func(c *gin.Context) {
+		handle(c, setTheme, c.Query("origin"))
+	})
+	r.POST("/config/theme", func(c *gin.Context) {
+		handle(c, canSetConfig(c, setDefaultTheme), "/dashboard")
+	})
+
 	r.Static("/media", mediaDir)
 	r.Static("/thumbnail", thumbnailDir)
 

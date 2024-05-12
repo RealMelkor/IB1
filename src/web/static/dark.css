@@ -1,0 +1,52 @@
+body {
+
+	background-color: #1d1f20;
+}
+a {
+	color: #3391ff;
+}
+p {
+	color: #e8e6e3;
+}
+div {
+	color: #e8e6e3;
+}
+.post {
+	background-color: #282b2d;
+}
+.title {
+	color: #9ab9f2;
+}
+.name {
+	color: #7fedb5;
+}
+.boards table {
+	border: 2px solid #888;
+}
+.boards th {
+	background-color: #211174;
+}
+.boards td {
+	background-color: #282b2d;
+}
+.new-thread th {
+	background-color: #211174;
+}
+.post-ref {
+	color: #a7b5cd;
+}
+input {
+	color: #ddd;
+	background-color: #282b2d;
+}
+textarea {
+	color: #ddd;
+	background-color: #282b2d;
+}
+select {
+	color: #ddd;
+	background-color: #282b2d;
+}
+.captcha {
+	background-color: #aaa;
+}

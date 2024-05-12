@@ -10,7 +10,7 @@
 	<input type="text" id="name" name="name"><br>
 {{if and .Captcha (not .Header.Account.Logged)}}
 	<label for="captcha">Captcha:</label><br>
-	<img loading="lazy" src="/captcha" alt="captcha"><br>
+	<img class="captcha" loading="lazy" src="/captcha" alt="captcha"><br>
 	<input type="text" id="captcha" name="captcha" required="required"><br>
 {{end}}
 	<label for="content">Comment:</label><br>

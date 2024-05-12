@@ -9,6 +9,7 @@ type Config struct {
 		Title		string	`validate:"required"`
 		Description	string	`validate:"required"`
 		Language	string	`validate:"required"`
+		Theme		string	`default:"default"`
 	}
 	Web struct {
 		Domain		string	`default:"localhost"`
@@ -31,12 +32,6 @@ type Config struct {
 	}
 	Board struct {
 		MaxThreads	int `validate:"required"`
-	}
-	Boards []struct {
-		Enabled		bool
-		Name		string
-		Title		string
-		Description	string
 	}
 }
 

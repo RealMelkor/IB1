@@ -1,0 +1,49 @@
+{{ template "header" .Header }}
+<div class="boards">
+	<table>
+	<tr>
+		<th>Enabled</th>
+		<th>Board</th>
+		<th>Description</th>
+		<th></th>
+	</tr>
+{{range .Boards}}
+	<tr>
+<form method="POST" action="/board/update/{{.ID}}">
+		<td><input type="checkbox" name="enabled" {{if not .Disabled}}checked{{end}}></td>
+		<td><input type="text" id="name" name="name" value="{{.Name}}" required></td>
+		<td><input type="text" id="description" name="description" value="{{.Description}}" required></td>
+		<td><input type="submit" value="Update"></td>
+</form>
+	</tr>
+{{end}}
+	<tr>
+<form method="POST" action="/board/create">
+		<td><input type="checkbox" name="enabled" checked></td>
+		<td><input type="text" id="name" name="name" required></td>
+		<td><input type="text" id="description" name="description" required></td>
+		<td><input type="submit" value="Create"></td>
+</form>
+	</tr>
+
+	</table>
+	<div style="padding: 30px;"></div>
+	<table>
+		<tr>
+			<td>Update default theme</td>
+			<form method="POST" action="/config/theme">
+			<td>
+				<select name="theme">
+			{{range .Themes}}
+				<option {{if eq $.Theme .}}selected="selected"{{end}}value="{{.}}">{{.}}</option>
+			{{end}}
+				</select>
+			</td>
+			<td>
+				<input type="submit" value="Update">
+			</td>
+			</form>
+		</tr>
+	</table>
+</div>
+{{ template "footer" . }}

@@ -1,10 +1,5 @@
 body {
-	background-color: #eef2ff;
 	padding: 0;
-}
-
-h1 {
-	color: gray;
 }
 
 .error {
@@ -89,7 +84,6 @@ h1 {
 
 .post-ref {
 	font-size: 9pt;
-	color: #34345c;
 }
 
 .content a {
@@ -105,7 +99,6 @@ h1 {
 }
 
 .name {
-	color: #117743;
 	font-weight: bold;
 }
 
@@ -118,7 +111,6 @@ h1 {
 }
 
 .title {
-	color: #0f0c5d;
 	font-weight: bold;
 }
 
@@ -135,6 +127,11 @@ h1 {
 
 .bar {
 	font-size: 10pt;
+}
+
+.bar-second {
+	margin-top: 10px;
+	float: right;
 }
 
 .catalog {
@@ -206,7 +203,6 @@ h1 {
 }
 
 .new-thread th {
-	background-color: #9988ee;
 	font-size: 10pt;
 	border: 1px solid black;
 }
@@ -230,12 +226,7 @@ h1 {
 	margin: auto;
 }
 
-.boards th {
-	background-color: #9988ee;
-}
-
 .boards td {
-	background-color: #d6daf0;
 	padding-left: 10px;
 	padding-right: 10px;
 }
@@ -254,42 +245,14 @@ h1 {
 	color: red;
 }
 
-.error p {
+.boards form {
+	width: 500px;
+	border: 2px solid black;
 	text-align: center;
+	margin: auto;
+	margin-top: 10px;
 }
 
-@media (prefers-color-scheme: dark) {
-	body {
-		background-color: #1d1f20;
-	}
-	a {
-		color: #3391ff;
-	}
-	p {
-		color: #e8e6e3;
-	}
-	div {
-		color: #e8e6e3;
-	}
-	.post {
-		background-color: #282b2d;
-	}
-	.title {
-		color: #9ab9f2;
-	}
-	.name {
-		color: #7fedb5;
-	}
-	.boards th {
-		background-color: #211174;
-	}
-	.boards td {
-		background-color: #282b2d;
-	}
-	.new-thread th {
-		background-color: #211174;
-	}
-	.post-ref {
-		color: #a7b5cd;
-	}
+.error p {
+	text-align: center;
 }

@@ -62,12 +62,18 @@ func header(c *gin.Context) any {
 	data := struct {
 		Title	string
 		Lang	string
+		Url	string
+		Theme	string
+		Themes	[]string
 		Logged	bool
 		Account	db.Account
 		Boards	[]db.Board
 	}{
 		config.Cfg.Home.Title,
 		config.Cfg.Home.Language,
+		c.Request.RequestURI,
+		getTheme(c),
+		getThemes(),
 		logged,
 		account,
 		boards,
@@ -88,7 +94,21 @@ func renderIndex(c *gin.Context) error {
 		Header: header(c),
 	}
 	return render("index.gohtml", data, c)
+}
 
+func renderDashboard(c *gin.Context) error {
+	data := struct {
+		Boards		map[string]db.Board
+		Theme		string
+		Themes		[]string
+		Header		any
+	}{
+		Boards: db.Boards,
+		Theme: config.Cfg.Home.Theme,
+		Themes: getThemes(),
+		Header: header(c),
+	}
+	return render("dashboard.gohtml", data, c)
 }
 
 func renderBoard(board db.Board, c *gin.Context) error {
@@ -220,7 +240,7 @@ var stylesheet []byte = nil
 func minifyStylesheet() error {
 	m := minify.New()
 	m.AddFunc("text/css", css.Minify)
-	data, err := static.ReadFile("static/style.css")
+	data, err := static.ReadFile("static/common.css")
 	if err != nil { return err }
 	res, err := m.Bytes("text/css", data)
 	if err != nil { return err }

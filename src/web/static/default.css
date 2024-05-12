@@ -1,0 +1,24 @@
+body {
+	background-color: #eef2ff;
+}
+.post {
+	background-color: #d6daf0;
+}
+.title {
+	color: #0f0c5d;
+}
+.name {
+	color: #117743;
+}
+.boards th {
+	background-color: #9988ee;
+}
+.boards td {
+	background-color: #d6daf0;
+}
+.new-thread th {
+	background-color: #9988ee;
+}
+.post-ref {
+	color: #34345c;
+}

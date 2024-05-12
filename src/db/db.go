@@ -16,6 +16,7 @@ type Board struct {
 	Description	string
 	Threads		[]Thread
 	Posts		int
+	Disabled	bool
 }
 var Boards map[string]Board
 
@@ -113,12 +114,7 @@ func Init() error {
 	db.AutoMigrate(&Board{}, &Thread{}, &Post{}, &Ban{},
 			&Reference{}, &Account{}, &Session{})
 
-	for _, v := range config.Cfg.Boards {
-		if !v.Enabled { continue }
-		err := CreateBoard(v.Name, v.Title, v.Description)
-		if err != nil { return err }
-	}
-
+	if err := LoadBoards(); err != nil { return err }
 	if err := LoadBanList(); err != nil { return err }
 
 	return nil
@@ -131,6 +127,16 @@ func GetBoard(name string) (Board, error) {
 		return Board{}, err
 	}
 	return board, nil
+}
+
+func LoadBoards() error {
+	var boards []Board
+	tx := db.Find(&boards)
+	if tx.Error != nil {  return tx.Error }
+	for _, v := range boards {
+		Boards[v.Name] = v
+	}
+	return nil
 }
 
 func RefreshBoard(board *Board) error {
