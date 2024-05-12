@@ -454,9 +454,7 @@ func Init() error {
 	r.POST("/config/client/theme", func(c *gin.Context) {
 		handle(c, setTheme, c.Query("origin"))
 	})
-	r.POST("/config/theme", func(c *gin.Context) {
-		handle(c, canSetConfig(c, setDefaultTheme), "/dashboard")
-	})
+	r.POST("/config/update", handleConfig(updateConfig))
 	r.POST("/config/board/create", handleConfig(createBoard))
 	r.POST("/config/board/update/:board", handleConfig(updateBoard))
 	r.POST("/config/board/delete/:board", handleConfig(deleteBoard))

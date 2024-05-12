@@ -245,11 +245,8 @@ body {
 	color: red;
 }
 
-.boards form {
-	width: 500px;
-	border: 2px solid black;
-	text-align: center;
-	margin: auto;
+.input-center {
+	margin: 50%;
 	margin-top: 10px;
 }
 

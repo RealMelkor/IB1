@@ -101,12 +101,13 @@ func renderDashboard(c *gin.Context) error {
 	if err != nil { return err }
 	data := struct {
 		Boards		[]db.Board
+		Config		config.Config
 		Theme		string
 		Themes		[]string
 		Header		any
 	}{
 		Boards: boards,
-		Theme: config.Cfg.Home.Theme,
+		Config: config.Cfg,
 		Themes: getThemes(),
 		Header: header(c),
 	}
