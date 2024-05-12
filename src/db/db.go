@@ -133,7 +133,9 @@ func LoadBoards() error {
 	var boards []Board
 	tx := db.Find(&boards)
 	if tx.Error != nil {  return tx.Error }
+	Boards = map[string]Board{}
 	for _, v := range boards {
+		if v.Disabled { continue }
 		Boards[v.Name] = v
 	}
 	return nil
@@ -197,4 +199,17 @@ func CreateThread(board Board, title string, name string, media string,
 		return err
 	})
 	return number, err
+}
+
+func UpdateBoard(board Board) error {
+	return db.Save(&board).Error
+}
+
+func DeleteBoard(board Board) error {
+	return db.Delete(&board).Error
+}
+
+func GetBoards() ([]Board, error) {
+	var boards []Board
+	return boards, db.Find(&boards).Error
 }

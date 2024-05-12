@@ -2,6 +2,7 @@ package web
 
 import (
 	"errors"
+	"strconv"
 	"net/http"
 	"IB1/db"
 	"IB1/config"
@@ -46,4 +47,51 @@ func setDefaultTheme(c *gin.Context) error {
         if !ok { return errors.New("invalid theme") }
 	config.Cfg.Home.Theme = theme
 	return nil
+}
+
+func createBoard(c *gin.Context) error {
+	board, hasBoard := c.GetPostForm("board")
+	name, hasName := c.GetPostForm("name")
+        if !hasBoard || !hasName { return errors.New("invalid form") }
+	description, _ := c.GetPostForm("description")
+	err := db.CreateBoard(board, name, description)
+	if err != nil { return err }
+	return db.LoadBoards()
+}
+
+func updateBoard(c *gin.Context) error {
+	board, hasBoard := c.GetPostForm("board")
+	name, hasName := c.GetPostForm("name")
+        if !hasBoard || !hasName { return errors.New("invalid form") }
+	enabled, _ := c.GetPostForm("enabled")
+	description, _ := c.GetPostForm("description")
+	boards, err := db.GetBoards()
+	if err != nil { return err }
+	for _, v := range boards {
+		if strconv.Itoa(int(v.ID)) != c.Param("board") { continue }
+		v.Name = board
+		v.LongName = name
+		v.Description = description
+		v.Disabled = enabled != "on"
+		if err := db.UpdateBoard(v); err != nil { return err }
+		return db.LoadBoards()
+	}
+        return errors.New("invalid board")
+}
+
+func deleteBoard(c *gin.Context) error {
+	for i, v := range db.Boards {
+		if strconv.Itoa(int(v.ID)) != c.Param("board") { continue }
+		err := db.DeleteBoard(v)
+		if err != nil { return err }
+		delete(db.Boards, i)
+		return nil
+	}
+        return errors.New("invalid board")
+}
+
+func handleConfig(f func(c *gin.Context) error) func(c *gin.Context) {
+	return func(c *gin.Context) {
+		handle(c, canSetConfig(c, f), "/dashboard")
+	}
 }

@@ -97,13 +97,15 @@ func renderIndex(c *gin.Context) error {
 }
 
 func renderDashboard(c *gin.Context) error {
+	boards, err := db.GetBoards()
+	if err != nil { return err }
 	data := struct {
-		Boards		map[string]db.Board
+		Boards		[]db.Board
 		Theme		string
 		Themes		[]string
 		Header		any
 	}{
-		Boards: db.Boards,
+		Boards: boards,
 		Theme: config.Cfg.Home.Theme,
 		Themes: getThemes(),
 		Header: header(c),

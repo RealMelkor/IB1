@@ -457,6 +457,9 @@ func Init() error {
 	r.POST("/config/theme", func(c *gin.Context) {
 		handle(c, canSetConfig(c, setDefaultTheme), "/dashboard")
 	})
+	r.POST("/config/board/create", handleConfig(createBoard))
+	r.POST("/config/board/update/:board", handleConfig(updateBoard))
+	r.POST("/config/board/delete/:board", handleConfig(deleteBoard))
 
 	r.Static("/media", mediaDir)
 	r.Static("/thumbnail", thumbnailDir)
