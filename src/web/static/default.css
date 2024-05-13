@@ -22,3 +22,6 @@ body {
 .post-ref {
 	color: #34345c;
 }
+.post-hidden {
+	background-color: #99c;
+}

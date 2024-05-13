@@ -3,6 +3,7 @@ package web
 import (
 	"errors"
 	"strconv"
+	"os"
 	"net/http"
 	"IB1/db"
 	"IB1/config"
@@ -42,7 +43,7 @@ func canSetConfig(c *gin.Context, f func(c *gin.Context) error) func(
 
 func setDefaultTheme(c *gin.Context) error {
 	theme, ok := c.GetPostForm("theme")
-        if !ok { return errors.New("invalid form9") }
+        if !ok { return errors.New("invalid form") }
         _, ok = getThemesTable()[theme]
         if !ok { return errors.New("invalid theme") }
 	config.Cfg.Home.Theme = theme
@@ -51,14 +52,33 @@ func setDefaultTheme(c *gin.Context) error {
 
 func updateConfig(c *gin.Context) error {
 	if err := setDefaultTheme(c); err != nil { return err }
+
 	title, ok := c.GetPostForm("title")
-        if !ok { return errors.New("invalid form0") }
+        if !ok { return errors.New("invalid form") }
 	config.Cfg.Home.Title = title
+
 	description, ok := c.GetPostForm("description")
-        if !ok { return errors.New("invalid form1") }
+        if !ok { return errors.New("invalid form") }
 	config.Cfg.Home.Description = description
+
+	domain, ok := c.GetPostForm("domain")
+        if !ok { return errors.New("invalid form") }
+	config.Cfg.Web.Domain = domain
+
+	tmp, ok := c.GetPostForm("tmp")
+        if !ok { return errors.New("invalid form") }
+	err := os.MkdirAll(config.Cfg.Media.Tmp, 0700)
+	if err != nil { return err }
+	config.Cfg.Media.Tmp = tmp
+
 	captcha, _ := c.GetPostForm("captcha")
 	config.Cfg.Captcha.Enabled = captcha == "on"
+
+	path, _ := c.GetPostForm("media")
+	err = os.MkdirAll(path + "/thumbnail", 0700)
+	if err != nil { return err }
+	config.Cfg.Media.Path = path
+
 	return db.UpdateConfig()
 }
 

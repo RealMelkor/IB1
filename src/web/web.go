@@ -408,12 +408,8 @@ func ban(c *gin.Context) {
 
 func Init() error {
 
-	if err := os.MkdirAll(config.Cfg.Media.Directory, 0700); err != nil {
-		return err
-	}
-	if err := os.MkdirAll(config.Cfg.Media.Thumbnail, 0700); err != nil {
-		return err
-	}
+	os.MkdirAll(config.Cfg.Media.Path + "/thumbnail", 0700)
+	os.MkdirAll(config.Cfg.Media.Tmp, 0700)
 
 	r := gin.Default()
 	if err := initTemplate(); err != nil { return err }
@@ -459,8 +455,7 @@ func Init() error {
 	r.POST("/config/board/update/:board", handleConfig(updateBoard))
 	r.POST("/config/board/delete/:board", handleConfig(deleteBoard))
 
-	r.Static("/media", mediaDir)
-	r.Static("/thumbnail", thumbnailDir)
+	r.Static("/media", config.Cfg.Media.Path)
 
 	return r.Run(config.Cfg.Web.Listener)
 }

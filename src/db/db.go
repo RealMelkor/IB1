@@ -6,6 +6,7 @@ import (
 	"gorm.io/driver/mysql"
 	"html/template"
 	"errors"
+	"os"
 	"IB1/config"
 )
 
@@ -90,29 +91,39 @@ const (
 
 var db *gorm.DB
 var dbType int
+var Path string
+var Type string
 
 func Init() error {
 
 	Boards = map[string]Board{}
 
 	config.LoadDefault()
-	switch config.Cfg.Database.Type {
+	if Type == "" {
+		v, ok := os.LookupEnv("DB_TYPE")
+		if ok { Type = v }
+	}
+	if Path == "" {
+		v, ok := os.LookupEnv("DB_PATH")
+		if ok { Path = v }
+	}
+	if Type == "" { Type = "sqlite" }
+	if Path == "" { Path = "ib1.db" }
+	switch Type {
 	case "mysql":
 		dbType = TYPE_MYSQL
 	case "sqlite":
 		dbType = TYPE_SQLITE
 	default:
-		return errors.New("unknown database " +
-				config.Cfg.Database.Type)
+		return errors.New("unknown database " + Type)
 	}
 
 	var err error
 	if dbType == TYPE_MYSQL {
-		dsn := config.Cfg.Database.Url
+		dsn := Path
 		db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	} else if dbType == TYPE_SQLITE {
-		db, err = gorm.Open(sqlite.Open(config.Cfg.Database.Url),
-				&gorm.Config{})
+		db, err = gorm.Open(sqlite.Open(Path), &gorm.Config{})
 	} else {
 		return errors.New("unknown database")
 	}

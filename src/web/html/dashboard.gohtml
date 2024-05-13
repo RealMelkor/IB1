@@ -24,6 +24,18 @@
 			<td>Enable captcha</td>
 			<td><input type="checkbox" name="captcha" {{if .Config.Captcha.Enabled}}checked{{end}}></td>
 		</tr>
+		<tr>
+			<td>Domain</td>
+			<td><input type="text" name="domain" value="{{.Config.Web.Domain}}" required></td>
+		</tr>
+		<tr>
+			<td>Media</td>
+			<td><input type="text" name="media" value="{{.Config.Media.Path}}" required></td>
+		</tr>
+		<tr>
+			<td>Temporary Directory Path</td>
+			<td><input type="text" name="tmp" value="{{.Config.Media.Tmp}}" required></td>
+		</tr>
 	</table>
 	<div>
 		<input class="input-center" type="submit" value="Update">

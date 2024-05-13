@@ -35,6 +35,9 @@ div {
 .post-ref {
 	color: #a7b5cd;
 }
+.post-hidden {
+	background-color: #99c;
+}
 input {
 	color: #ddd;
 	background-color: #282b2d;

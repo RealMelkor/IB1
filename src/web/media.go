@@ -12,11 +12,8 @@ import (
 	"errors"
 	"io"
 	"os"
+	"IB1/config"
 )
-
-const mediaDir = "./media"
-const thumbnailDir = "./thumbnail"
-const tmpDir = "./tmp"
 
 func uniqueRandomName() (string, error) {
 	now := time.Now().UnixMilli()
@@ -102,23 +99,24 @@ func uploadFile(c *gin.Context, file *multipart.FileHeader) (string, error) {
 	// write file to disk
 	name, err := uniqueRandomName()
 	if err != nil { return "", err }
-	path := tmpDir + "/" + name + "." + extension
+	path := config.Cfg.Media.Tmp + "/" + name + "." + extension
 	if err = c.SaveUploadedFile(file, path); err != nil { return "", err }
 
 	// clean up the metadata
-	out := tmpDir + "/clean_" + name + "." + extension
+	out := config.Cfg.Media.Tmp + "/clean_" + name + "." + extension
 	if err := cleanImage(path, out); err != nil { return "", err }
 	os.Remove(path)
 
 	// rename to the sha256 hash of itself
 	hash, err := sha256sum(out)
 	if err != nil { return "", err }
-	media := mediaDir + "/" + hash + "." + extension
+	media := config.Cfg.Media.Path + "/" + hash + "." + extension
 	err = os.Rename(out, media)
 	if err != nil { return "", err }
 
 	// create thumbnail
-	err = thumbnail(media, thumbnailDir + "/" + hash + ".png"); 
+	err = thumbnail(media, config.Cfg.Media.Path +
+				"/thumbnail/" + hash + ".png");
 	if err != nil { return "", err }
 
 	return hash + "." + extension, err

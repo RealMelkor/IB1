@@ -8,7 +8,7 @@
 {{if (or (not (index .Posts 0).Disabled) $.Header.Account.Logged)}}
 <div class="thread{{if (index .Posts 0).Disabled}} thread-hidden{{end}}">
 	<a href="{{.Number}}">
-    		<img src="/thumbnail/{{(index .Posts 0).Thumbnail}}" alt="{{.Number}}">
+		<img src="/media/thumbnail/{{(index .Posts 0).Thumbnail}}" alt="{{.Number}}">
 	</a>
 	<p class="thread-info">R: {{.Replies}} / I: {{.Images}}</p>
 	<p class="title">{{.Title}}</p>

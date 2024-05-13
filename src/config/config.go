@@ -16,14 +16,9 @@ type Config struct {
 		Listener	string	`validate:"required"`
 	}
 	Media struct {
-		Directory	string	`validate:"required"`
-		Thumbnail	string	`validate:"required"`
-		InDatabase	bool
+		Path		string	`validate:"required"`
+		Tmp		string	`validate:"required"`
 	}
-	Database struct {
-                Type            string	`validate:"required"`
-                Url             string	`validate:"required"`
-        }
 	Captcha struct {
 		Enabled		bool
 		Length		int `validate:"required"`
@@ -43,14 +38,11 @@ func LoadDefault() {
 	Cfg.Home.Theme = "default"
 	Cfg.Web.Domain = "localhost"
 	Cfg.Web.Listener = ":8080"
-	Cfg.Database.Type = "sqlite"
-	Cfg.Database.Url = "ib1.db"
 	Cfg.Captcha.Enabled = true
 	Cfg.Captcha.Length = 7
 	Cfg.Board.MaxThreads = 40
-	Cfg.Media.Directory = "./media"
-	Cfg.Media.Thumbnail = "./thumbnail"
-	Cfg.Media.InDatabase = true
+	Cfg.Media.Path = "./media"
+	Cfg.Media.Tmp = "./tmp"
 }
 
 func LoadConfig(data []byte) error {
