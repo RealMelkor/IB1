@@ -114,14 +114,19 @@ func renderDashboard(c *gin.Context) error {
 	return render("dashboard.gohtml", data, c)
 }
 
-func renderBoard(board db.Board, c *gin.Context) error {
+func renderBoard(board db.Board, threads int, c *gin.Context) error {
+	pages := []int{}
+	count := (threads + 3) / 4
+	for i := 0; i < count; i++ { pages = append(pages, i) }
 	data := struct {
 		Board	db.Board
 		Captcha	bool
+		Pages	[]int
 		Header	any
 	}{
 		Board: board,
 		Captcha: config.Cfg.Captcha.Enabled,
+		Pages: pages,
 		Header: header(c),
 	}
 	return render("board.gohtml", data, c)

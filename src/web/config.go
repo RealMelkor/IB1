@@ -65,6 +65,10 @@ func updateConfig(c *gin.Context) error {
         if !ok { return errors.New("invalid form") }
 	config.Cfg.Web.Domain = domain
 
+	defaultname, ok := c.GetPostForm("defaultname")
+        if !ok { return errors.New("invalid form") }
+	config.Cfg.Post.DefaultName = defaultname
+
 	tmp, ok := c.GetPostForm("tmp")
         if !ok { return errors.New("invalid form") }
 	err := os.MkdirAll(config.Cfg.Media.Tmp, 0700)

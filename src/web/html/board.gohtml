@@ -12,5 +12,10 @@
 <a href="/{{$.Board.Name}}/{{.Number}}">View thread</a>
 {{end}}
 {{end}}
+<div>
+{{range $i := .Pages}}
+<a href="/{{$.Board.Name}}?page={{$i}}">[{{$i}}]</a>
+{{end}}
+</div>
 {{ template "bottom" .Board.Name }}
 {{ template "footer" . }}

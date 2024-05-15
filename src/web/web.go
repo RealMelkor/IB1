@@ -59,15 +59,20 @@ func dashboard(c *gin.Context) {
 }
 
 func boardIndex(c *gin.Context) {
+	page, err := strconv.Atoi(c.Query("page"))
+	if err != nil { page = 0 }
 	boardName := c.Param("board")
 	board, err := db.GetBoard(boardName)
 	if err != nil { 
 		internalError(c, err.Error())
 		return
 	}
-	if len(board.Threads) > 4 {
-		// TODO: support pages
-		board.Threads = board.Threads[0:4]
+	threads := len(board.Threads)
+	if threads > 4 {
+		if page < 0 || page * 4 >= threads { page = 0 }
+		i := 4
+		if page * 4 + i > threads { i -= threads % 4 }
+		board.Threads = board.Threads[page * 4 : page * 4 + i]
 	}
 	for i := range board.Threads {
 		if err := db.RefreshThread(&board.Threads[i]); err != nil {
@@ -81,7 +86,7 @@ func boardIndex(c *gin.Context) {
 		}
 	}
 	captchaNew(c)
-	if err := renderBoard(board, c); err != nil {
+	if err := renderBoard(board, threads, c); err != nil {
 		internalError(c, err.Error())
 		return
 	}

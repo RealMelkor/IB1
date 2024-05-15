@@ -43,6 +43,7 @@ func LoadDefault() {
 	Cfg.Board.MaxThreads = 40
 	Cfg.Media.Path = "./media"
 	Cfg.Media.Tmp = "./tmp"
+	Cfg.Post.DefaultName = "Anonymous"
 }
 
 func LoadConfig(data []byte) error {
