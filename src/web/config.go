@@ -75,13 +75,13 @@ func updateConfig(c *gin.Context) error {
 	if err != nil { return err }
 	config.Cfg.Media.Tmp = tmp
 
-	captcha, _ := c.GetPostForm("captcha")
-	config.Cfg.Captcha.Enabled = captcha == "on"
-
 	path, _ := c.GetPostForm("media")
 	err = os.MkdirAll(path + "/thumbnail", 0700)
 	if err != nil { return err }
 	config.Cfg.Media.Path = path
+
+	captcha, _ := c.GetPostForm("captcha")
+	config.Cfg.Captcha.Enabled = captcha == "on"
 
 	return db.UpdateConfig()
 }

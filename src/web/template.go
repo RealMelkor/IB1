@@ -117,7 +117,7 @@ func renderDashboard(c *gin.Context) error {
 func renderBoard(board db.Board, threads int, c *gin.Context) error {
 	pages := []int{}
 	count := (threads + 3) / 4
-	for i := 0; i < count; i++ { pages = append(pages, i) }
+	for i := 0; i < count; i++ { pages = append(pages, i + 1) }
 	data := struct {
 		Board	db.Board
 		Captcha	bool

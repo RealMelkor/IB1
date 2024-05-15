@@ -85,6 +85,29 @@ func thumbnail(in string, out string) error {
 	return bimg.Write(out, newImage)
 }
 
+func move(source string, destination string) error {
+	src, err := os.Open(source)
+	if err != nil { return err }
+	defer src.Close()
+	dst, err := os.Create(destination)
+	if err != nil { return err }
+	defer dst.Close()
+	_, err = io.Copy(dst, src)
+	if err != nil { return err }
+	fi, err := os.Stat(source)
+	if err != nil {
+		os.Remove(destination)
+		return err
+	}
+	err = os.Chmod(destination, fi.Mode())
+	if err != nil {
+		os.Remove(destination)
+		return err
+	}
+	os.Remove(source)
+	return nil
+}
+
 func uploadFile(c *gin.Context, file *multipart.FileHeader) (string, error) {
 
 	// verify extension
@@ -111,7 +134,7 @@ func uploadFile(c *gin.Context, file *multipart.FileHeader) (string, error) {
 	hash, err := sha256sum(out)
 	if err != nil { return "", err }
 	media := config.Cfg.Media.Path + "/" + hash + "." + extension
-	err = os.Rename(out, media)
+	err = move(out, media)
 	if err != nil { return "", err }
 
 	// create thumbnail

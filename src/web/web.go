@@ -60,7 +60,7 @@ func dashboard(c *gin.Context) {
 
 func boardIndex(c *gin.Context) {
 	page, err := strconv.Atoi(c.Query("page"))
-	if err != nil { page = 0 }
+	if err != nil { page = 0 } else { page -= 1 }
 	boardName := c.Param("board")
 	board, err := db.GetBoard(boardName)
 	if err != nil { 
@@ -71,7 +71,7 @@ func boardIndex(c *gin.Context) {
 	if threads > 4 {
 		if page < 0 || page * 4 >= threads { page = 0 }
 		i := 4
-		if page * 4 + i > threads { i -= threads % 4 }
+		if page * 4 + i >= threads { i = threads % 4 }
 		board.Threads = board.Threads[page * 4 : page * 4 + i]
 	}
 	for i := range board.Threads {

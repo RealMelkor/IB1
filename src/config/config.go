@@ -42,7 +42,7 @@ func LoadDefault() {
 	Cfg.Captcha.Length = 7
 	Cfg.Board.MaxThreads = 40
 	Cfg.Media.Path = "./media"
-	Cfg.Media.Tmp = "./tmp"
+	Cfg.Media.Tmp = "/tmp/ib1"
 	Cfg.Post.DefaultName = "Anonymous"
 }
 
