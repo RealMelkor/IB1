@@ -71,7 +71,9 @@ func boardIndex(c *gin.Context) {
 	if threads > 4 {
 		if page < 0 || page * 4 >= threads { page = 0 }
 		i := 4
-		if page * 4 + i >= threads { i = threads % 4 }
+		if threads % 4 != 0 && page * 4 + i >= threads {
+			i = threads % 4
+		}
 		board.Threads = board.Threads[page * 4 : page * 4 + i]
 	}
 	for i := range board.Threads {
