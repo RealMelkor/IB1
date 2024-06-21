@@ -23,12 +23,13 @@ func parseArguments() error {
 	switch os.Args[1] {
 	case "domain":
 		if len(os.Args) <= 2 {
-			return errors.New(os.Args[0] + " domain <domain> ")
+			return errors.New(os.Args[0] + " domain <domain>")
 		}
+		if err := db.Init(); err != nil { return err }
 		config.LoadDefault()
 		config.Cfg.Web.Domain = os.Args[2]
-		if err := db.Init(); err != nil { return err }
-		db.UpdateConfig()
+		if err := db.UpdateConfig(); err != nil { return err }
+		fmt.Println("domain updated")
 	case "register":
 		if len(os.Args) <= 3 {
 			return errors.New(os.Args[0] + " register <name> " +
@@ -41,7 +42,7 @@ func parseArguments() error {
 		if err := db.Init(); err != nil { return err }
 		err = db.CreateAccount(os.Args[2], password, rank)
 		if err != nil { return err }
-		fmt.Println("domain updated")
+		fmt.Println("new user created")
 	case "help":
 		fmt.Println(os.Args[0] +
 			" register <name> <trusted|moderator|admin>")
