@@ -4,7 +4,10 @@ import (
 	"log"
 	"IB1/web"
 	"IB1/db"
+	"IB1/config"
 )
+
+const VERSION = "v0.1"
 
 func main() {
 
@@ -20,6 +23,12 @@ func main() {
 		return
 	}
 
+	if err := firstLaunch(); err != nil {
+		log.Println(err)
+		return
+	}
+
+	log.Println("IB1", VERSION, "- Listening on", config.Cfg.Web.Listener)
 	if err := web.Init(); err != nil {
 		log.Println(err)
 		return

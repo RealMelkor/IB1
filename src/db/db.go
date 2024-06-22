@@ -2,8 +2,6 @@ package db
 
 import (
 	"gorm.io/gorm"
-	"gorm.io/driver/sqlite"
-	//"github.com/glebarez/sqlite"
 	"gorm.io/driver/mysql"
 	"html/template"
 	"errors"
@@ -124,7 +122,7 @@ func Init() error {
 		dsn := Path
 		db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	} else if dbType == TYPE_SQLITE {
-		db, err = gorm.Open(sqlite.Open(Path), &gorm.Config{})
+		db, err = gorm.Open(sqlite_open(Path), &gorm.Config{})
 	} else {
 		return errors.New("unknown database")
 	}

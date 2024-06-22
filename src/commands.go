@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"syscall"
+	"bufio"
 	"golang.org/x/term"
 
 	"IB1/db"
@@ -16,6 +17,27 @@ func askPassword() (string, error) {
 	password, err := term.ReadPassword(int(syscall.Stdin))
 	fmt.Println("")
 	return string(password), err
+}
+
+func firstLaunch() error {
+	if count, err := db.AccountsCount(); err != nil || count != 0 {
+		return err
+	}
+	fmt.Println("No account detected, creating admin account")
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("Enter Username: ")
+	name, _ := reader.ReadString('\n')
+	if len(name) < 1 { return nil }
+	name = name[:len(name) - 1]
+	if len(name) > 1 && name[len(name) - 1] == '\r' {
+		name = name[:len(name) - 1]
+	}
+
+	password, err := askPassword()
+	if err != nil { return err }
+	if err := db.Init(); err != nil { return err }
+
+	return db.CreateAccount(name, password, db.RANK_ADMIN)
 }
 
 func parseArguments() error {

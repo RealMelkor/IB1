@@ -418,6 +418,7 @@ func Init() error {
 	os.MkdirAll(config.Cfg.Media.Path + "/thumbnail", 0700)
 	os.MkdirAll(config.Cfg.Media.Tmp, 0700)
 
+	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 	if err := initTemplate(); err != nil { return err }
 

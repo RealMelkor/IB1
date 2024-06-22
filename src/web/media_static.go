@@ -1,9 +1,10 @@
-//go:build cgo
+//go:build !cgo
 package web
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/h2non/bimg"
+	"github.com/anthonynsimon/bild/imgio"
+	"github.com/anthonynsimon/bild/transform"
 	"mime/multipart"
 	"crypto/rand"
 	"crypto/sha256"
@@ -44,34 +45,33 @@ var extensions = map[string]bool{
 	"jpg": true,
 	"jpeg": true,
 	"webp": true,
+	"gif": true,
 	"webm": false,
 	"mp4": false,
 }
 
 func cleanImage(in string, out string) error {
 
-	buffer, err := bimg.Read(in)
+	img, err := imgio.Open(in)
 	if err != nil { return err }
 
-	img, err := bimg.NewImage(buffer).Process(
-			bimg.Options{StripMetadata: true})
-	if err != nil { return err }
-
-	bimg.Write(out, img)
-	return nil
+	enc := imgio.PNGEncoder()
+	ext := strings.Split(out, ".")
+	if len(ext) > 0 && ext[len(ext) - 1] != "png" {
+		enc = imgio.JPEGEncoder(100)
+	}
+	return imgio.Save(out, img, enc)
 }
 
 func thumbnail(in string, out string) error {
 
-	buffer, err := bimg.Read(in)
+	img, err := imgio.Open(in)
 	if err != nil { return err }
 
-	img := bimg.NewImage(buffer)
-
-	size, err := img.Size()
+	size := img.Bounds().Size()
 	if err != nil { return err }
-	w := size.Width
-	h := size.Height
+	w := size.X
+	h := size.Y
 	if w > h {
 		h = h * 200 / w
 		w = 200
@@ -80,10 +80,8 @@ func thumbnail(in string, out string) error {
 		h = 200
 	}
 
-	newImage, err := img.Resize(w, h)
-	if err != nil { return err }
-
-	return bimg.Write(out, newImage)
+	img = transform.Resize(img, w, h, transform.Linear)
+	return imgio.Save(out, img, imgio.PNGEncoder())
 }
 
 func move(source string, destination string) error {
@@ -129,7 +127,7 @@ func uploadFile(c *gin.Context, file *multipart.FileHeader) (string, error) {
 	// clean up the metadata
 	out := config.Cfg.Media.Tmp + "/clean_" + name + "." + extension
 	if err := cleanImage(path, out); err != nil { return "", err }
-	os.Remove(path)
+	if extension == "gif" { os.Rename(path, out) } else { os.Remove(path) }
 
 	// rename to the sha256 hash of itself
 	hash, err := sha256sum(out)

@@ -74,3 +74,9 @@ func Login(name string, password string) (string, error) {
 	token, err := createSession(account)
 	return token, err
 }
+
+func AccountsCount() (int, error) {
+	result := db.Find(&Account{})
+	if result.Error != nil { return -1, result.Error }
+	return int(result.RowsAffected), nil
+}
