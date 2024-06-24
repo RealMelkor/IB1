@@ -11,15 +11,14 @@ import (
 
 var themes []string
 var themesTable map[string]bool
-var userThemes map[string]string
-var builtinThemes map[string][]byte
+var themesContent map[string][]byte
 func getThemes() []string {
 	if themes != nil { return themes }
 	themesTable = map[string]bool{}
 	files, err := static.ReadDir("static")
 	if err != nil { return []string{} }
 	themes = []string{}
-	builtinThemes = map[string][]byte{}
+	themesContent = map[string][]byte{}
 	for _, v := range files {
 		if !v.Type().IsRegular() || v.Name() == "common.css" {
 			continue
@@ -34,17 +33,16 @@ func getThemes() []string {
 		if err != nil { continue }
 		data, err = minifyCSS(data)
 		if err != nil { continue }
-		builtinThemes[v.Name()] = data
+		themesContent[v.Name()] = data
 		themes = append(themes, theme)
 	}
-	userThemes = map[string]string{}
 	dbThemes, err := db.GetThemes()
 	if err == nil {
 		for _, v := range dbThemes {
 			if v.Disabled { continue }
 			themes = append(themes, v.Name)
 			themesTable[v.Name] = true
-			userThemes[v.Name] = v.Content
+			themesContent[v.Name + ".css"] = []byte(v.Content)
 		}
 	}
 	return themes

@@ -5,9 +5,11 @@ import (
 	"html/template"
 	"strings"
 	"strconv"
+	"io"
 
 	"github.com/tdewolff/minify/v2"
 	"github.com/tdewolff/minify/v2/css"
+	"github.com/tdewolff/minify/v2/html"
 	"github.com/gin-gonic/gin"
 
 	"IB1/db"
@@ -60,14 +62,12 @@ func header(c *gin.Context) any {
 		if err == nil { logged = true }
 	}
 	theme := getTheme(c)
-	_, ok := userThemes[theme]
 	data := struct {
 		Title	string
 		Lang	string
 		Url	string
 		Theme	string
 		Themes	[]string
-		UserTheme	bool
 		Logged	bool
 		Account	db.Account
 		Boards	[]db.Board
@@ -77,7 +77,6 @@ func header(c *gin.Context) any {
 		c.Request.RequestURI,
 		theme,
 		getThemes(),
-		ok,
 		logged,
 		account,
 		boards,
@@ -273,6 +272,13 @@ func minifyCSS(in []byte) ([]byte, error) {
 	res, err := m.Bytes("text/css", in)
 	if err != nil { return nil, err }
 	return res, nil
+}
+
+
+func minifyHTML(w io.Writer) io.WriteCloser {
+	m := minify.New()
+	m.AddFunc("text/html", html.Minify)
+	return m.Writer("text/html", w)
 }
 
 var stylesheet []byte = nil

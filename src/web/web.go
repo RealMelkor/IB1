@@ -14,8 +14,10 @@ import (
 func render(template string, data any, c *gin.Context) error {
 	c.Writer.WriteHeader(http.StatusOK)
 	c.Writer.Header().Add("Content-Type", "text/html; charset=utf-8")
-	err := templates.Lookup(template).Execute(c.Writer, data)
+	w := minifyHTML(c.Writer)
+	err := templates.Lookup(template).Execute(w, data)
 	if err != nil { return err }
+	w.Close()
 	return nil
 }
 
@@ -440,20 +442,8 @@ func Init() error {
 	r.GET("/static/common.css", func(c *gin.Context) {
 		c.Data(http.StatusOK, "text/css", stylesheet)
 	})
-	r.GET("/static/themes/:theme", func(c *gin.Context) {
-		theme := c.Param("theme")
-		if len(theme) < 4 || theme[len(theme) - 4:] != ".css" {
-			internalError(c, "file not found")
-		}
-		content, ok := userThemes[theme[:len(theme) - 4]]
-		if !ok {
-			internalError(c, "file not found")
-			return
-		}
-		c.Data(http.StatusOK, "text/css", []byte(content))
-	})
 	r.GET("/static/:file", func(c *gin.Context) {
-		content, ok := builtinThemes[c.Param("file")]
+		content, ok := themesContent[c.Param("file")]
 		if !ok {
 			internalError(c, "file not found")
 			return
