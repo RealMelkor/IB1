@@ -83,13 +83,6 @@ type Session struct {
 	Token		string `gorm:"unique"`
 }
 
-type Ban struct {
-	IP		string
-	Expiry		int64
-}
-
-var BanList = map[string]Ban{}
-
 const (
 	TYPE_SQLITE = iota
 	TYPE_MYSQL

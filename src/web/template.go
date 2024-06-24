@@ -108,11 +108,13 @@ func renderDashboard(c *gin.Context) error {
 		Config		config.Config
 		Theme		string
 		Themes		[]string
+		Bans		[]db.Ban
 		UserThemes	[]db.Theme
 		Header		any
 	}{
 		Boards: boards,
 		Config: config.Cfg,
+		Bans:	db.BanList,
 		Themes: getThemes(),
 		UserThemes: themes,
 		Header: header(c),

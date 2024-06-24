@@ -11,6 +11,8 @@ import (
 	"IB1/config"
 )
 
+type fErr func(c *gin.Context) error
+
 func render(template string, data any, c *gin.Context) error {
 	c.Writer.WriteHeader(http.StatusOK)
 	c.Writer.Header().Add("Content-Type", "text/html; charset=utf-8")
@@ -36,46 +38,38 @@ func badRequest(c *gin.Context, info string) {
 	render("error.gohtml", data, c)
 }
 
-func isBanned(c *gin.Context) bool {
+func isBanned(c *gin.Context) error {
 	_, err := loggedAs(c)
-	if err == nil { return false }
-	if err := db.IsBanned(c.RemoteIP()); err != nil {
-		badRequest(c, err.Error())
-		return true
-	}
-	return false
+	if err == nil { return err }
+	return db.IsBanned(c.RemoteIP())
 }
 
-func index(c *gin.Context) {
-	if err := renderIndex(c); err != nil {
-		internalError(c, err.Error())
-		return
+func hasRank(f fErr, rank int) fErr {
+	return func(c *gin.Context) error {
+		if err := needRank(c, rank); err != nil { return err }
+		return f(c)
 	}
 }
 
-func dashboard(c *gin.Context) {
-	if err := renderDashboard(c); err != nil {
-		internalError(c, err.Error())
-		return
+func err(f func(c *gin.Context) error) func(c *gin.Context) {
+	return func(c *gin.Context) {
+		if err := f(c); err != nil {
+			badRequest(c, err.Error())
+			return
+		}
 	}
 }
 
-func boardIndex(c *gin.Context) {
+func boardIndex(c *gin.Context) error {
 	page, err := strconv.Atoi(c.Query("page"))
 	if err != nil { page = 0 } else { page -= 1 }
 	boardName := c.Param("board")
 	board, err := db.GetBoard(boardName)
-	if err != nil { 
-		internalError(c, err.Error())
-		return
-	}
+	if err != nil { return err }
 	account, err := loggedAs(c)
 	if err == nil && account.Rank < db.RANK_MODERATOR {
 		board.Threads, err = db.GetVisibleThreads(board)
-		if err != nil {
-			internalError(c, err.Error())
-			return
-		}
+		if err != nil { return err }
 	}
 	threads := len(board.Threads)
 	if threads > 4 {
@@ -88,8 +82,7 @@ func boardIndex(c *gin.Context) {
 	}
 	for i := range board.Threads {
 		if err := db.RefreshThread(&board.Threads[i]); err != nil {
-			internalError(c, err.Error())
-			return
+			return err
 		}
 		if length := len(board.Threads[i].Posts); length > 5 {
 			posts := []db.Post{board.Threads[i].Posts[0]}
@@ -98,25 +91,16 @@ func boardIndex(c *gin.Context) {
 		}
 	}
 	captchaNew(c)
-	if err := renderBoard(board, threads, c); err != nil {
-		internalError(c, err.Error())
-		return
-	}
+	return renderBoard(board, threads, c)
 }
 
-func catalog(c *gin.Context) {
+func catalog(c *gin.Context) error {
 	boardName := c.Param("board")
 	board, err := db.GetBoard(boardName)
-	if err != nil { 
-		internalError(c, err.Error())
-		return
-	}
+	if err != nil { return err }
 	for i, v := range board.Threads {
 		err := db.RefreshThread(&v)
-		if err != nil {
-			internalError(c, err.Error())
-			return
-		}
+		if err != nil { return err }
 		v.Replies = len(v.Posts) - 1
 		v.Images = -1
 		for _, post := range v.Posts {
@@ -127,27 +111,22 @@ func catalog(c *gin.Context) {
 		board.Threads[i] = v
 	}
 	captchaNew(c)
-	if err := renderCatalog(board, c); err != nil {
-		internalError(c, err.Error())
-		return
-	}
+	return renderCatalog(board, c)
 }
 
-func checkCaptcha(c *gin.Context) bool {
+func checkCaptcha(c *gin.Context) error {
 	if config.Cfg.Captcha.Enabled {
 		_, err := loggedAs(c)
-		if err == nil { return true }
+		if err == nil { return nil } // captcha not needed if logged
 		captcha, hasCaptcha := c.GetPostForm("captcha")
 		if !hasCaptcha {
-			badRequest(c, "invalid form")
-			return false
+			return errors.New("invalid form")
 		}
 		if !captchaVerify(c, captcha) {
-			badRequest(c, "wrong captcha")
-			return false
+			return errors.New("wrong captcha")
 		}
 	}
-	return true
+	return nil
 }
 
 func verifyCaptcha(c *gin.Context) error {
@@ -162,107 +141,80 @@ func verifyCaptcha(c *gin.Context) error {
 	return nil
 }
 
-func newThread(c *gin.Context) {
+func newThread(c *gin.Context) error {
 
-	if isBanned(c) { return }
+	if err := isBanned(c); err != nil { return err }
 
 	boardName := c.Param("board")
 	board, err := db.GetBoard(boardName)
-	if err != nil { 
-		internalError(c, err.Error())
-		return 
-	}
+	if err != nil { return err }
 
 	name, hasName := c.GetPostForm("name")
 	title, hasTitle := c.GetPostForm("title")
 	content, hasContent := c.GetPostForm("content")
 	if !hasTitle || !hasContent || !hasName || content == "" { 
-		badRequest(c, "invalid form")
-		return 
+		return errors.New("invalid form")
 	}
 
-	if !checkCaptcha(c) { return }
+	if err := checkCaptcha(c); err != nil { return err }
 
 	media := ""
 	file, err := c.FormFile("media")
-	if err != nil { 
-		badRequest(c, err.Error())
-		return 
-	}
-	if media, err = uploadFile(c, file); err != nil { 
-		badRequest(c, err.Error())
-		return
-	}
+	if err != nil { return err }
+	if media, err = uploadFile(c, file); err != nil { return err }
 
 	parsed, _ := parseContent(content, 0)
 	number, err := db.CreateThread(board, title, name, media,
 					c.ClientIP(), parsed)
-	if err != nil { 
-		internalError(c, err.Error())
-		return
-	}
+	if err != nil { return err }
 
 	c.Redirect(http.StatusFound, c.Request.URL.Path + "/" +
 			strconv.Itoa(number))
+	return nil
 }
 
-func newPost(c *gin.Context) {
+func newPost(c *gin.Context) error {
 
-	if isBanned(c) { return }
+	if err := isBanned(c); err != nil { return err }
 
 	boardName := c.Param("board")
 	board, err := db.GetBoard(boardName)
-	if err != nil { 
-		badRequest(c, err.Error())
-		return
-	}
+	if err != nil { return err }
 
 	threadNumberStr := c.Param("thread")
 	threadNumber, err := strconv.Atoi(threadNumberStr)
-	if err != nil { 
-		badRequest(c, err.Error())
-		return
-	}
+	if err != nil { return err }
 	thread, err := db.GetThread(board, threadNumber)
-	if err != nil {
-		badRequest(c, err.Error())
-		return
-	}
+	if err != nil { return err }
 
 	name, hasName := c.GetPostForm("name")
 	content, hasContent := c.GetPostForm("content")
-	if !hasName || !hasContent {
-		badRequest(c, "invalid form")
-		return
-	}
+	if !hasName || !hasContent { return errors.New("invalid form") }
 
-	if !checkCaptcha(c) { return }
+	if err := checkCaptcha(c); err != nil { return err }
 
 	media := ""
 	file, err := c.FormFile("media")
 	if err == nil { 
 		if media, err = uploadFile(c, file); err != nil { 
-			badRequest(c, err.Error())
-			return
+			return err
 		}
 	}
 
 	parsed, refs := parseContent(content, thread.ID)
 	number, err := db.CreatePost(thread, parsed, name, media,
 					c.ClientIP(), nil)
-	if err != nil {
-		internalError(c, err.Error())
-		return
-	}
+	if err != nil { return err }
 
 	for _, v := range refs {
 		db.CreateReference(thread.ID, number, v)
 	}
 
 	c.Redirect(http.StatusFound, c.Request.URL.Path)
+	return nil
 }
 
-func thread(c *gin.Context) {
+func thread(c *gin.Context) error {
 
 	var thread db.Thread
 	var board db.Board
@@ -271,51 +223,33 @@ func thread(c *gin.Context) {
 	boardName := c.Param("board")
 
 	id, err := strconv.Atoi(threadID)
-	if err != nil {
-		badRequest(c, err.Error())
-		return
-	}
+	if err != nil { return err }
 	board, err = db.GetBoard(boardName)
-	if err != nil {
-		internalError(c, err.Error())
-		return
-	}
+	if err != nil { return err }
 	thread, err = db.GetThread(board, id)
-	if err != nil {
-		internalError(c, err.Error())
-		return
-	}
+	if err != nil { return err }
 	if thread.Posts[0].Disabled {
-		if _, err := loggedAs(c); err != nil {
-			badRequest(c, "not found")
-			return
-		}
+		if _, err := loggedAs(c); err != nil { return err }
 	}
 	captchaNew(c)
-	if err := renderThread(thread, c); err != nil {
-		internalError(c, err.Error())
-		return
-	}
+	return renderThread(thread, c)
 }
 
-func login(c *gin.Context) {
+func login(c *gin.Context) error {
 	_, err := loggedAs(c)
 	if err == nil {
 		c.Redirect(http.StatusFound, "/")
-		return
+		return nil
 	}
 	captchaNew(c)
-	if err := renderLogin(c, ""); err != nil {
-		internalError(c, err.Error())
-		return
-	}
+	return renderLogin(c, "")
 }
 
-func loginAs(c *gin.Context) {
+func loginAs(c *gin.Context) error {
 	_, err := loggedAs(c)
 	if err == nil {
 		c.Redirect(http.StatusFound, "/")
-		return
+		return nil
 	}
 	name := c.PostForm("username")
 	password := c.PostForm("password")
@@ -327,15 +261,12 @@ func loginAs(c *gin.Context) {
 	}
 	if err != nil {
 		captchaNew(c)
-		if err := renderLogin(c, err.Error()); err != nil {
-			internalError(c, err.Error())
-			return
-		}
-		return
+		return renderLogin(c, err.Error())
 	}
 	c.SetCookie("session_token", token, 0, "/", config.Cfg.Web.Domain,
 			false, true)
 	c.Redirect(http.StatusFound, "/")
+	return nil
 }
 
 func loggedAs(c *gin.Context) (db.Account, error) {
@@ -356,71 +287,58 @@ func disconnect(c *gin.Context) {
 	c.Redirect(http.StatusFound, "/")
 }
 
-func remove(c *gin.Context) {
-	var err error
-	for {
-		var id int
-		var post db.Post
-		board := c.Param("board")
-		id, err = strconv.Atoi(c.Param("id"))
-		if err != nil { break }
+func remove(c *gin.Context) error {
+	board := c.Param("board")
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil { return err }
 
-		post, err = db.GetPostFromBoard(board, id)
+	post, err := db.GetPostFromBoard(board, id)
+	if err != nil { return err }
+	err = db.Remove(board, id)
+	if err != nil { return err }
+	/*
+	TODO: verify if media is used by another post
+	if post.Media != "" {
+		err = os.Remove(
+			config.Cfg.Media.Directory + "/" + post.Media)
 		if err != nil { break }
-		err = db.Remove(board, id)
-		if err != nil { break }
-		/*
-		TODO: verify if media is used by another post
-		if post.Media != "" {
-			err = os.Remove(
-				config.Cfg.Media.Directory + "/" + post.Media)
-			if err != nil { break }
-		}
-		if post.Thumbnail() != "" {
-			err = os.Remove(config.Cfg.Media.Thumbnail + "/" +
-						post.Thumbnail())
-			if err != nil { break }
-		}
-		*/
-
-		dst := "/" + board
-		if id != post.Thread.Number {
-			dst += "/" + strconv.Itoa(post.Thread.Number)
-		}
-		c.Redirect(http.StatusFound, dst)
-		return
 	}
-	badRequest(c, err.Error())
+	if post.Thumbnail() != "" {
+		err = os.Remove(config.Cfg.Media.Thumbnail + "/" +
+					post.Thumbnail())
+		if err != nil { break }
+	}
+	*/
+
+	dst := "/" + board
+	if id != post.Thread.Number {
+		dst += "/" + strconv.Itoa(post.Thread.Number)
+	}
+	c.Redirect(http.StatusFound, dst)
+	return nil
 }
 
-func hide(c *gin.Context) {
-	var err error
-	for {
-		var id int
-		var post db.Post
-		id, err = strconv.Atoi(c.Param("id"))
-		if err != nil { break }
-		board := c.Param("board")
-		post, err = db.GetPostFromBoard(board, id)
-		if err != nil { break }
-		err = db.Hide(board, id, post.Disabled)
-		if err != nil { break }
-		c.Redirect(http.StatusFound, "/" + board + "/" +
-				strconv.Itoa(post.Thread.Number))
-		return
-	}
-	badRequest(c, err.Error())
+func hide(c *gin.Context) error {
+	var id int
+	var post db.Post
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil { return err }
+	board := c.Param("board")
+	post, err = db.GetPostFromBoard(board, id)
+	if err != nil { return err }
+	err = db.Hide(board, id, post.Disabled)
+	if err != nil { return err }
+	c.Redirect(http.StatusFound, "/" + board + "/" +
+			strconv.Itoa(post.Thread.Number))
+	return err
 }
 
-func ban(c *gin.Context) {
+func ban(c *gin.Context) error {
 	board := c.Param("board")
 	ip := c.Param("ip")
-	if err := db.BanIP(ip); err != nil {
-		badRequest(c, err.Error())
-		return
-	}
+	if err := db.BanIP(ip, 3600); err != nil { return err }
 	c.Redirect(http.StatusFound, "/" + board)
-	return
+	return nil
 }
 
 func Init() error {
@@ -432,7 +350,7 @@ func Init() error {
 	r := gin.Default()
 	if err := initTemplate(); err != nil { return err }
 
-	r.GET("/", index)
+	r.GET("/", err(renderIndex))
 	r.GET("/favicon.ico", func(c *gin.Context) {
 		c.Data(http.StatusNotFound, "text/plain", []byte("Not Found"))
 	})
@@ -454,20 +372,20 @@ func Init() error {
 	if config.Cfg.Captcha.Enabled {
 		r.GET("/captcha", captchaImage)
 	}
-	r.GET("/:board", boardIndex)
-	r.GET("/:board/catalog", catalog)
-	r.POST("/:board", newThread)
-	r.GET("/:board/:thread", thread)
-	r.POST("/:board/:thread", newPost)
+	r.GET("/:board", err(boardIndex))
+	r.GET("/:board/catalog", err(catalog))
+	r.POST("/:board", err(newThread))
+	r.GET("/:board/:thread", err(thread))
+	r.POST("/:board/:thread", err(newPost))
 	r.GET("/disconnect", disconnect)
-	r.GET("/login", login)
-	r.POST("/login", loginAs)
-	r.GET("/:board/remove/:id", remove)
-	r.GET("/:board/hide/:id", hide)
-	r.GET("/:board/ban/:ip", ban)
-	r.GET("/dashboard", dashboard)
+	r.GET("/login", err(login))
+	r.POST("/login", err(loginAs))
+	r.GET("/:board/remove/:id", err(hasRank(remove, db.RANK_ADMIN)))
+	r.GET("/:board/hide/:id", err(hasRank(hide, db.RANK_MODERATOR)))
+	r.GET("/:board/ban/:ip", err(hasRank(ban, db.RANK_MODERATOR)))
+	r.GET("/dashboard", err(hasRank(renderDashboard, db.RANK_ADMIN)))
 	r.POST("/config/client/theme", func(c *gin.Context) {
-		handle(c, setTheme, c.Query("origin"))
+		redirect(setTheme, c.Query("origin"))(c)
 	})
 	r.POST("/config/update", handleConfig(updateConfig))
 	r.POST("/config/board/create", handleConfig(createBoard))
@@ -476,6 +394,8 @@ func Init() error {
 	r.POST("/config/theme/create", handleConfig(createTheme))
 	r.POST("/config/theme/delete/:id", handleConfig(deleteTheme))
 	r.POST("/config/theme/update/:id", handleConfig(updateTheme))
+	r.POST("/config/ban/create", handleConfig(addBan))
+	r.POST("/config/ban/cancel/:id", handleConfig(deleteBan))
 
 	r.Static("/media", config.Cfg.Media.Path)
 

@@ -108,6 +108,32 @@
 </form>
 	</tr>
 	</table>
-
+	<div style="padding: 30px;"></div>
+	<table>
+	<tr>
+		<th>IP</th>
+		<th>Start</th>
+		<th>End</th>
+		<th></th>
+	</tr>
+{{range .Bans}}
+	<tr>
+<form method="POST" action="/config/ban/cancel/{{.ID}}">
+		<td>{{.String}}</td>
+		<td>{{.From}}</td>
+		<td>{{.To}}</td>
+		<td><input type="submit" value="Remove"></td>
+</form>
+	</tr>
+{{end}}
+	<tr>
+<form method="POST" action="/config/ban/create">
+		<td><input type="text" name="ip" required></td>
+		<td></td>
+		<td><input type="datetime-local" name="expiration"></td>
+		<td><input type="submit" value="Create"></td>
+</form>
+	</tr>
+	</table>
 </div>
 {{ template "footer" . }}

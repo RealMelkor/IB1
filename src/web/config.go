@@ -4,6 +4,7 @@ import (
 	"errors"
 	"strconv"
 	"os"
+	"time"
 	"net/http"
 	"IB1/db"
 	"IB1/config"
@@ -11,32 +12,35 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func handle(c *gin.Context, f func(*gin.Context) error, redirect string) {
-	err := f(c)
-	if err != nil {
-		badRequest(c, err.Error())
-		return
+func redirect(f fErr, redirect string) func(*gin.Context) error {
+	return func(c *gin.Context) error {
+		err := f(c)
+		if err != nil { return err }
+		c.Redirect(http.StatusFound, redirect)
+		return nil
 	}
-	c.Redirect(http.StatusFound, redirect)
 }
 
-func isAdmin(c *gin.Context) bool {
+func needRank(c *gin.Context, rank int) error {
+	ret := errors.New("insufficient privilege")
 	var account db.Account
 	account.Logged = false
 	token, _ := c.Cookie("session_token")
-	if token == "" { return false }
+	if token == "" { return ret }
 	var err error
 	account, err = db.GetAccountFromToken(token)
-	if err != nil { return false }
-	return account.Rank == db.RANK_ADMIN
+	if err != nil { return err }
+	if account.Rank < rank { return ret }
+	return nil
 }
 
-func canSetConfig(c *gin.Context, f func(c *gin.Context) error) func(
-						c *gin.Context) error {
-	if !isAdmin(c) {
-		return func(c *gin.Context) error {
-			return errors.New("insufficient privilege")
-		}
+func handleConfig(f func(c *gin.Context) error) func(c *gin.Context) {
+	return err(redirect(hasRank(f, db.RANK_ADMIN), "/dashboard"))
+}
+
+func canSetConfig(c *gin.Context, f fErr) fErr {
+	if err := needRank(c, db.RANK_ADMIN); err != nil {
+		return func(c *gin.Context) error { return err }
 	}
 	return f
 }
@@ -172,8 +176,24 @@ func deleteTheme(c *gin.Context) error {
 	return nil
 }
 
-func handleConfig(f func(c *gin.Context) error) func(c *gin.Context) {
-	return func(c *gin.Context) {
-		handle(c, canSetConfig(c, f), "/dashboard")
+func addBan(c *gin.Context) error {
+	ip, hasIP := c.GetPostForm("ip")
+        if !hasIP { return errors.New("invalid form") }
+	expiry, hasExpiry := c.GetPostForm("expiration")
+	duration := int64(3600)
+        if hasExpiry {
+		expiration, err := time.Parse("2006-01-02T03:04", expiry)
+		if err == nil {
+			duration =  expiration.Unix() - time.Now().Unix()
+		}
 	}
+	db.BanIP(ip, duration)
+	return nil
+}
+
+func deleteBan(c *gin.Context) error {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil { return errors.New("invalid theme") }
+	err = db.RemoveBan(uint(id))
+	return nil
 }
