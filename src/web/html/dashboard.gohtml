@@ -40,6 +40,10 @@
 			<td>Temporary Directory Path</td>
 			<td><input type="text" name="tmp" value="{{.Config.Media.Tmp}}" required></td>
 		</tr>
+		<tr>
+			<td>Ascii-Only Mode</td>
+			<td><input type="checkbox" name="ascii" {{if .Config.Post.AsciiOnly}}checked{{end}}></td>
+		</tr>
 	</table>
 	<div>
 		<input class="input-center" type="submit" value="Update">
@@ -73,6 +77,33 @@
 		<td><input type="text" name="board" required></td>
 		<td><input type="text" name="name" required></td>
 		<td><input type="text" name="description" required></td>
+		<td><input type="submit" value="Create"></td>
+</form>
+	</tr>
+	</table>
+	<div style="padding: 30px;"></div>
+	<table>
+	<tr>
+		<th>Enabled</th>
+		<th>Theme</th>
+		<th></th>
+		<th></th>
+	</tr>
+{{range .UserThemes}}
+	<tr>
+<form method="POST" action="/config/theme/update/{{.ID}}">
+		<td><input type="checkbox" name="enabled" {{if not .Disabled}}checked{{end}}></td>
+		<td><input type="text" name="name" value="{{.Name}}" required></td>
+		<td><input type="submit" value="Update"></td>
+		<td><input type="submit" value="Delete" formaction="/config/theme/delete/{{.ID}}"></td>
+</form>
+	</tr>
+{{end}}
+	<tr>
+<form method="POST" action="/config/theme/create" enctype="multipart/form-data">
+		<td><input type="checkbox" name="enabled" checked></td>
+		<td><input type="text" name="name" required></td>
+		<td><input type="file" name="theme" required></td>
 		<td><input type="submit" value="Create"></td>
 </form>
 	</tr>

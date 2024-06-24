@@ -83,6 +83,9 @@ func updateConfig(c *gin.Context) error {
 	captcha, _ := c.GetPostForm("captcha")
 	config.Cfg.Captcha.Enabled = captcha == "on"
 
+	ascii, _ := c.GetPostForm("ascii")
+	config.Cfg.Post.AsciiOnly = ascii == "on"
+
 	return db.UpdateConfig()
 }
 
@@ -125,6 +128,48 @@ func deleteBoard(c *gin.Context) error {
 		return nil
 	}
         return errors.New("invalid board")
+}
+
+func createTheme(c *gin.Context) error {
+	file, err := c.FormFile("theme")
+        if err != nil { return err }
+	name, hasName := c.GetPostForm("name")
+        if !hasName { return errors.New("invalid form") }
+	enabled, _ := c.GetPostForm("enabled")
+	disabled := enabled != "on"
+	data := make([]byte, file.Size)
+	f, err := file.Open()
+	if err != nil { return err }
+	_, err = f.Read(data)
+	if err != nil { return err }
+	data, err = minifyCSS(data)
+	if err != nil { return err }
+	err = db.AddTheme(name, string(data), disabled)
+	if err != nil { return err }
+	reloadThemes()
+	return nil
+}
+
+func updateTheme(c *gin.Context) error {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil { return errors.New("invalid theme") }
+	name, hasName := c.GetPostForm("name")
+        if !hasName { return errors.New("invalid form") }
+	enabled, _ := c.GetPostForm("enabled")
+	disabled := enabled != "on"
+	err = db.UpdateThemeByID(id, name, disabled)
+	if err != nil { return err }
+	reloadThemes()
+	return nil
+}
+
+func deleteTheme(c *gin.Context) error {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil { return errors.New("invalid theme") }
+	err = db.DeleteThemeByID(id)
+	if err != nil { return err }
+	reloadThemes()
+	return nil
 }
 
 func handleConfig(f func(c *gin.Context) error) func(c *gin.Context) {

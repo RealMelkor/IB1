@@ -67,6 +67,14 @@ func boardIndex(c *gin.Context) {
 		internalError(c, err.Error())
 		return
 	}
+	account, err := loggedAs(c)
+	if err == nil && account.Rank < db.RANK_MODERATOR {
+		board.Threads, err = db.GetVisibleThreads(board)
+		if err != nil {
+			internalError(c, err.Error())
+			return
+		}
+	}
 	threads := len(board.Threads)
 	if threads > 4 {
 		if page < 0 || page * 4 >= threads { page = 0 }
@@ -432,13 +440,26 @@ func Init() error {
 	r.GET("/static/common.css", func(c *gin.Context) {
 		c.Data(http.StatusOK, "text/css", stylesheet)
 	})
-	r.GET("/static/:file", func(c *gin.Context) {
-		data, err := static.ReadFile("static/" + c.Param("file"))
-		if err != nil {
+	r.GET("/static/themes/:theme", func(c *gin.Context) {
+		theme := c.Param("theme")
+		if len(theme) < 4 || theme[len(theme) - 4:] != ".css" {
+			internalError(c, "file not found")
+		}
+		content, ok := userThemes[theme[:len(theme) - 4]]
+		if !ok {
 			internalError(c, "file not found")
 			return
 		}
-		c.Data(http.StatusOK, "text/css", data)
+		c.Data(http.StatusOK, "text/css", []byte(content))
+	})
+	r.GET("/static/:file", func(c *gin.Context) {
+		content, ok := builtinThemes[c.Param("file")]
+		if !ok {
+			internalError(c, "file not found")
+			return
+		}
+		c.Writer.Header().Add("Content-Type", "text/css")
+		c.Writer.Write(content)
 	})
 	if config.Cfg.Captcha.Enabled {
 		r.GET("/captcha", captchaImage)
@@ -462,6 +483,9 @@ func Init() error {
 	r.POST("/config/board/create", handleConfig(createBoard))
 	r.POST("/config/board/update/:board", handleConfig(updateBoard))
 	r.POST("/config/board/delete/:board", handleConfig(deleteBoard))
+	r.POST("/config/theme/create", handleConfig(createTheme))
+	r.POST("/config/theme/delete/:id", handleConfig(deleteTheme))
+	r.POST("/config/theme/update/:id", handleConfig(updateTheme))
 
 	r.Static("/media", config.Cfg.Media.Path)
 

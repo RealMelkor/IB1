@@ -15,6 +15,13 @@ type Config struct {
 	Data		[]byte
 }
 
+type Theme struct {
+	gorm.Model
+	Content		string
+	Name		string `gorm:"unique"`
+	Disabled	bool
+}
+
 type Board struct {
 	gorm.Model
 	Name		string `gorm:"unique"`
@@ -128,7 +135,7 @@ func Init() error {
 	}
 	if err != nil { return err }
 
-	db.AutoMigrate(&Board{}, &Thread{}, &Post{}, &Ban{},
+	db.AutoMigrate(&Board{}, &Thread{}, &Post{}, &Ban{}, &Theme{},
 			&Reference{}, &Account{}, &Session{}, &Config{})
 
 	if err := LoadBoards(); err != nil { return err }
@@ -172,6 +179,22 @@ func GetBoard(name string) (Board, error) {
 	return board, nil
 }
 
+func GetVisibleThreads(board Board) ([]Thread, error) {
+	var threads []Thread
+	err := db.Raw(
+		"SELECT a.* FROM threads a " +
+		"INNER JOIN posts b ON " +
+		"a.number = b.number AND a.id = b.thread_id " +
+		"INNER JOIN posts c ON " +
+		"a.id = c.thread_id " +
+		"WHERE a.board_id = ? AND b.disabled = 0 " +
+		"GROUP BY a.id " +
+		"ORDER BY MAX(c.timestamp) DESC LIMIT ?;",
+		board.ID, config.Cfg.Board.MaxThreads,
+	).Order("number").Scan(&threads).Error
+	return threads, err
+}
+
 func LoadBoards() error {
 	var boards []Board
 	tx := db.Find(&boards)
@@ -186,10 +209,11 @@ func LoadBoards() error {
 
 func RefreshBoard(board *Board) error {
 	board.Threads = []Thread{}
+	hide := ""
 	err := db.Raw(
 		"SELECT b.* FROM posts a " +
 		"INNER JOIN threads b ON a.thread_id = b.id " +
-		"WHERE a.board_id = ? GROUP BY a.thread_id " +
+		"WHERE a.board_id = ? " + hide + "GROUP BY a.thread_id " +
 		"ORDER BY MAX(a.timestamp) DESC LIMIT ?;",
 		board.ID, config.Cfg.Board.MaxThreads).
 		Scan(&board.Threads).Error
@@ -249,10 +273,34 @@ func UpdateBoard(board Board) error {
 }
 
 func DeleteBoard(board Board) error {
-	return db.Delete(&board).Error
+	return db.Unscoped().Delete(&board).Error
 }
 
 func GetBoards() ([]Board, error) {
 	var boards []Board
 	return boards, db.Find(&boards).Error
+}
+
+func AddTheme(name string, content string, disabled bool) error {
+	return db.Create(&Theme{
+		Name: name, Content: content, Disabled: disabled}).Error
+}
+
+func DeleteTheme(name string) error {
+	return db.Where("name = ?", name).Delete(&Theme{}).Error
+}
+
+func DeleteThemeByID(id int) error {
+	return db.Unscoped().Delete(&Theme{}, id).Error
+}
+
+func UpdateThemeByID(id int, name string, disabled bool) error {
+	return db.Where("id = ?", id).Select("name", "disabled").
+		Updates(Theme{Name: name, Disabled: disabled}).Error
+}
+
+func GetThemes() ([]Theme, error) {
+	var themes []Theme
+	err := db.Find(&themes).Error
+	return themes, err
 }

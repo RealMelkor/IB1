@@ -59,12 +59,15 @@ func header(c *gin.Context) any {
 		account, err = db.GetAccountFromToken(token)
 		if err == nil { logged = true }
 	}
+	theme := getTheme(c)
+	_, ok := userThemes[theme]
 	data := struct {
 		Title	string
 		Lang	string
 		Url	string
 		Theme	string
 		Themes	[]string
+		UserTheme	bool
 		Logged	bool
 		Account	db.Account
 		Boards	[]db.Board
@@ -72,8 +75,9 @@ func header(c *gin.Context) any {
 		config.Cfg.Home.Title,
 		config.Cfg.Home.Language,
 		c.Request.RequestURI,
-		getTheme(c),
+		theme,
 		getThemes(),
+		ok,
 		logged,
 		account,
 		boards,
@@ -99,16 +103,19 @@ func renderIndex(c *gin.Context) error {
 func renderDashboard(c *gin.Context) error {
 	boards, err := db.GetBoards()
 	if err != nil { return err }
+	themes, _ := db.GetThemes()
 	data := struct {
 		Boards		[]db.Board
 		Config		config.Config
 		Theme		string
 		Themes		[]string
+		UserThemes	[]db.Theme
 		Header		any
 	}{
 		Boards: boards,
 		Config: config.Cfg,
 		Themes: getThemes(),
+		UserThemes: themes,
 		Header: header(c),
 	}
 	return render("dashboard.gohtml", data, c)
@@ -236,12 +243,36 @@ func addGreentext(content string) string {
 	return content
 }
 
+func asciiOnly(s string) string {
+	i := 0
+	res := make([]byte, len(s))
+	for _, c := range s {
+		if c == '\t' || c == '\n' || (c >= ' ' && c < 127) {
+			res[i] = byte(c)
+			i++
+		}
+	}
+	if i == 0 { return "" }
+	return string(res[:i])
+}
+
 func parseContent(content string, thread uint) (template.HTML, []int) {
+	if config.Cfg.Post.AsciiOnly {
+		content = asciiOnly(content)
+	}
 	content = template.HTMLEscapeString(content)
 	content = strings.Replace(content, "\n", "<br>", -1)
 	content, refs := addLinks(content, thread)
 	content = addGreentext(content)
 	return template.HTML(content), refs
+}
+
+func minifyCSS(in []byte) ([]byte, error) {
+	m := minify.New()
+	m.AddFunc("text/css", css.Minify)
+	res, err := m.Bytes("text/css", in)
+	if err != nil { return nil, err }
+	return res, nil
 }
 
 var stylesheet []byte = nil

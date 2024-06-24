@@ -6,28 +6,29 @@ var Cfg Config
 
 type Config struct {
 	Home struct {
-		Title		string	`validate:"required"`
-		Description	string	`validate:"required"`
-		Language	string	`validate:"required"`
-		Theme		string	`default:"default"`
+		Title		string
+		Description	string
+		Language	string
+		Theme		string
 	}
 	Web struct {
-		Domain		string	`default:"localhost"`
-		Listener	string	`validate:"required"`
+		Domain		string
+		Listener	string
 	}
 	Media struct {
-		Path		string	`validate:"required"`
-		Tmp		string	`validate:"required"`
+		Path		string
+		Tmp		string
 	}
 	Captcha struct {
 		Enabled		bool
-		Length		int `validate:"required"`
+		Length		int
 	}
 	Post struct {
-		DefaultName	string `default:"Anonymous"`
+		DefaultName	string
+		AsciiOnly	bool
 	}
 	Board struct {
-		MaxThreads	int `validate:"required"`
+		MaxThreads	int
 	}
 }
 
@@ -44,6 +45,7 @@ func LoadDefault() {
 	Cfg.Media.Path = "./media"
 	Cfg.Media.Tmp = "/tmp/ib1"
 	Cfg.Post.DefaultName = "Anonymous"
+	Cfg.Post.AsciiOnly = false
 }
 
 func LoadConfig(data []byte) error {
