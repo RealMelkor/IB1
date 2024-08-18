@@ -162,27 +162,27 @@ body {
 }
 
 .new-thread {
-	width: 300px;
+	width: fit-content;
 	margin-left: auto;
 	margin-right: auto;
 }
 
-#new-thread-check ~ label > p > span {
+#new-thread-check ~ label > span {
 	cursor: pointer;
 	color: #3391ff;
 	text-align: center;
 }
 
-#new-thread-check ~ label > p > span:hover {
+#new-thread-check ~ label > span:hover {
 	color: red;
 }
 
-#new-thread-check ~ label > p {
+#new-thread-check ~ label {
 	text-align: center;
 	font-size: 16pt;
 }
 
-#new-thread-check:checked ~ label > p {
+#new-thread-check:checked ~ label {
 	display: none;
 }
 
