@@ -111,6 +111,23 @@
 	<div style="padding: 30px;"></div>
 	<table>
 	<tr>
+		<th>Favicon</th>
+		<th></th>
+		<th></th>
+	</tr>
+	<tr>
+<form method="POST" action="/config/favicon/update" enctype="multipart/form-data">
+		<td><input type="file" name="theme" required></td>
+		<td><input type="submit" value="Upload"></td>
+</form>
+<form method="POST" action="/config/favicon/clear">
+		<td><input type="submit" value="Reset"></td>
+</form>
+	</tr>
+	</table>
+	<div style="padding: 30px;"></div>
+	<table>
+	<tr>
 		<th>IP</th>
 		<th>Start</th>
 		<th>End</th>

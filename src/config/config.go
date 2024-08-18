@@ -10,6 +10,8 @@ type Config struct {
 		Description	string
 		Language	string
 		Theme		string
+		Favicon		[]byte
+		FaviconMime	string
 	}
 	Web struct {
 		Domain		string

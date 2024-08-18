@@ -144,6 +144,7 @@ func createTheme(c *gin.Context) error {
 	data := make([]byte, file.Size)
 	f, err := file.Open()
 	if err != nil { return err }
+	defer f.Close()
 	_, err = f.Read(data)
 	if err != nil { return err }
 	data, err = minifyCSS(data)

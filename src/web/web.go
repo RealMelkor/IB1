@@ -354,8 +354,13 @@ func Init() error {
 	r.GET("/favicon.ico", func(c *gin.Context) {
 		c.Data(http.StatusNotFound, "text/plain", []byte("Not Found"))
 	})
-	r.GET("/static/favicon.png", func(c *gin.Context) {
-		c.Data(http.StatusOK, "image/png", favicon)
+	r.GET("/static/favicon", func(c *gin.Context) {
+		if config.Cfg.Home.FaviconMime == "" {
+			c.Data(http.StatusOK, "image/png", favicon)
+			return
+		}
+		c.Data(http.StatusOK, config.Cfg.Home.FaviconMime,
+			config.Cfg.Home.Favicon)
 	})
 	r.GET("/static/common.css", func(c *gin.Context) {
 		c.Data(http.StatusOK, "text/css", stylesheet)
@@ -394,6 +399,8 @@ func Init() error {
 	r.POST("/config/theme/create", handleConfig(createTheme))
 	r.POST("/config/theme/delete/:id", handleConfig(deleteTheme))
 	r.POST("/config/theme/update/:id", handleConfig(updateTheme))
+	r.POST("/config/favicon/update", handleConfig(updateFavicon))
+	r.POST("/config/favicon/clear", handleConfig(clearFavicon))
 	r.POST("/config/ban/create", handleConfig(addBan))
 	r.POST("/config/ban/cancel/:id", handleConfig(deleteBan))
 
