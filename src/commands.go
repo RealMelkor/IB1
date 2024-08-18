@@ -41,6 +41,8 @@ func firstLaunch() error {
 }
 
 func parseArguments() error {
+	if s := os.Getenv("IB1_DB_PATH"); s != "" { db.Path = s }
+	if s := os.Getenv("IB1_DB_TYPE"); s != "" { db.Type = s }
 	if len(os.Args) <= 1 { return nil }
 	switch os.Args[1] {
 	case "domain":
@@ -65,15 +67,18 @@ func parseArguments() error {
 		err = db.CreateAccount(os.Args[2], password, rank)
 		if err != nil { return err }
 		fmt.Println("new user created")
-	case "help":
+	case "db":
+		if len(os.Args) < 3 {
+			return errors.New(os.Args[0] + " db <path> [type]")
+		}
+		if len(os.Args) > 3 { db.Type = os.Args[3] }
+		db.Path = os.Args[2]
+		return nil
+	default:
 		fmt.Println(os.Args[0] +
 			" register <name> <trusted|moderator|admin>")
 		fmt.Println(os.Args[0] + " domain <domain>")
-		fmt.Println(os.Args[0] + " help")
-	default:
-		db.Path = os.Args[1]
-		if len(os.Args) > 2 { db.Type = os.Args[2] }
-		return nil
+		fmt.Println(os.Args[0] + " db <path> [sqlite|sqlite3|mysql]")
 	}
 	return errors.New("")
 }

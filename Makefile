@@ -1,6 +1,10 @@
 PREFIX=/usr/local
 
 build: src/* src/*/*
+	cd src && CGO_ENABLED=0 go build
+	mv src/IB1 .
+
+prod: src/* src/*/*
 	cd src && go build
 	mv src/IB1 .
 
