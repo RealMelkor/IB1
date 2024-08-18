@@ -2,6 +2,8 @@
 
 An imageboard that does not require Javascript.
 
+![pic0](./img/img0.png)
+
 ## Requirements
 
 * go compiler
@@ -28,6 +30,8 @@ cd ..
 * Open http://localhost:8080/login in a browser and login using the admin credentials.
 * Open the dashboard link in the top right corner.
 * Add boards and change the configuration as you want.
+
+![pic1](./img/img1.png)
 
 ## Database configuration
 
