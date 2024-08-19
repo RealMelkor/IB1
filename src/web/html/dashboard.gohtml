@@ -34,7 +34,11 @@
 		</tr>
 		<tr>
 			<td>Media</td>
-			<td><input type="text" name="media" value="{{.Config.Media.Path}}" required></td>
+			<td><input type="text" name="media" value="{{.Config.Media.Path}}" {{if .Config.Media.InDatabase}}disabled{{else}}required{{end}}></td>
+		</tr>
+		<tr>
+			<td>Store media inside the database</td>
+			<td><input type="checkbox" name="indb" {{if .Config.Media.InDatabase}}checked{{end}}></td>
 		</tr>
 		<tr>
 			<td>Temporary Directory Path</td>

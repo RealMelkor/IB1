@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"os"
+	"strings"
 	"errors"
 	
 	"IB1/db"
@@ -343,7 +344,9 @@ func ban(c *gin.Context) error {
 
 func Init() error {
 
-	os.MkdirAll(config.Cfg.Media.Path + "/thumbnail", 0700)
+	if !config.Cfg.Media.InDatabase {
+		os.MkdirAll(config.Cfg.Media.Path + "/thumbnail", 0700)
+	}
 	os.MkdirAll(config.Cfg.Media.Tmp, 0700)
 
 	gin.SetMode(gin.ReleaseMode)
@@ -404,7 +407,30 @@ func Init() error {
 	r.POST("/config/ban/create", handleConfig(addBan))
 	r.POST("/config/ban/cancel/:id", handleConfig(deleteBan))
 
-	r.Static("/media", config.Cfg.Media.Path)
+	if config.Cfg.Media.InDatabase {
+		r.GET("/media/:hash", func(c *gin.Context) {
+			parts := strings.Split(c.Param("hash"), ".")
+			data, mime, err := db.GetMedia(parts[0])
+			if err != nil {
+				c.Data(http.StatusBadRequest, "text/plain",
+						[]byte(err.Error()))
+				return
+			}
+			c.Data(http.StatusOK, mime, data)
+		})
+		r.GET("/media/thumbnail/:hash", func(c *gin.Context) {
+			parts := strings.Split(c.Param("hash"), ".")
+			data, err := db.GetThumbnail(parts[0])
+			if err != nil {
+				c.Data(http.StatusBadRequest, "text/plain",
+						[]byte(err.Error()))
+				return
+			}
+			c.Data(http.StatusOK, "image/png", data)
+		})
+	} else {
+		r.Static("/media", config.Cfg.Media.Path)
+	}
 
 	return r.Run(config.Cfg.Web.Listener)
 }

@@ -27,11 +27,13 @@ func firstLaunch() error {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("Enter Username: ")
 	name, _ := reader.ReadString('\n')
-	if len(name) < 1 { return nil }
-	name = name[:len(name) - 1]
-	if len(name) > 1 && name[len(name) - 1] == '\r' {
-		name = name[:len(name) - 1]
+	pop := func(s string) (string) {
+		if len(s) < 2 { return "" }
+		return s[:len(s) - 1]
 	}
+	name = pop(name)
+	if name != "" && name[len(name) - 1] == '\r' { name = pop(name) }
+	if len(name) < 1 { return errors.New("invalid username") }
 
 	password, err := askPassword()
 	if err != nil { return err }

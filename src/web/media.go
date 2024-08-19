@@ -1,19 +1,20 @@
-//go:build cgo
 package web
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/h2non/bimg"
-	"mime/multipart"
-	"crypto/rand"
-	"crypto/sha256"
-	"strings"
+	"os"
+	"io"
 	"time"
 	"fmt"
+	"strings"
 	"errors"
-	"io"
-	"os"
+	"crypto/rand"
+	"crypto/sha256"
+	"mime/multipart"
+
+	"github.com/gabriel-vasile/mimetype"
+	"github.com/gin-gonic/gin"
 	"IB1/config"
+	"IB1/db"
 )
 
 func uniqueRandomName() (string, error) {
@@ -48,67 +49,6 @@ var extensions = map[string]bool{
 	"mp4": false,
 }
 
-func cleanImage(in string, out string) error {
-
-	buffer, err := bimg.Read(in)
-	if err != nil { return err }
-
-	img, err := bimg.NewImage(buffer).Process(
-			bimg.Options{StripMetadata: true})
-	if err != nil { return err }
-
-	bimg.Write(out, img)
-	return nil
-}
-
-func thumbnail(in string, out string) error {
-
-	buffer, err := bimg.Read(in)
-	if err != nil { return err }
-
-	img := bimg.NewImage(buffer)
-
-	size, err := img.Size()
-	if err != nil { return err }
-	w := size.Width
-	h := size.Height
-	if w > h {
-		h = h * 200 / w
-		w = 200
-	} else {
-		w = w * 200 / h
-		h = 200
-	}
-
-	newImage, err := img.Resize(w, h)
-	if err != nil { return err }
-
-	return bimg.Write(out, newImage)
-}
-
-func move(source string, destination string) error {
-	src, err := os.Open(source)
-	if err != nil { return err }
-	defer src.Close()
-	dst, err := os.Create(destination)
-	if err != nil { return err }
-	defer dst.Close()
-	_, err = io.Copy(dst, src)
-	if err != nil { return err }
-	fi, err := os.Stat(source)
-	if err != nil {
-		os.Remove(destination)
-		return err
-	}
-	err = os.Chmod(destination, fi.Mode())
-	if err != nil {
-		os.Remove(destination)
-		return err
-	}
-	os.Remove(source)
-	return nil
-}
-
 func uploadFile(c *gin.Context, file *multipart.FileHeader) (string, error) {
 
 	// verify extension
@@ -134,6 +74,20 @@ func uploadFile(c *gin.Context, file *multipart.FileHeader) (string, error) {
 	// rename to the sha256 hash of itself
 	hash, err := sha256sum(out)
 	if err != nil { return "", err }
+	if config.Cfg.Media.InDatabase { // store media in database
+		tn := config.Cfg.Media.Tmp + "/thumbnail_" + hash + ".png"
+		if err := thumbnail(out, tn); err != nil { return "", err }
+		defer os.Remove(tn)
+		defer os.Remove(out)
+		tn_data, err := os.ReadFile(tn)
+		if err != nil { return "", err }
+		data, err := os.ReadFile(out)
+		if err != nil { return "", err }
+		mime := mimetype.Detect(data).String()
+		err = db.AddMedia(data, tn_data, hash, mime)
+		if err != nil { return "", err }
+		return hash + "." + extension, nil
+	}
 	media := config.Cfg.Media.Path + "/" + hash + "." + extension
 	err = move(out, media)
 	if err != nil { return "", err }
@@ -143,5 +97,28 @@ func uploadFile(c *gin.Context, file *multipart.FileHeader) (string, error) {
 				"/thumbnail/" + hash + ".png");
 	if err != nil { return "", err }
 
-	return hash + "." + extension, err
+	return hash + "." + extension, nil
+}
+
+func move(source string, destination string) error {
+	src, err := os.Open(source)
+	if err != nil { return err }
+	defer src.Close()
+	dst, err := os.Create(destination)
+	if err != nil { return err }
+	defer dst.Close()
+	_, err = io.Copy(dst, src)
+	if err != nil { return err }
+	fi, err := os.Stat(source)
+	if err != nil {
+		os.Remove(destination)
+		return err
+	}
+	err = os.Chmod(destination, fi.Mode())
+	if err != nil {
+		os.Remove(destination)
+		return err
+	}
+	os.Remove(source)
+	return nil
 }

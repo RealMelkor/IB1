@@ -18,6 +18,7 @@ type Config struct {
 		Listener	string
 	}
 	Media struct {
+		InDatabase	bool
 		Path		string
 		Tmp		string
 	}

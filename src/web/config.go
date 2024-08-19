@@ -57,6 +57,9 @@ func setDefaultTheme(c *gin.Context) error {
 func updateConfig(c *gin.Context) error {
 	if err := setDefaultTheme(c); err != nil { return err }
 
+	indb, _ := c.GetPostForm("indb")
+	config.Cfg.Media.InDatabase = indb == "on"
+
 	title, ok := c.GetPostForm("title")
         if !ok { return errors.New("invalid form") }
 	config.Cfg.Home.Title = title
@@ -80,7 +83,10 @@ func updateConfig(c *gin.Context) error {
 	config.Cfg.Media.Tmp = tmp
 
 	path, _ := c.GetPostForm("media")
-	err = os.MkdirAll(path + "/thumbnail", 0700)
+	if path == "" { path = config.Cfg.Media.Path }
+	if !config.Cfg.Media.InDatabase {
+		err = os.MkdirAll(path + "/thumbnail", 0700)
+	}
 	if err != nil { return err }
 	config.Cfg.Media.Path = path
 
