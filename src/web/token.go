@@ -7,7 +7,7 @@ import (
 const characters =
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@"
 const charactersLength = byte(len(characters) - 1)
-const tokenLength = byte(24)
+const tokenLength = byte(128)
 
 func newToken() (string, error) {
         var random [tokenLength]byte

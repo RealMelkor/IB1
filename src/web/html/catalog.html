@@ -1,10 +1,11 @@
 {{ template "header" .Header }}
-<h2 class="board-title">/{{.Board.Name}}/ - {{.Board.LongName}}</h2>
-<p class="board-title">{{.Board.Description}}</p>
+{{$board := .Data}}
+<h2 class="board-title">/{{$board.Name}}/ - {{$board.LongName}}</h2>
+<p class="board-title">{{$board.Description}}</p>
 {{ template "newthread" . }}
-{{ template "top" .Board.Name }}
+{{ template "top" $board.Name }}
 <div class="catalog">
-{{range .Board.Threads}}
+{{range $board.Threads}}
 {{if (or (not (index .Posts 0).Disabled) $.Header.Account.Logged)}}
 <div class="thread{{if (index .Posts 0).Disabled}} thread-hidden{{end}}">
 	<a href="{{.Number}}">
@@ -17,5 +18,5 @@
 {{end}}
 {{end}}
 </div>
-{{ template "bottom" .Board.Name }}
+{{ template "bottom" $board.Name }}
 {{ template "footer" . }}

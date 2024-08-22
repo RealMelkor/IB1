@@ -1,14 +1,16 @@
 {{ template "header" .Header }}
-<h2 class="board-title">/{{.Board.Name}}/ - {{.Board.LongName}}</h2>
-{{ template "top" .Board.Name }}
+{{$thread := .Data}}
+{{$board := $thread.Board}}
+<h2 class="board-title">/{{$board.Name}}/ - {{$board.LongName}}</h2>
+{{ template "top" $board.Name }}
 <div class="form-container">
 <div class="post form">
 <label for="show-form" class="btn">Hide new-reply box</label>
-<input type="checkbox" id="show-form" checked>
+<input type="checkbox" id="show-form" {{if (not (has "new-post-error"))}} checked{{end}}>
 <form method="post" enctype="multipart/form-data" id="new-reply">
 	<label for="name">Name:</label><br>
 	<input type="text" id="name" name="name"><br>
-{{if and .Captcha (not .Header.Account.Logged)}}
+{{if and .Header.Config.Captcha.Enabled (not .Header.Account.Logged)}}
 	<label for="captcha">Captcha:</label><br>
 	<img class="captcha" loading="lazy" src="/captcha" alt="captcha"><br>
 	<input type="text" id="captcha" name="captcha" required="required"><br>
@@ -18,9 +20,10 @@
 	<label for="media">File:</label><br>
 	<input type="file" id="media" name="media"><br>
 	<input type="submit" value="New Reply">
+	<p class="error">{{once "new-post-error"}}</p>
 </form> 
 </div>
 </div>
-{{ template "thread-template" (thread .Thread .Header.Account) }}
-{{ template "bottom" .Board.Name }}
+{{ template "thread-template" (thread $thread .Header.Account) }}
+{{ template "bottom" $board.Name }}
 {{ template "footer" . }}

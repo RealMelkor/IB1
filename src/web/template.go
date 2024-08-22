@@ -3,6 +3,7 @@ package web
 import (
 	"embed"
 	"html/template"
+	"net/http"
 	"strings"
 	"strconv"
 	"io"
@@ -16,7 +17,7 @@ import (
 	"IB1/config"
 )
 
-//go:embed html/*.gohtml
+//go:embed html/*.html
 var templatesFS embed.FS
 
 //go:embed static/*
@@ -26,6 +27,22 @@ var static embed.FS
 var favicon []byte
 
 var templates *template.Template
+
+func render(_template string, data any, c *gin.Context) error {
+	c.Writer.WriteHeader(http.StatusOK)
+	c.Writer.Header().Add("Content-Type", "text/html; charset=utf-8")
+	w := minifyHTML(c.Writer)
+	funcs := template.FuncMap{
+		"get": get(c),
+		"once": once(c),
+		"set": set(c),
+		"has": has(c),
+	}
+	err := templates.Funcs(funcs).Lookup(_template).Execute(w, data)
+	if err != nil { return err }
+	w.Close()
+	return nil
+}
 
 func initTemplate() error {
 	var err error
@@ -41,9 +58,16 @@ func initTemplate() error {
 		},
 		"set": func(string) string {return ""},
 		"get": func(string, string) string {return ""},
+		"once": func(string) string {return ""},
+		"has": func(string) bool {return false},
+		"boards": func() []db.Board {
+			boards, err := db.GetBoards()
+			if err != nil { return nil }
+			return boards
+		},
 	}
 	templates, err = template.New("gmi").Funcs(funcs).
-				ParseFS(templatesFS, "html/*.gohtml")
+				ParseFS(templatesFS, "html/*.html")
 	if err != nil { return err }
 	if err := minifyStylesheet(); err != nil { return err }
 	return nil
@@ -57,10 +81,10 @@ func header(c *gin.Context) any {
 	var account db.Account
 	account.Logged = false
 	logged := false
-	token, _ := c.Cookie("session_token")
-	if token != "" {
+	token := get(c)("token")
+	if token != nil {
 		var err error
-		account, err = db.GetAccountFromToken(token)
+		account, err = db.GetAccountFromToken(token.(string))
 		if err == nil { logged = true }
 	}
 	theme := getTheme(c)
@@ -84,21 +108,6 @@ func header(c *gin.Context) any {
 	return data
 }
 
-func renderIndex(c *gin.Context) error {
-	data := struct {
-		Boards		map[string]db.Board
-		Title		string
-		Description	string
-		Header		any
-	}{
-		Boards: db.Boards,
-		Title: config.Cfg.Home.Title,
-		Description: config.Cfg.Home.Description,
-		Header: header(c),
-	}
-	return render("index.gohtml", data, c)
-}
-
 func renderDashboard(c *gin.Context) error {
 	boards, err := db.GetBoards()
 	if err != nil { return err }
@@ -120,56 +129,6 @@ func renderDashboard(c *gin.Context) error {
 		Header: header(c),
 	}
 	return render("dashboard.gohtml", data, c)
-}
-
-func renderBoard(board db.Board, threads int, c *gin.Context) error {
-	pages := []int{}
-	count := (threads + 3) / 4
-	for i := 0; i < count; i++ { pages = append(pages, i + 1) }
-	data := struct {
-		Board	db.Board
-		Captcha	bool
-		Pages	[]int
-		Header	any
-	}{
-		Board: board,
-		Captcha: config.Cfg.Captcha.Enabled,
-		Pages: pages,
-		Header: header(c),
-	}
-	return render("board.gohtml", data, c)
-}
-
-func renderCatalog(board db.Board, c *gin.Context) error {
-	data := struct {
-		Board	db.Board
-		Captcha	bool
-		Header	any
-	}{
-		Board: board,
-		Captcha: config.Cfg.Captcha.Enabled,
-		Header: header(c),
-	}
-	return render("catalog.gohtml", data, c)
-}
-
-func renderThread(thread db.Thread, c *gin.Context) error {
-	data := struct {
-		Board	db.Board
-		Thread	db.Thread
-		Captcha	bool
-		Header	any
-	}{
-		Board: thread.Board,
-		Thread: thread,
-		Captcha: config.Cfg.Captcha.Enabled,
-		Header: header(c),
-	}
-	return render("thread.gohtml", data, c)
-}
-
-func renderLogin(c *gin.Context) error {
-	return render("login.gohtml", header(c), c)
 }
 
 func removeDuplicateInt(intSlice []int) []int {
@@ -266,7 +225,6 @@ func minifyCSS(in []byte) ([]byte, error) {
 	if err != nil { return nil, err }
 	return res, nil
 }
-
 
 func minifyHTML(w io.Writer) io.WriteCloser {
 	m := minify.New()

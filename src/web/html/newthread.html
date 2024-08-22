@@ -1,7 +1,7 @@
 {{define "newthread"}}
 <div class="separator"></div>
 <div class="new-thread">
-<input id="new-thread-check" type="checkbox">
+<input id="new-thread-check" type="checkbox"{{if (has "new-thread-error")}} checked{{end}}>
 <label for="new-thread-check">
 [<span>Start a New Thread</span>]
 </label>
@@ -15,7 +15,7 @@
 			<th>Subject</th>
 			<td><input type="text" id="title" name="title"></td>
 		</tr>
-{{if and .Captcha (not .Header.Account.Logged)}}
+{{if and .Header.Config.Captcha.Enabled (not .Header.Account.Logged)}}
 		<tr>
 			<th></th>
 			<td><img class="captcha" loading="lazy" src="/captcha" alt="captcha"></td>
@@ -34,6 +34,7 @@
 			<td><input type="file" id="media" name="media" required="required"></td>
 		</tr>
 	</table>
+	<p class="error">{{once "new-thread-error"}}</p>
 	<input type="submit" value="Post">
 </form> 
 </div>

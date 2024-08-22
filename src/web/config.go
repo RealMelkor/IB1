@@ -25,10 +25,10 @@ func needRank(c *gin.Context, rank int) error {
 	ret := errors.New("insufficient privilege")
 	var account db.Account
 	account.Logged = false
-	token, _ := c.Cookie("session_token")
-	if token == "" { return ret }
+	token := get(c)("token")
+	if token == nil { return ret }
 	var err error
-	account, err = db.GetAccountFromToken(token)
+	account, err = db.GetAccountFromToken(token.(string))
 	if err != nil { return err }
 	if account.Rank < rank { return ret }
 	return nil

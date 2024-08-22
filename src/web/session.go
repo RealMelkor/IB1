@@ -23,10 +23,10 @@ func getID(c *gin.Context) (string, error) {
 
 func get(c *gin.Context) func(string)any {
 	id, err := getID(c)
-	if err != nil { return func(string)any { return "" } }
+	if err != nil { return func(string)any { return nil } }
 	return func(param string)any {
 		v, ok := sessions[id][param]
-		if !ok { return "" }
+		if !ok { return nil }
 		return v
 	}
 }
@@ -39,5 +39,25 @@ func set(c *gin.Context) func(string, any) any {
 		if !ok { sessions[id] = session{} }
 		sessions[id][param] = value
 		return nil
+	}
+}
+
+func once(c *gin.Context) func(string)any {
+	id, err := getID(c)
+	if err != nil { return func(string)any { return nil } }
+	return func(param string)any {
+		v, ok := sessions[id][param]
+		if !ok { return nil }
+		delete(sessions[id], param)
+		return v
+	}
+}
+
+func has(c *gin.Context) func(string)bool {
+	id, err := getID(c)
+	if err != nil { return func(string)bool { return false } }
+	return func(param string)bool {
+		_, ok := sessions[id][param]
+		return ok
 	}
 }

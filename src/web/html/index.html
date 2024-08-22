@@ -1,13 +1,13 @@
-{{ template "header" .Header }}
-<h1 class="board-title">{{.Title}}</h1>
-<p class="board-title">{{.Description}}</p>
+{{ template "header" . }}
+<h1 class="board-title">{{.Config.Home.Title}}</h1>
+<p class="board-title">{{.Config.Home.Description}}</p>
 <div class="boards">
 	<table>
 	<tr>
 		<th>Board</th>
 		<th>Description</th>
 	</tr>
-{{range .Boards}}
+{{range (boards)}}
 	<tr>
 		<td><a href="/{{.Name}}">/{{.Name}}/ - {{.LongName}}</a></td>
 		<td>{{.Description}}</td>

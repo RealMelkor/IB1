@@ -1,33 +1,27 @@
 package web
 
 import (
+	"errors"
+	"net/http"
+
 	"github.com/dchest/captcha"
 	"github.com/gin-gonic/gin"
-	"net/http"
+
 	"IB1/config"
 )
 
-func captchaNew(c *gin.Context) error {
-	if !config.Cfg.Captcha.Enabled { return nil }
+func captchaNew(c *gin.Context) (string, error) {
 	id, err := getID(c)
-	if err != nil { return err }
-	captchaID, ok := sessions[id]["captcha"]
-	if !ok {
-		sessions[id]["captcha"] = captcha.New()
-	} else {
-		captcha.Reload(captchaID.(string))
-	}
-	return nil
+	if err != nil { return "", err }
+	captchaID := captcha.New()
+	sessions[id]["captcha"] = captchaID
+	return captchaID, nil
 }
 
 func captchaImage(c *gin.Context) {
-	if err := captchaNew(c); err != nil {
+	id, err := captchaNew(c)
+	if err != nil {
 		badRequest(c, err.Error())
-		return
-	}
-	id := get(c)("captcha").(string)
-	if id == "" {
-		badRequest(c, "no captcha")
 		return
 	}
 	c.Status(http.StatusOK)
@@ -35,7 +29,22 @@ func captchaImage(c *gin.Context) {
 }
 
 func captchaVerify(c *gin.Context, answer string) bool {
-	cookie, err := c.Cookie("captcha")
-	if err != nil || cookie == "" { return false }
-	return captcha.VerifyString(cookie, answer)
+	v := get(c)("captcha").(string)
+	if v == "" { return false }
+	return captcha.VerifyString(v, answer)
+}
+
+func checkCaptcha(c *gin.Context) error {
+	if !config.Cfg.Captcha.Enabled { return nil }
+	_, err := loggedAs(c)
+	if err == nil { return nil } // captcha not needed if logged
+	return verifyCaptcha(c)
+}
+
+func verifyCaptcha(c *gin.Context) error {
+	if !config.Cfg.Captcha.Enabled { return nil }
+	captcha, hasCaptcha := c.GetPostForm("captcha")
+	if !hasCaptcha { return errors.New("invalid form") }
+	if !captchaVerify(c, captcha) { return errors.New("wrong captcha") }
+	return nil
 }
