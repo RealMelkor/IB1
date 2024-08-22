@@ -39,6 +39,8 @@ func initTemplate() error {
 			}
 			return data
 		},
+		"set": func(string) string {return ""},
+		"get": func(string, string) string {return ""},
 	}
 	templates, err = template.New("gmi").Funcs(funcs).
 				ParseFS(templatesFS, "html/*.gohtml")
@@ -63,8 +65,7 @@ func header(c *gin.Context) any {
 	}
 	theme := getTheme(c)
 	data := struct {
-		Title	string
-		Lang	string
+		Config	config.Config
 		Url	string
 		Theme	string
 		Themes	[]string
@@ -72,8 +73,7 @@ func header(c *gin.Context) any {
 		Account	db.Account
 		Boards	[]db.Board
 	}{
-		config.Cfg.Home.Title,
-		config.Cfg.Home.Language,
+		config.Cfg,
 		c.Request.RequestURI,
 		theme,
 		getThemes(),
@@ -168,17 +168,8 @@ func renderThread(thread db.Thread, c *gin.Context) error {
 	return render("thread.gohtml", data, c)
 }
 
-func renderLogin(c *gin.Context, err string) error {
-	data := struct {
-		LoginError	string
-		Captcha		bool
-		Header	any
-	}{
-		LoginError: err,
-		Captcha: config.Cfg.Captcha.Enabled,
-		Header: header(c),
-	}
-	return render("login.gohtml", data, c)
+func renderLogin(c *gin.Context) error {
+	return render("login.gohtml", header(c), c)
 }
 
 func removeDuplicateInt(intSlice []int) []int {

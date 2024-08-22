@@ -1,4 +1,4 @@
-{{ template "header" .Header }}
+{{ template "header" . }}
 <h2 class="board-title">Login</h2>
 <div class="new-thread">
 	<form action="/login" method="POST">
@@ -11,7 +11,7 @@
 				<th>Password</th>
 				<td><input class="field" type="password" name="password" required="required"></td>
 			</tr>
-{{if .Captcha}}
+{{if .Config.Captcha.Enabled}}
 			<tr>
 				<th></th>
 				<td class="captcha"><img loading="lazy" src="/captcha" alt="captcha"></td>
@@ -22,7 +22,7 @@
 			</tr>
 {{end}}
 		</table>
-		<p class="error">{{.LoginError}}</p>
+		<p class="error">{{get "login-error"}}</p>
 		<input class="btn" type="submit" value="Login">
 	</form>
 </div>

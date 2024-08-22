@@ -2,6 +2,7 @@ package web
 
 import (
 	"github.com/gin-gonic/gin"
+	"html/template"
 	"net/http"
 	"strconv"
 	"os"
@@ -14,11 +15,15 @@ import (
 
 type fErr func(c *gin.Context) error
 
-func render(template string, data any, c *gin.Context) error {
+func render(_template string, data any, c *gin.Context) error {
 	c.Writer.WriteHeader(http.StatusOK)
 	c.Writer.Header().Add("Content-Type", "text/html; charset=utf-8")
 	w := minifyHTML(c.Writer)
-	err := templates.Lookup(template).Execute(w, data)
+	funcs := template.FuncMap{
+		"get": get(c),
+		"set": set(c),
+	}
+	err := templates.Funcs(funcs).Lookup(_template).Execute(w, data)
 	if err != nil { return err }
 	w.Close()
 	return nil
@@ -91,7 +96,6 @@ func boardIndex(c *gin.Context) error {
 				board.Threads[i].Posts[length - 4:]...)
 		}
 	}
-	captchaNew(c)
 	return renderBoard(board, threads, c)
 }
 
@@ -111,7 +115,6 @@ func catalog(c *gin.Context) error {
 		}
 		board.Threads[i] = v
 	}
-	captchaNew(c)
 	return renderCatalog(board, c)
 }
 
@@ -232,7 +235,6 @@ func thread(c *gin.Context) error {
 	if thread.Posts[0].Disabled {
 		if _, err := loggedAs(c); err != nil { return err }
 	}
-	captchaNew(c)
 	return renderThread(thread, c)
 }
 
@@ -242,8 +244,7 @@ func login(c *gin.Context) error {
 		c.Redirect(http.StatusFound, "/")
 		return nil
 	}
-	captchaNew(c)
-	return renderLogin(c, "")
+	return renderLogin(c)
 }
 
 func loginAs(c *gin.Context) error {
@@ -261,8 +262,9 @@ func loginAs(c *gin.Context) error {
 		if err != nil { err = errors.New("invalid credentials") }
 	}
 	if err != nil {
-		captchaNew(c)
-		return renderLogin(c, err.Error())
+		set(c)("login-error", err.Error())
+		c.Redirect(http.StatusFound, "/login")
+		return nil
 	}
 	c.SetCookie("session_token", token, 0, "/", config.Cfg.Web.Domain,
 			false, true)

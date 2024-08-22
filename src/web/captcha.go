@@ -7,22 +7,31 @@ import (
 	"IB1/config"
 )
 
-func captchaNew(c *gin.Context) {
-	if !config.Cfg.Captcha.Enabled { return }
-	c.SetCookie("captcha", captcha.NewLen(config.Cfg.Captcha.Length),
-		int(captcha.Expiration.Seconds()), "/",
-		config.Cfg.Web.Domain, true, false)
+func captchaNew(c *gin.Context) error {
+	if !config.Cfg.Captcha.Enabled { return nil }
+	id, err := getID(c)
+	if err != nil { return err }
+	captchaID, ok := sessions[id]["captcha"]
+	if !ok {
+		sessions[id]["captcha"] = captcha.New()
+	} else {
+		captcha.Reload(captchaID.(string))
+	}
+	return nil
 }
 
 func captchaImage(c *gin.Context) {
-	cookie, err := c.Cookie("captcha")
-	if err != nil || cookie == "" {
+	if err := captchaNew(c); err != nil {
+		badRequest(c, err.Error())
+		return
+	}
+	id := get(c)("captcha").(string)
+	if id == "" {
 		badRequest(c, "no captcha")
 		return
 	}
 	c.Status(http.StatusOK)
-	captcha.WriteImage(c.Writer, cookie,
-			captcha.StdWidth, captcha.StdHeight)
+	captcha.WriteImage(c.Writer, id, captcha.StdWidth, captcha.StdHeight)
 }
 
 func captchaVerify(c *gin.Context, answer string) bool {
