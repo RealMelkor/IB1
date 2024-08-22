@@ -5,7 +5,7 @@
 <label for="new-thread-check">
 [<span>Start a New Thread</span>]
 </label>
-<form action="/{{.Board.Name}}" method="post" enctype="multipart/form-data">
+<form action="/{{.Name}}" method="post" enctype="multipart/form-data">
 	<table>
 		<tr>
 			<th>Name</th>
@@ -15,7 +15,7 @@
 			<th>Subject</th>
 			<td><input type="text" id="title" name="title"></td>
 		</tr>
-{{if and .Header.Config.Captcha.Enabled (not .Header.Account.Logged)}}
+{{if and isCaptchaEnabled (not isLogged)}}
 		<tr>
 			<th></th>
 			<td><img class="captcha" loading="lazy" src="/captcha" alt="captcha"></td>

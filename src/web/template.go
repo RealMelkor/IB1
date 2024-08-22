@@ -28,43 +28,54 @@ var favicon []byte
 
 var templates *template.Template
 
+func isLogged(c *gin.Context) bool {
+	token := get(c)("token")
+	if token != nil {
+		var err error
+		_, err = db.GetAccountFromToken(token.(string))
+		return err == nil
+	}
+	return false
+}
+
 func render(_template string, data any, c *gin.Context) error {
 	c.Writer.WriteHeader(http.StatusOK)
 	c.Writer.Header().Add("Content-Type", "text/html; charset=utf-8")
 	w := minifyHTML(c.Writer)
+	defer w.Close()
 	funcs := template.FuncMap{
 		"get": get(c),
 		"once": once(c),
 		"set": set(c),
 		"has": has(c),
+		"isLogged": func() bool { return isLogged(c) },
 	}
-	err := templates.Funcs(funcs).Lookup(_template).Execute(w, data)
+	err := templates.Lookup("header").Execute(c.Writer, header(c))
 	if err != nil { return err }
-	w.Close()
+	err = templates.Funcs(funcs).Lookup(_template).Execute(w, data)
+	if err != nil { return err }
+	err = templates.Lookup("footer").Execute(c.Writer, header(c))
+	if err != nil { return err }
 	return nil
 }
 
 func initTemplate() error {
 	var err error
 	funcs := template.FuncMap{
-		"thread": func(thread db.Thread, account db.Account) any {
-			data := struct {
-				Account db.Account
-				Thread db.Thread
-			}{
-				Account: account, Thread: thread,
-			}
-			return data
-		},
-		"set": func(string) string {return ""},
-		"get": func(string, string) string {return ""},
-		"once": func(string) string {return ""},
-		"has": func(string) bool {return false},
 		"boards": func() []db.Board {
 			boards, err := db.GetBoards()
 			if err != nil { return nil }
 			return boards
 		},
+		"isCaptchaEnabled": func() bool {
+			return	config.Cfg.Captcha.Enabled
+		},
+		"config": func() config.Config { return config.Cfg },
+		"isLogged": func() bool { return false },
+		"set": func(string) string {return ""},
+		"get": func(string, string) string {return ""},
+		"once": func(string) string {return ""},
+		"has": func(string) bool {return false},
 	}
 	templates, err = template.New("gmi").Funcs(funcs).
 				ParseFS(templatesFS, "html/*.html")
@@ -74,10 +85,8 @@ func initTemplate() error {
 }
 
 func header(c *gin.Context) any {
-	var boards []db.Board
-	for _, v := range db.Boards {
-		boards = append([]db.Board{v}, boards...)
-	}
+	boards, err := db.GetBoards()
+	if err != nil { return nil }
 	var account db.Account
 	account.Logged = false
 	logged := false
@@ -128,7 +137,7 @@ func renderDashboard(c *gin.Context) error {
 		UserThemes: themes,
 		Header: header(c),
 	}
-	return render("dashboard.gohtml", data, c)
+	return render("dashboard.html", data, c)
 }
 
 func removeDuplicateInt(intSlice []int) []int {

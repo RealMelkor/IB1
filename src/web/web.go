@@ -83,7 +83,7 @@ func Init() error {
 	r.GET("/static/:file", func(c *gin.Context) {
 		content, ok := themesContent[c.Param("file")]
 		if !ok {
-			internalError(c, "file not found")
+			badRequest(c, "file not found")
 			return
 		}
 		c.Writer.Header().Add("Content-Type", "text/css")

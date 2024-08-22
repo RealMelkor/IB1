@@ -9,7 +9,6 @@ import (
 	"IB1/config"
 )
 
-
 type Config struct {
 	gorm.Model
 	Data		[]byte
@@ -118,6 +117,7 @@ func Init() error {
 	switch Type {
 	case "mysql":
 		dbType = TYPE_MYSQL
+		Path += "?parseTime=true"
 	case "sqlite":
 		dbType = TYPE_SQLITE
 	default:

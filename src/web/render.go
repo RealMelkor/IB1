@@ -2,35 +2,23 @@ package web
 
 import (
 	"strconv"
-	"net/http"
+	"errors"
 
 	"github.com/gin-gonic/gin"
 
 	"IB1/db"
 )
 
-func renderCustom(c *gin.Context, file string, data any) error {
-	var v = map[string]any{
-		"Header": header(c),
-		"Data": data,
-	}
-	return render(file, v, c)
-}
-
 func badRequest(c *gin.Context, info string) {
-	renderCustom(c, "error.html", info)
+	render("error.html", info, c)
 }
 
 func renderFile(file string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if err := render(file, header(c), c); err != nil {
+		if err := render(file, nil, c); err != nil {
 			badRequest(c, err.Error())
 		}
 	}
-}
-
-func internalError(c *gin.Context, data string) {
-	c.Data(http.StatusBadRequest, "text/plain", []byte(data))
 }
 
 func boardIndex(c *gin.Context) error {
@@ -73,7 +61,7 @@ func boardIndex(c *gin.Context) error {
 		Board: board,
 		Pages: pages,
 	}
-	return renderCustom(c, "board.html", data)
+	return render("board.html", data, c)
 }
 
 func catalog(c *gin.Context) error {
@@ -92,7 +80,7 @@ func catalog(c *gin.Context) error {
 		}
 		board.Threads[i] = v
 	}
-	return renderCustom(c, "catalog.html", board)
+	return render("catalog.html", board, c)
 }
 
 func thread(c *gin.Context) error {
@@ -104,7 +92,7 @@ func thread(c *gin.Context) error {
 	boardName := c.Param("board")
 
 	id, err := strconv.Atoi(threadID)
-	if err != nil { return err }
+	if err != nil { return errors.New("file not found") }
 	board, err = db.GetBoard(boardName)
 	if err != nil { return err }
 	thread, err = db.GetThread(board, id)
@@ -112,6 +100,5 @@ func thread(c *gin.Context) error {
 	if thread.Posts[0].Disabled {
 		if _, err := loggedAs(c); err != nil { return err }
 	}
-	return renderCustom(c, "thread.html", thread)
+	return render("thread.html", thread, c)
 }
-

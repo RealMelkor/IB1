@@ -1,5 +1,4 @@
-{{ template "header" .Header }}
-{{$board := .Data}}
+{{$board := .}}
 <h2 class="board-title">/{{$board.Name}}/ - {{$board.LongName}}</h2>
 <p class="board-title">{{$board.Description}}</p>
 {{ template "newthread" . }}
@@ -19,4 +18,3 @@
 {{end}}
 </div>
 {{ template "bottom" $board.Name }}
-{{ template "footer" . }}

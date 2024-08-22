@@ -43,19 +43,6 @@ func remove(c *gin.Context) error {
 	if err != nil { return err }
 	err = db.Remove(board, id)
 	if err != nil { return err }
-	/*
-	TODO: verify if media is used by another post
-	if post.Media != "" {
-		err = os.Remove(
-			config.Cfg.Media.Directory + "/" + post.Media)
-		if err != nil { break }
-	}
-	if post.Thumbnail() != "" {
-		err = os.Remove(config.Cfg.Media.Thumbnail + "/" +
-					post.Thumbnail())
-		if err != nil { break }
-	}
-	*/
 
 	dst := "/" + board
 	if id != post.Thread.Number {

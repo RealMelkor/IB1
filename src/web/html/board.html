@@ -1,16 +1,15 @@
-{{ template "header" .Header }}
-{{$board := .Data.Board}}
-{{$pages := .Data.Pages}}
+{{$board := .Board}}
+{{$pages := .Pages}}
 <h2 class="board-title">/{{$board.Name}}/ - {{$board.LongName}}</h2>
 <p class="board-title">{{$board.Description}}</p>
-{{ template "newthread" . }}
+{{ template "newthread" $board }}
 {{ template "top" $board.Name }}
 {{range $i, $e := $board.Threads}}
-{{if (or (not (index $e.Posts 0).Disabled) $.Header.Account.Logged)}}
+{{if (or (not (index $e.Posts 0).Disabled) isLogged)}}
 {{if $i}}
 <div class="separator"></div>
 {{end}}
-{{ template "thread-template" (thread . $.Header.Account) }}
+{{ template "thread-template" . }}
 <a href="/{{$board.Name}}/{{.Number}}">View thread</a>
 {{end}}
 {{end}}
@@ -20,4 +19,3 @@
 {{end}}
 </div>
 {{ template "bottom" $board.Name }}
-{{ template "footer" . }}

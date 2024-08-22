@@ -1,6 +1,6 @@
-{{ template "header" . }}
-<h1 class="board-title">{{.Config.Home.Title}}</h1>
-<p class="board-title">{{.Config.Home.Description}}</p>
+{{$config := config}}
+<h1 class="board-title">{{config.Home.Title}}</h1>
+<p class="board-title">{{config.Home.Description}}</p>
 <div class="boards">
 	<table>
 	<tr>
@@ -15,4 +15,3 @@
 {{end}}
 	</table>
 </div>
-{{ template "footer" . }}
