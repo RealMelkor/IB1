@@ -6,7 +6,7 @@ import (
 	"IB1/config"
 	"IB1/db"
 
-	"github.com/gin-gonic/gin"
+	"github.com/labstack/echo/v4"
 )
 
 var themes []string
@@ -58,7 +58,7 @@ func reloadThemes() {
 	getThemes()
 }
 
-func getTheme(c *gin.Context) string {
+func getTheme(c echo.Context) string {
 	theme := getCookie(c, "theme")
 	if theme == "" { return config.Cfg.Home.Theme }
 	_, ok := getThemesTable()[theme]
@@ -66,11 +66,11 @@ func getTheme(c *gin.Context) string {
 	return theme
 }
 
-func setTheme(c *gin.Context) error {
-	theme, ok := c.GetPostForm("theme")
-	if !ok { return errors.New("invalid form") }
-	_, ok = themesTable[theme]
+func setTheme(c echo.Context) error {
+	theme := c.Request().PostFormValue("theme")
+	if theme == "" { return errors.New("invalid form") }
+	_, ok := themesTable[theme]
 	if !ok { return errors.New("invalid theme") }
-	SetCookiePermanent(c, "theme", theme)
+	setCookiePermanent(c, "theme", theme)
 	return nil
 }

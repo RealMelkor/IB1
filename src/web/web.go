@@ -1,63 +1,96 @@
 package web
 
 import (
-	"github.com/gin-gonic/gin"
+	"github.com/labstack/echo/v4"
 	"net/http"
+	"hash/fnv"
 	"os"
 	"strings"
+	"time"
+	"strconv"
+	"log"
 	
 	"IB1/db"
 	"IB1/config"
 )
 
-type fErr func(c *gin.Context) error
-
-func isBanned(c *gin.Context) error {
-	_, err := loggedAs(c)
-	if err == nil { return err }
-	return db.IsBanned(c.RemoteIP())
+func clientIP(c echo.Context) string {
+	ip := c.Request().Header.Get("X-Real-IP")
+	if ip == "" { return c.Request().RemoteAddr }
+	return ip
 }
 
-func hasRank(f fErr, rank int) fErr {
-	return func(c *gin.Context) error {
+func err(f echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		if err := f(c); err != nil {
+			return badRequest(c, err.Error())
+		}
+		return nil
+	}
+}
+
+func logger(next echo.HandlerFunc) echo.HandlerFunc {
+	return func (c echo.Context) error {
+		t1 := time.Now()
+		id, err := getID(c)
+		if id != "" && err == nil {
+			h := fnv.New32()
+			h.Write([]byte(id))
+			id = strconv.Itoa(int(h.Sum32()))
+		}
+		err = next(c)
+		t2 := time.Now()
+		r := c.Request()
+		ip := clientIP(c)
+		log.Println("[" + id + "][" + ip + "][" + r.Method + "]",
+		r.URL.String(), t2.Sub(t1))
+		return err
+	}
+}
+
+func isBanned(c echo.Context) error {
+	_, err := loggedAs(c)
+	if err == nil { return err }
+	return db.IsBanned(clientIP(c))
+}
+
+func hasRank(f echo.HandlerFunc, rank int) echo.HandlerFunc {
+	return func(c echo.Context) error {
 		if err := needRank(c, rank); err != nil { return err }
 		return f(c)
 	}
 }
 
-func err(f func(c *gin.Context) error) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		if err := f(c); err != nil {
-			badRequest(c, err.Error())
-			return
-		}
-	}
-}
-
-func catchCustom(f fErr, param string, redirect string) gin.HandlerFunc {
-	return func(c *gin.Context) {
+func catchCustom(f echo.HandlerFunc, param string,
+			redirect string) echo.HandlerFunc {
+	return func(c echo.Context) error {
 		if err := f(c); err != nil {
 			set(c)(param, err.Error())
 			c.Redirect(http.StatusFound, redirect)
 		}
+		return nil
 	}
 }
 
-func catch(f fErr, param string) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		catchCustom(f, param, c.Request.RequestURI)(c)
+func catch(f echo.HandlerFunc, param string) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		return catchCustom(f, param, c.Request().RequestURI)(c)
 	}
 }
 
-func unauth(f gin.HandlerFunc) gin.HandlerFunc {
-	return func(c *gin.Context) {
+func unauth(f echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
 		_, err := loggedAs(c)
 		if err == nil {
 			c.Redirect(http.StatusFound, "/")
-			return
+			return nil
 		}
-		f(c)
+		return f(c)
 	}
+}
+
+func notFound(c echo.Context) error {
+	return c.Blob(http.StatusNotFound, "text/plain", []byte("Not Found"))
 }
 
 func Init() error {
@@ -67,51 +100,48 @@ func Init() error {
 	}
 	os.MkdirAll(config.Cfg.Media.Tmp, 0700)
 
-	gin.SetMode(gin.ReleaseMode)
-	r := gin.Default()
+	r := echo.New()
 	if err := initTemplate(); err != nil { return err }
 
+	r.Use(logger)
+	r.Use(err)
+
 	r.GET("/", renderFile("index.html"))
-	r.GET("/favicon.ico", func(c *gin.Context) {
-		c.Data(http.StatusNotFound, "text/plain", []byte("Not Found"))
-	})
-	r.GET("/static/favicon", func(c *gin.Context) {
+	r.GET("/favicon.ico", notFound)
+	r.GET("/static/favicon", func(c echo.Context) error {
 		if config.Cfg.Home.FaviconMime == "" {
-			c.Data(http.StatusOK, "image/png", favicon)
-			return
+			return c.Blob(http.StatusOK, "image/png", favicon)
 		}
-		c.Data(http.StatusOK, config.Cfg.Home.FaviconMime,
-			config.Cfg.Home.Favicon)
+		return c.Blob(http.StatusOK, config.Cfg.Home.FaviconMime,
+				config.Cfg.Home.Favicon)
 	})
-	r.GET("/static/common.css", func(c *gin.Context) {
-		c.Data(http.StatusOK, "text/css", stylesheet)
+	r.GET("/static/common.css", func(c echo.Context) error {
+		return c.Blob(http.StatusOK, "text/css", stylesheet)
 	})
-	r.GET("/static/:file", func(c *gin.Context) {
+	r.GET("/static/:file", func(c echo.Context) error {
 		content, ok := themesContent[c.Param("file")]
-		if !ok {
-			badRequest(c, "file not found")
-			return
-		}
-		c.Writer.Header().Add("Content-Type", "text/css")
-		c.Writer.Write(content)
+		if !ok { return notFound(c) }
+		c.Response().Writer.Header().Add("Content-Type", "text/css")
+		c.Response().Writer.Write(content)
+		return nil
 	})
 	if config.Cfg.Captcha.Enabled {
 		r.GET("/captcha", captchaImage)
 	}
-	r.GET("/:board", err(boardIndex))
-	r.GET("/:board/catalog", err(catalog))
+	r.GET("/:board", boardIndex)
+	r.GET("/:board/catalog", catalog)
 	r.POST("/:board", catch(newThread, "new-thread-error"))
-	r.GET("/:board/:thread", err(thread))
+	r.GET("/:board/:thread", thread)
 	r.POST("/:board/:thread", catch(newPost, "new-post-error"))
-	r.GET("/disconnect", err(disconnect))
+	r.GET("/disconnect", disconnect)
 	r.GET("/login", unauth(renderFile("login.html")))
 	r.POST("/login", unauth(catch(loginAs, "login-error")))
-	r.GET("/:board/remove/:id", err(hasRank(remove, db.RANK_ADMIN)))
-	r.GET("/:board/hide/:id", err(hasRank(hide, db.RANK_MODERATOR)))
-	r.GET("/:board/ban/:ip", err(hasRank(ban, db.RANK_MODERATOR)))
-	r.GET("/dashboard", err(hasRank(renderDashboard, db.RANK_ADMIN)))
-	r.POST("/config/client/theme", func(c *gin.Context) {
-		redirect(setTheme, c.Query("origin"))(c)
+	r.GET("/:board/remove/:id", hasRank(remove, db.RANK_ADMIN))
+	r.GET("/:board/hide/:id", hasRank(hide, db.RANK_MODERATOR))
+	r.GET("/:board/ban/:ip", hasRank(ban, db.RANK_MODERATOR))
+	r.GET("/dashboard", hasRank(renderDashboard, db.RANK_ADMIN))
+	r.POST("/config/client/theme", func(c echo.Context) error {
+		return redirect(setTheme, c.QueryParam("origin"))(c)
 	})
 	r.POST("/config/update", handleConfig(updateConfig, "config-error"))
 	r.POST("/config/board/create",
@@ -134,29 +164,21 @@ func Init() error {
 	r.POST("/config/ban/cancel/:id", handleConfig(deleteBan, "ban-error"))
 
 	if config.Cfg.Media.InDatabase {
-		r.GET("/media/:hash", func(c *gin.Context) {
+		r.GET("/media/:hash", func(c echo.Context) error {
 			parts := strings.Split(c.Param("hash"), ".")
 			data, mime, err := db.GetMedia(parts[0])
-			if err != nil {
-				c.Data(http.StatusBadRequest, "text/plain",
-						[]byte(err.Error()))
-				return
-			}
-			c.Data(http.StatusOK, mime, data)
+			if err != nil { return err }
+			return c.Blob(http.StatusOK, mime, data)
 		})
-		r.GET("/media/thumbnail/:hash", func(c *gin.Context) {
+		r.GET("/media/thumbnail/:hash", func(c echo.Context) error {
 			parts := strings.Split(c.Param("hash"), ".")
 			data, err := db.GetThumbnail(parts[0])
-			if err != nil {
-				c.Data(http.StatusBadRequest, "text/plain",
-						[]byte(err.Error()))
-				return
-			}
-			c.Data(http.StatusOK, "image/png", data)
+			if err != nil { return err }
+			return c.Blob(http.StatusOK, "image/png", data)
 		})
 	} else {
 		r.Static("/media", config.Cfg.Media.Path)
 	}
 
-	return r.Run(config.Cfg.Web.Listener)
+	return r.Start(config.Cfg.Web.Listener)
 }

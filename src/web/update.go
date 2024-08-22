@@ -5,14 +5,14 @@ import (
 	"strconv"
 	"net/http"
 
-	"github.com/gin-gonic/gin"
+	"github.com/labstack/echo/v4"
 
 	"IB1/db"
 )
 
-func loginAs(c *gin.Context) error {
-	name := c.PostForm("username")
-	password := c.PostForm("password")
+func loginAs(c echo.Context) error {
+	name := c.Request().PostFormValue("username")
+	password := c.Request().PostFormValue("password")
 	err := verifyCaptcha(c)
 	if err != nil { return err }
 	token, err := db.Login(name, password)
@@ -22,7 +22,7 @@ func loginAs(c *gin.Context) error {
 	return nil
 }
 
-func disconnect(c *gin.Context) error {
+func disconnect(c echo.Context) error {
 	_, err := loggedAs(c)
 	if err != nil { return err }
 	db.Disconnect(getCookie(c, "token"))
@@ -31,7 +31,7 @@ func disconnect(c *gin.Context) error {
 	return nil
 }
 
-func remove(c *gin.Context) error {
+func remove(c echo.Context) error {
 	board := c.Param("board")
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil { return err }
@@ -49,7 +49,7 @@ func remove(c *gin.Context) error {
 	return nil
 }
 
-func hide(c *gin.Context) error {
+func hide(c echo.Context) error {
 	var id int
 	var post db.Post
 	id, err := strconv.Atoi(c.Param("id"))
@@ -64,7 +64,7 @@ func hide(c *gin.Context) error {
 	return err
 }
 
-func ban(c *gin.Context) error {
+func ban(c echo.Context) error {
 	board := c.Param("board")
 	ip := c.Param("ip")
 	if err := db.BanIP(ip, 3600); err != nil { return err }
@@ -72,7 +72,7 @@ func ban(c *gin.Context) error {
 	return nil
 }
 
-func newThread(c *gin.Context) error {
+func newThread(c echo.Context) error {
 
 	if err := isBanned(c); err != nil { return err }
 
@@ -80,9 +80,9 @@ func newThread(c *gin.Context) error {
 	board, err := db.GetBoard(boardName)
 	if err != nil { return err }
 
-	name, hasName := c.GetPostForm("name")
-	title, hasTitle := c.GetPostForm("title")
-	content, hasContent := c.GetPostForm("content")
+	name, hasName := getPostForm(c, "name")
+	title, hasTitle := getPostForm(c, "title")
+	content, hasContent := getPostForm(c, "content")
 	if !hasTitle || !hasContent || !hasName || content == "" { 
 		return errors.New("invalid form")
 	}
@@ -96,15 +96,15 @@ func newThread(c *gin.Context) error {
 
 	parsed, _ := parseContent(content, 0)
 	number, err := db.CreateThread(board, title, name, media,
-					c.ClientIP(), parsed)
+					clientIP(c), parsed)
 	if err != nil { return err }
 
-	c.Redirect(http.StatusFound, c.Request.URL.Path + "/" +
+	c.Redirect(http.StatusFound, c.Request().URL.Path + "/" +
 			strconv.Itoa(number))
 	return nil
 }
 
-func newPost(c *gin.Context) error {
+func newPost(c echo.Context) error {
 
 	if err := isBanned(c); err != nil { return err }
 
@@ -118,8 +118,8 @@ func newPost(c *gin.Context) error {
 	thread, err := db.GetThread(board, threadNumber)
 	if err != nil { return err }
 
-	name, hasName := c.GetPostForm("name")
-	content, hasContent := c.GetPostForm("content")
+	name, hasName := getPostForm(c, "name")
+	content, hasContent := getPostForm(c, "content")
 	if !hasName || !hasContent { return errors.New("invalid form") }
 
 	if err := checkCaptcha(c); err != nil { return err }
@@ -134,13 +134,13 @@ func newPost(c *gin.Context) error {
 
 	parsed, refs := parseContent(content, thread.ID)
 	number, err := db.CreatePost(thread, parsed, name, media,
-					c.ClientIP(), nil)
+					clientIP(c), nil)
 	if err != nil { return err }
 
 	for _, v := range refs {
 		db.CreateReference(thread.ID, number, v)
 	}
 
-	c.Redirect(http.StatusFound, c.Request.URL.Path)
+	c.Redirect(http.StatusFound, c.Request().URL.Path)
 	return nil
 }

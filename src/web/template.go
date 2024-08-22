@@ -11,7 +11,7 @@ import (
 	"github.com/tdewolff/minify/v2"
 	"github.com/tdewolff/minify/v2/css"
 	"github.com/tdewolff/minify/v2/html"
-	"github.com/gin-gonic/gin"
+	"github.com/labstack/echo/v4"
 
 	"IB1/db"
 	"IB1/config"
@@ -28,15 +28,16 @@ var favicon []byte
 
 var templates *template.Template
 
-func isLogged(c *gin.Context) bool {
+func isLogged(c echo.Context) bool {
 	_, err := loggedAs(c)
 	return err == nil
 }
 
-func render(_template string, data any, c *gin.Context) error {
-	c.Writer.WriteHeader(http.StatusOK)
-	c.Writer.Header().Add("Content-Type", "text/html; charset=utf-8")
-	w := minifyHTML(c.Writer)
+func render(_template string, data any, c echo.Context) error {
+	c.Response().Writer.WriteHeader(http.StatusOK)
+	c.Response().Writer.Header().Add(
+		"Content-Type", "text/html; charset=utf-8")
+	w := minifyHTML(c.Response().Writer)
 	defer w.Close()
 	funcs := template.FuncMap{
 		"get": get(c),
@@ -45,11 +46,11 @@ func render(_template string, data any, c *gin.Context) error {
 		"has": has(c),
 		"isLogged": func() bool { return isLogged(c) },
 	}
-	err := templates.Lookup("header").Execute(c.Writer, header(c))
+	err := templates.Lookup("header").Execute(w, header(c))
 	if err != nil { return err }
 	err = templates.Funcs(funcs).Lookup(_template).Execute(w, data)
 	if err != nil { return err }
-	err = templates.Lookup("footer").Execute(c.Writer, header(c))
+	err = templates.Lookup("footer").Execute(w, header(c))
 	if err != nil { return err }
 	return nil
 }
@@ -79,7 +80,7 @@ func initTemplate() error {
 	return nil
 }
 
-func header(c *gin.Context) any {
+func header(c echo.Context) any {
 	boards, err := db.GetBoards()
 	if err != nil { return nil }
 	account, err := loggedAs(c)
@@ -95,7 +96,7 @@ func header(c *gin.Context) any {
 		Boards	[]db.Board
 	}{
 		config.Cfg,
-		c.Request.RequestURI,
+		c.Request().RequestURI,
 		theme,
 		getThemes(),
 		logged,
@@ -105,7 +106,7 @@ func header(c *gin.Context) any {
 	return data
 }
 
-func renderDashboard(c *gin.Context) error {
+func renderDashboard(c echo.Context) error {
 	boards, err := db.GetBoards()
 	if err != nil { return err }
 	themes, _ := db.GetThemes()

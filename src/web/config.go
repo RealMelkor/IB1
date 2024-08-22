@@ -9,11 +9,16 @@ import (
 	"IB1/db"
 	"IB1/config"
 
-	"github.com/gin-gonic/gin"
+	"github.com/labstack/echo/v4"
 )
 
-func redirect(f fErr, redirect string) func(*gin.Context) error {
-	return func(c *gin.Context) error {
+func getPostForm(c echo.Context, param string) (string, bool) {
+	v := c.Request().PostFormValue(param)
+	return v, v != ""
+}
+
+func redirect(f echo.HandlerFunc, redirect string) echo.HandlerFunc {
+	return func(c echo.Context) error {
 		err := f(c)
 		if err != nil { return err }
 		c.Redirect(http.StatusFound, redirect)
@@ -21,7 +26,7 @@ func redirect(f fErr, redirect string) func(*gin.Context) error {
 	}
 }
 
-func needRank(c *gin.Context, rank int) error {
+func needRank(c echo.Context, rank int) error {
 	ret := errors.New("insufficient privilege")
 	var account db.Account
 	account.Logged = false
@@ -34,20 +39,20 @@ func needRank(c *gin.Context, rank int) error {
 	return nil
 }
 
-func handleConfig(f fErr, param string) func(c *gin.Context) {
+func handleConfig(f echo.HandlerFunc, param string) echo.HandlerFunc {
 	return catchCustom(redirect(hasRank(f, db.RANK_ADMIN), "/dashboard"),
 				param, "/dashboard")
 }
 
-func canSetConfig(c *gin.Context, f fErr) fErr {
+func canSetConfig(c echo.Context, f echo.HandlerFunc) echo.HandlerFunc {
 	if err := needRank(c, db.RANK_ADMIN); err != nil {
-		return func(c *gin.Context) error { return err }
+		return func(c echo.Context) error { return err }
 	}
 	return f
 }
 
-func setDefaultTheme(c *gin.Context) error {
-	theme, ok := c.GetPostForm("theme")
+func setDefaultTheme(c echo.Context) error {
+	theme, ok := getPostForm(c, "theme")
         if !ok { return errors.New("invalid form") }
         _, ok = getThemesTable()[theme]
         if !ok { return errors.New("invalid theme") }
@@ -55,35 +60,35 @@ func setDefaultTheme(c *gin.Context) error {
 	return nil
 }
 
-func updateConfig(c *gin.Context) error {
+func updateConfig(c echo.Context) error {
 	if err := setDefaultTheme(c); err != nil { return err }
 
-	indb, _ := c.GetPostForm("indb")
+	indb, _ := getPostForm(c, "indb")
 	config.Cfg.Media.InDatabase = indb == "on"
 
-	title, ok := c.GetPostForm("title")
+	title, ok := getPostForm(c, "title")
         if !ok { return errors.New("invalid form") }
 	config.Cfg.Home.Title = title
 
-	description, ok := c.GetPostForm("description")
+	description, ok := getPostForm(c, "description")
         if !ok { return errors.New("invalid form") }
 	config.Cfg.Home.Description = description
 
-	domain, ok := c.GetPostForm("domain")
+	domain, ok := getPostForm(c, "domain")
         if !ok { return errors.New("invalid form") }
 	config.Cfg.Web.Domain = domain
 
-	defaultname, ok := c.GetPostForm("defaultname")
+	defaultname, ok := getPostForm(c, "defaultname")
         if !ok { return errors.New("invalid form") }
 	config.Cfg.Post.DefaultName = defaultname
 
-	tmp, ok := c.GetPostForm("tmp")
+	tmp, ok := getPostForm(c, "tmp")
         if !ok { return errors.New("invalid form") }
 	err := os.MkdirAll(config.Cfg.Media.Tmp, 0700)
 	if err != nil { return err }
 	config.Cfg.Media.Tmp = tmp
 
-	path, _ := c.GetPostForm("media")
+	path, _ := getPostForm(c, "media")
 	if path == "" { path = config.Cfg.Media.Path }
 	if !config.Cfg.Media.InDatabase {
 		err = os.MkdirAll(path + "/thumbnail", 0700)
@@ -91,36 +96,36 @@ func updateConfig(c *gin.Context) error {
 	if err != nil { return err }
 	config.Cfg.Media.Path = path
 
-	sizeStr, _ := c.GetPostForm("maxsize")
+	sizeStr, _ := getPostForm(c, "maxsize")
 	size, err := strconv.ParseUint(sizeStr, 10, 64)
 	if err != nil { return err }
 	config.Cfg.Media.MaxSize = size
 
-	captcha, _ := c.GetPostForm("captcha")
+	captcha, _ := getPostForm(c, "captcha")
 	config.Cfg.Captcha.Enabled = captcha == "on"
 
-	ascii, _ := c.GetPostForm("ascii")
+	ascii, _ := getPostForm(c, "ascii")
 	config.Cfg.Post.AsciiOnly = ascii == "on"
 
 	return db.UpdateConfig()
 }
 
-func createBoard(c *gin.Context) error {
-	board, hasBoard := c.GetPostForm("board")
-	name, hasName := c.GetPostForm("name")
+func createBoard(c echo.Context) error {
+	board, hasBoard := getPostForm(c, "board")
+	name, hasName := getPostForm(c, "name")
         if !hasBoard || !hasName { return errors.New("invalid form") }
-	description, _ := c.GetPostForm("description")
+	description, _ := getPostForm(c, "description")
 	err := db.CreateBoard(board, name, description)
 	if err != nil { return err }
 	return db.LoadBoards()
 }
 
-func updateBoard(c *gin.Context) error {
-	board, hasBoard := c.GetPostForm("board")
-	name, hasName := c.GetPostForm("name")
+func updateBoard(c echo.Context) error {
+	board, hasBoard := getPostForm(c, "board")
+	name, hasName := getPostForm(c, "name")
         if !hasBoard || !hasName { return errors.New("invalid form") }
-	enabled, _ := c.GetPostForm("enabled")
-	description, _ := c.GetPostForm("description")
+	enabled, _ := getPostForm(c, "enabled")
+	description, _ := getPostForm(c, "description")
 	boards, err := db.GetBoards()
 	if err != nil { return err }
 	for _, v := range boards {
@@ -135,7 +140,7 @@ func updateBoard(c *gin.Context) error {
         return errors.New("invalid board")
 }
 
-func deleteBoard(c *gin.Context) error {
+func deleteBoard(c echo.Context) error {
 	for i, v := range db.Boards {
 		if strconv.Itoa(int(v.ID)) != c.Param("board") { continue }
 		err := db.DeleteBoard(v)
@@ -146,12 +151,12 @@ func deleteBoard(c *gin.Context) error {
         return errors.New("invalid board")
 }
 
-func createTheme(c *gin.Context) error {
+func createTheme(c echo.Context) error {
 	file, err := c.FormFile("theme")
         if err != nil { return err }
-	name, hasName := c.GetPostForm("name")
+	name, hasName := getPostForm(c, "name")
         if !hasName { return errors.New("invalid form") }
-	enabled, _ := c.GetPostForm("enabled")
+	enabled, _ := getPostForm(c, "enabled")
 	disabled := enabled != "on"
 	data := make([]byte, file.Size)
 	f, err := file.Open()
@@ -167,12 +172,12 @@ func createTheme(c *gin.Context) error {
 	return nil
 }
 
-func updateTheme(c *gin.Context) error {
+func updateTheme(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil { return errors.New("invalid theme") }
-	name, hasName := c.GetPostForm("name")
+	name, hasName := getPostForm(c, "name")
         if !hasName { return errors.New("invalid form") }
-	enabled, _ := c.GetPostForm("enabled")
+	enabled, _ := getPostForm(c, "enabled")
 	disabled := enabled != "on"
 	err = db.UpdateThemeByID(id, name, disabled)
 	if err != nil { return err }
@@ -180,7 +185,7 @@ func updateTheme(c *gin.Context) error {
 	return nil
 }
 
-func deleteTheme(c *gin.Context) error {
+func deleteTheme(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil { return errors.New("invalid theme") }
 	err = db.DeleteThemeByID(id)
@@ -189,10 +194,10 @@ func deleteTheme(c *gin.Context) error {
 	return nil
 }
 
-func addBan(c *gin.Context) error {
-	ip, hasIP := c.GetPostForm("ip")
+func addBan(c echo.Context) error {
+	ip, hasIP := getPostForm(c, "ip")
         if !hasIP { return errors.New("invalid form") }
-	expiry, hasExpiry := c.GetPostForm("expiration")
+	expiry, hasExpiry := getPostForm(c, "expiration")
 	duration := int64(3600)
         if hasExpiry {
 		expiration, err := time.Parse("2006-01-02T03:04", expiry)
@@ -204,7 +209,7 @@ func addBan(c *gin.Context) error {
 	return nil
 }
 
-func deleteBan(c *gin.Context) error {
+func deleteBan(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil { return errors.New("invalid theme") }
 	err = db.RemoveBan(uint(id))

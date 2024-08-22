@@ -2,7 +2,9 @@ package web
 
 import (
 	"errors"
-	"github.com/gin-gonic/gin"
+	"time"
+	"net/http"
+	"github.com/labstack/echo/v4"
 
 	"IB1/config"
 	"IB1/db"
@@ -11,38 +13,56 @@ import (
 type session map[string]any
 var sessions = map[string]session{}
 
-func setCookie(c *gin.Context, name string, value string) {
-	c.SetCookie(name, value, 0, "/", config.Cfg.Web.Domain, false, true)
+func setCookie(c echo.Context, name string, value string) {
+	cookie := http.Cookie{
+		Path: "/",
+                Domain: config.Cfg.Web.Domain,
+                Name: name,
+                Value: value,
+        }
+	c.SetCookie(&cookie)
 }
 
-func SetCookiePermanent(c *gin.Context, name string, value string) {
-	exp := 86400 * 3650
-	c.SetCookie(name, value, exp, "/", config.Cfg.Web.Domain, false, true)
+func setCookiePermanent(c echo.Context, name string, value string) {
+	cookie := http.Cookie{
+		Path: "/",
+                Domain: config.Cfg.Web.Domain,
+                Name: name,
+                Value: value,
+		Expires: time.Now().Add(3650 * 24 * time.Hour),
+        }
+	c.SetCookie(&cookie)
 }
 
-func getCookie(c *gin.Context, name string) string {
+func getCookie(c echo.Context, name string) string {
 	v, err := c.Cookie(name)
 	if err != nil { return "" }
-	return v
+	return v.Value
 }
 
-func deleteCookie(c *gin.Context, name string) {
-	c.SetCookie(name, "", -86400, "/", config.Cfg.Web.Domain, false, true)
+func deleteCookie(c echo.Context, name string) {
+	cookie := http.Cookie{
+                Domain: config.Cfg.Web.Domain,
+                Name: name,
+		Expires: time.Now().UTC().Add(time.Duration(-86400)),
+        }
+	c.SetCookie(&cookie)
 }
 
-func getID(c *gin.Context) (string, error) {
+func getID(c echo.Context) (string, error) {
 	v := getCookie(c, "id")
 	if v == "" {
 		token, err := newToken()
 		if err != nil { return "", err }
 		setCookie(c, "id", token)
+		v = token
 	}
 	_, ok := sessions[v]
 	if !ok { sessions[v] = session{} }
 	return v, nil
 }
 
-func get(c *gin.Context) func(string)any {
+func get(c echo.Context) func(string)any {
 	id, err := getID(c)
 	if err != nil { return func(string)any { return nil } }
 	return func(param string)any {
@@ -52,7 +72,7 @@ func get(c *gin.Context) func(string)any {
 	}
 }
 
-func set(c *gin.Context) func(string, any) any {
+func set(c echo.Context) func(string, any) any {
 	id, err := getID(c)
 	if err != nil { return func(string, any) any { return "" } }
 	return func(param string, value any) any {
@@ -63,7 +83,7 @@ func set(c *gin.Context) func(string, any) any {
 	}
 }
 
-func once(c *gin.Context) func(string)any {
+func once(c echo.Context) func(string)any {
 	id, err := getID(c)
 	if err != nil { return func(string)any { return nil } }
 	return func(param string)any {
@@ -74,7 +94,7 @@ func once(c *gin.Context) func(string)any {
 	}
 }
 
-func has(c *gin.Context) func(string)bool {
+func has(c echo.Context) func(string)bool {
 	id, err := getID(c)
 	if err != nil { return func(string)bool { return false } }
 	return func(param string)bool {
@@ -83,7 +103,7 @@ func has(c *gin.Context) func(string)bool {
 	}
 }
 
-func loggedAs(c *gin.Context) (db.Account, error) {
+func loggedAs(c echo.Context) (db.Account, error) {
 	token := getCookie(c, "token")
 	if token == "" { return db.Account{}, errors.New("unauthenticated") }
 	return db.GetAccountFromToken(token)

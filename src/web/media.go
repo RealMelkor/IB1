@@ -12,7 +12,8 @@ import (
 	"mime/multipart"
 
 	"github.com/gabriel-vasile/mimetype"
-	"github.com/gin-gonic/gin"
+	"github.com/labstack/echo/v4"
+
 	"IB1/config"
 	"IB1/db"
 )
@@ -49,7 +50,20 @@ var extensions = map[string]bool{
 	"mp4": false,
 }
 
-func uploadFile(c *gin.Context, file *multipart.FileHeader) (string, error) {
+func saveUploadedFile(file *multipart.FileHeader, out string) error {
+	src, err := file.Open()
+	if err != nil { return err }
+	defer src.Close()
+
+	dst, err := os.Create(out)
+	if err != nil { return err }
+	defer dst.Close()
+
+	_, err = io.Copy(dst, src)
+	return err
+}
+
+func uploadFile(c echo.Context, file *multipart.FileHeader) (string, error) {
 
 	if uint64(file.Size) > config.Cfg.Media.MaxSize {
 		return "", errors.New("media is above size limit")
@@ -68,7 +82,7 @@ func uploadFile(c *gin.Context, file *multipart.FileHeader) (string, error) {
 	name, err := uniqueRandomName()
 	if err != nil { return "", err }
 	path := config.Cfg.Media.Tmp + "/" + name + "." + extension
-	if err = c.SaveUploadedFile(file, path); err != nil { return "", err }
+	if err = saveUploadedFile(file, path); err != nil { return "", err }
 
 	// clean up the metadata
 	out := config.Cfg.Media.Tmp + "/clean_" + name + "." + extension

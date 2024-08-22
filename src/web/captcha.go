@@ -5,12 +5,12 @@ import (
 	"net/http"
 
 	"github.com/dchest/captcha"
-	"github.com/gin-gonic/gin"
+	"github.com/labstack/echo/v4"
 
 	"IB1/config"
 )
 
-func captchaNew(c *gin.Context) (string, error) {
+func captchaNew(c echo.Context) (string, error) {
 	id, err := getID(c)
 	if err != nil { return "", err }
 	captchaID := captcha.New()
@@ -18,32 +18,32 @@ func captchaNew(c *gin.Context) (string, error) {
 	return captchaID, nil
 }
 
-func captchaImage(c *gin.Context) {
+func captchaImage(c echo.Context) error {
 	id, err := captchaNew(c)
 	if err != nil {
-		badRequest(c, err.Error())
-		return
+		return badRequest(c, err.Error())
 	}
-	c.Status(http.StatusOK)
-	captcha.WriteImage(c.Writer, id, captcha.StdWidth, captcha.StdHeight)
+	c.Response().WriteHeader(http.StatusOK)
+	return captcha.WriteImage(c.Response().Writer, id,
+			captcha.StdWidth, captcha.StdHeight)
 }
 
-func captchaVerify(c *gin.Context, answer string) bool {
-	v := get(c)("captcha").(string)
-	if v == "" { return false }
-	return captcha.VerifyString(v, answer)
+func captchaVerify(c echo.Context, answer string) bool {
+	v := get(c)("captcha")
+	if v == nil { return false }
+	return captcha.VerifyString(v.(string), answer)
 }
 
-func checkCaptcha(c *gin.Context) error {
+func checkCaptcha(c echo.Context) error {
 	if !config.Cfg.Captcha.Enabled { return nil }
 	_, err := loggedAs(c)
 	if err == nil { return nil } // captcha not needed if logged
 	return verifyCaptcha(c)
 }
 
-func verifyCaptcha(c *gin.Context) error {
+func verifyCaptcha(c echo.Context) error {
 	if !config.Cfg.Captcha.Enabled { return nil }
-	captcha, hasCaptcha := c.GetPostForm("captcha")
+	captcha, hasCaptcha := getPostForm(c, "captcha")
 	if !hasCaptcha { return errors.New("invalid form") }
 	if !captchaVerify(c, captcha) { return errors.New("wrong captcha") }
 	return nil

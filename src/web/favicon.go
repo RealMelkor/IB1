@@ -1,7 +1,7 @@
 package web
 
 import (
-	"github.com/gin-gonic/gin"
+	"github.com/labstack/echo/v4"
 	"github.com/gabriel-vasile/mimetype"
 	"errors"
 	"strings"
@@ -10,7 +10,7 @@ import (
 	"IB1/db"
 )
 
-func updateFavicon(c *gin.Context) error {
+func updateFavicon(c echo.Context) error {
 	file, err := c.FormFile("theme")
         if err != nil { return err }
 	f, err := file.Open()
@@ -30,7 +30,7 @@ func updateFavicon(c *gin.Context) error {
 	return nil
 }
 
-func clearFavicon(c *gin.Context) error {
+func clearFavicon(c echo.Context) error {
 	config.Cfg.Home.FaviconMime = ""
 	config.Cfg.Home.Favicon = nil
 	db.UpdateConfig()

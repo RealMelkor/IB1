@@ -4,25 +4,26 @@ import (
 	"strconv"
 	"errors"
 
-	"github.com/gin-gonic/gin"
+	"github.com/labstack/echo/v4"
 
 	"IB1/db"
 )
 
-func badRequest(c *gin.Context, info string) {
-	render("error.html", info, c)
+func badRequest(c echo.Context, info string) error {
+	return render("error.html", info, c)
 }
 
-func renderFile(file string) gin.HandlerFunc {
-	return func(c *gin.Context) {
+func renderFile(file string) echo.HandlerFunc {
+	return func(c echo.Context) error {
 		if err := render(file, nil, c); err != nil {
-			badRequest(c, err.Error())
+			return badRequest(c, err.Error())
 		}
+		return nil
 	}
 }
 
-func boardIndex(c *gin.Context) error {
-	page, err := strconv.Atoi(c.Query("page"))
+func boardIndex(c echo.Context) error {
+	page, err := strconv.Atoi(c.QueryParam("page"))
 	if err != nil { page = 0 } else { page -= 1 }
 	boardName := c.Param("board")
 	board, err := db.GetBoard(boardName)
@@ -64,7 +65,7 @@ func boardIndex(c *gin.Context) error {
 	return render("board.html", data, c)
 }
 
-func catalog(c *gin.Context) error {
+func catalog(c echo.Context) error {
 	boardName := c.Param("board")
 	board, err := db.GetBoard(boardName)
 	if err != nil { return err }
@@ -83,7 +84,7 @@ func catalog(c *gin.Context) error {
 	return render("catalog.html", board, c)
 }
 
-func thread(c *gin.Context) error {
+func thread(c echo.Context) error {
 
 	var thread db.Thread
 	var board db.Board
