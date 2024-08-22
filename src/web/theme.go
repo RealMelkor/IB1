@@ -59,11 +59,11 @@ func reloadThemes() {
 }
 
 func getTheme(c *gin.Context) string {
-	theme := get(c)("theme")
-	if theme == nil { return config.Cfg.Home.Theme }
-	_, ok := getThemesTable()[theme.(string)]
+	theme := getCookie(c, "theme")
+	if theme == "" { return config.Cfg.Home.Theme }
+	_, ok := getThemesTable()[theme]
 	if !ok { return config.Cfg.Home.Theme }
-	return theme.(string)
+	return theme
 }
 
 func setTheme(c *gin.Context) error {
@@ -71,6 +71,6 @@ func setTheme(c *gin.Context) error {
 	if !ok { return errors.New("invalid form") }
 	_, ok = themesTable[theme]
 	if !ok { return errors.New("invalid theme") }
-	set(c)("theme", theme)
+	SetCookiePermanent(c, "theme", theme)
 	return nil
 }

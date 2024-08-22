@@ -15,6 +15,11 @@ func setCookie(c *gin.Context, name string, value string) {
 	c.SetCookie(name, value, 0, "/", config.Cfg.Web.Domain, false, true)
 }
 
+func SetCookiePermanent(c *gin.Context, name string, value string) {
+	exp := 86400 * 3650
+	c.SetCookie(name, value, exp, "/", config.Cfg.Web.Domain, false, true)
+}
+
 func getCookie(c *gin.Context, name string) string {
 	v, err := c.Cookie(name)
 	if err != nil { return "" }
@@ -22,7 +27,7 @@ func getCookie(c *gin.Context, name string) string {
 }
 
 func deleteCookie(c *gin.Context, name string) {
-	c.SetCookie(name, "", 1, "/", config.Cfg.Web.Domain, false, true)
+	c.SetCookie(name, "", -86400, "/", config.Cfg.Web.Domain, false, true)
 }
 
 func getID(c *gin.Context) (string, error) {
