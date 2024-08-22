@@ -36,6 +36,10 @@
 			<td><input type="text" name="media" value="{{.Config.Media.Path}}" {{if .Config.Media.InDatabase}}disabled{{else}}required{{end}}></td>
 		</tr>
 		<tr>
+			<td>Maximum media size</td>
+			<td><input type="text" name="maxsize" value="{{.Config.Media.MaxSize}}" required></td>
+		</tr>
+		<tr>
 			<td>Store media inside the database</td>
 			<td><input type="checkbox" name="indb" {{if .Config.Media.InDatabase}}checked{{end}}></td>
 		</tr>
@@ -48,6 +52,7 @@
 			<td><input type="checkbox" name="ascii" {{if .Config.Post.AsciiOnly}}checked{{end}}></td>
 		</tr>
 	</table>
+	<p class="error">{{once "config-error"}}</p>
 	<div>
 		<input class="input-center" type="submit" value="Update">
 	</div>

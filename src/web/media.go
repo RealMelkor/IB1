@@ -51,6 +51,10 @@ var extensions = map[string]bool{
 
 func uploadFile(c *gin.Context, file *multipart.FileHeader) (string, error) {
 
+	if uint64(file.Size) > config.Cfg.Media.MaxSize {
+		return "", errors.New("media is above size limit")
+	}
+
 	// verify extension
 	parts := strings.Split(file.Filename, ".")
 	if len(parts) < 2 { return "", errors.New("no name extension") }

@@ -29,13 +29,8 @@ var favicon []byte
 var templates *template.Template
 
 func isLogged(c *gin.Context) bool {
-	token := get(c)("token")
-	if token != nil {
-		var err error
-		_, err = db.GetAccountFromToken(token.(string))
-		return err == nil
-	}
-	return false
+	_, err := loggedAs(c)
+	return err == nil
 }
 
 func render(_template string, data any, c *gin.Context) error {
@@ -87,15 +82,8 @@ func initTemplate() error {
 func header(c *gin.Context) any {
 	boards, err := db.GetBoards()
 	if err != nil { return nil }
-	var account db.Account
-	account.Logged = false
-	logged := false
-	token := get(c)("token")
-	if token != nil {
-		var err error
-		account, err = db.GetAccountFromToken(token.(string))
-		if err == nil { logged = true }
-	}
+	account, err := loggedAs(c)
+	logged := err == nil
 	theme := getTheme(c)
 	data := struct {
 		Config	config.Config

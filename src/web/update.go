@@ -17,21 +17,18 @@ func loginAs(c *gin.Context) error {
 	if err != nil { return err }
 	token, err := db.Login(name, password)
 	if err != nil { return errors.New("invalid credentials") }
-	set(c)("token", token)
+	setCookie(c, "token", token)
 	c.Redirect(http.StatusFound, "/")
 	return nil
 }
 
-func loggedAs(c *gin.Context) (db.Account, error) {
-	token := get(c)("token")
-	if token == nil { return db.Account{}, errors.New("not logged in") }
-	return db.GetAccountFromToken(token.(string))
-}
-
-func disconnect(c *gin.Context) {
-	token := get(c)("token")
-	if token != nil { db.Disconnect(token.(string)) }
+func disconnect(c *gin.Context) error {
+	_, err := loggedAs(c)
+	if err != nil { return err }
+	db.Disconnect(getCookie(c, "token"))
+	deleteCookie(c, "token")
 	c.Redirect(http.StatusFound, "/")
+	return nil
 }
 
 func remove(c *gin.Context) error {

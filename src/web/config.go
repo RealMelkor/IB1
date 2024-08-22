@@ -25,17 +25,18 @@ func needRank(c *gin.Context, rank int) error {
 	ret := errors.New("insufficient privilege")
 	var account db.Account
 	account.Logged = false
-	token := get(c)("token")
-	if token == nil { return ret }
+	token := getCookie(c, "token")
+	if token == "" { return ret }
 	var err error
-	account, err = db.GetAccountFromToken(token.(string))
+	account, err = db.GetAccountFromToken(token)
 	if err != nil { return err }
 	if account.Rank < rank { return ret }
 	return nil
 }
 
-func handleConfig(f func(c *gin.Context) error) func(c *gin.Context) {
-	return err(redirect(hasRank(f, db.RANK_ADMIN), "/dashboard"))
+func handleConfig(f fErr, param string) func(c *gin.Context) {
+	return catchCustom(redirect(hasRank(f, db.RANK_ADMIN), "/dashboard"),
+				param, "/dashboard")
 }
 
 func canSetConfig(c *gin.Context, f fErr) fErr {
@@ -89,6 +90,11 @@ func updateConfig(c *gin.Context) error {
 	}
 	if err != nil { return err }
 	config.Cfg.Media.Path = path
+
+	sizeStr, _ := c.GetPostForm("maxsize")
+	size, err := strconv.ParseUint(sizeStr, 10, 64)
+	if err != nil { return err }
+	config.Cfg.Media.MaxSize = size
 
 	captcha, _ := c.GetPostForm("captcha")
 	config.Cfg.Captcha.Enabled = captcha == "on"

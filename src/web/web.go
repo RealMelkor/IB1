@@ -34,12 +34,18 @@ func err(f func(c *gin.Context) error) gin.HandlerFunc {
 	}
 }
 
-func catch(f func(c *gin.Context) error, param string) gin.HandlerFunc {
+func catchCustom(f fErr, param string, redirect string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if err := f(c); err != nil {
 			set(c)(param, err.Error())
-			c.Redirect(http.StatusFound, c.Request.RequestURI)
+			c.Redirect(http.StatusFound, redirect)
 		}
+	}
+}
+
+func catch(f fErr, param string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		catchCustom(f, param, c.Request.RequestURI)(c)
 	}
 }
 
@@ -97,7 +103,7 @@ func Init() error {
 	r.POST("/:board", catch(newThread, "new-thread-error"))
 	r.GET("/:board/:thread", err(thread))
 	r.POST("/:board/:thread", catch(newPost, "new-post-error"))
-	r.GET("/disconnect", disconnect)
+	r.GET("/disconnect", err(disconnect))
 	r.GET("/login", unauth(renderFile("login.html")))
 	r.POST("/login", unauth(catch(loginAs, "login-error")))
 	r.GET("/:board/remove/:id", err(hasRank(remove, db.RANK_ADMIN)))
@@ -107,17 +113,25 @@ func Init() error {
 	r.POST("/config/client/theme", func(c *gin.Context) {
 		redirect(setTheme, c.Query("origin"))(c)
 	})
-	r.POST("/config/update", handleConfig(updateConfig))
-	r.POST("/config/board/create", handleConfig(createBoard))
-	r.POST("/config/board/update/:board", handleConfig(updateBoard))
-	r.POST("/config/board/delete/:board", handleConfig(deleteBoard))
-	r.POST("/config/theme/create", handleConfig(createTheme))
-	r.POST("/config/theme/delete/:id", handleConfig(deleteTheme))
-	r.POST("/config/theme/update/:id", handleConfig(updateTheme))
-	r.POST("/config/favicon/update", handleConfig(updateFavicon))
-	r.POST("/config/favicon/clear", handleConfig(clearFavicon))
-	r.POST("/config/ban/create", handleConfig(addBan))
-	r.POST("/config/ban/cancel/:id", handleConfig(deleteBan))
+	r.POST("/config/update", handleConfig(updateConfig, "config-error"))
+	r.POST("/config/board/create",
+		handleConfig(createBoard, "board-error"))
+	r.POST("/config/board/update/:board",
+		handleConfig(updateBoard, "board-error"))
+	r.POST("/config/board/delete/:board",
+		handleConfig(deleteBoard, "board-error"))
+	r.POST("/config/theme/create",
+		handleConfig(createTheme, "theme-error"))
+	r.POST("/config/theme/delete/:id",
+		handleConfig(deleteTheme, "theme-error"))
+	r.POST("/config/theme/update/:id",
+		handleConfig(updateTheme, "theme-error"))
+	r.POST("/config/favicon/update",
+		handleConfig(updateFavicon, "favicon-error"))
+	r.POST("/config/favicon/clear",
+		handleConfig(clearFavicon, "favicon-error"))
+	r.POST("/config/ban/create", handleConfig(addBan, "ban-error"))
+	r.POST("/config/ban/cancel/:id", handleConfig(deleteBan, "ban-error"))
 
 	if config.Cfg.Media.InDatabase {
 		r.GET("/media/:hash", func(c *gin.Context) {

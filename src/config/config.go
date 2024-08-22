@@ -21,6 +21,7 @@ type Config struct {
 		InDatabase	bool
 		Path		string
 		Tmp		string
+		MaxSize		uint64
 	}
 	Captcha struct {
 		Enabled		bool
@@ -45,6 +46,7 @@ func LoadDefault() {
 	Cfg.Captcha.Enabled = true
 	Cfg.Captcha.Length = 7
 	Cfg.Board.MaxThreads = 40
+	Cfg.Media.MaxSize = 1024 * 1024 * 4
 	Cfg.Media.InDatabase = true
 	Cfg.Media.Path = "./media"
 	Cfg.Media.Tmp = "/tmp/ib1"

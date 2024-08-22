@@ -10,7 +10,7 @@
 				<th>Password</th>
 				<td><input class="field" type="password" name="password" required="required"></td>
 			</tr>
-{{if .Config.Captcha.Enabled}}
+{{if isCaptchaEnabled}}
 			<tr>
 				<th></th>
 				<td class="captcha"><img loading="lazy" src="/captcha" alt="captcha"></td>

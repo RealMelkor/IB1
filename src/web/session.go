@@ -1,20 +1,36 @@
 package web
 
 import (
+	"errors"
 	"github.com/gin-gonic/gin"
+
 	"IB1/config"
+	"IB1/db"
 )
 
 type session map[string]any
 var sessions = map[string]session{}
 
+func setCookie(c *gin.Context, name string, value string) {
+	c.SetCookie(name, value, 0, "/", config.Cfg.Web.Domain, false, true)
+}
+
+func getCookie(c *gin.Context, name string) string {
+	v, err := c.Cookie(name)
+	if err != nil { return "" }
+	return v
+}
+
+func deleteCookie(c *gin.Context, name string) {
+	c.SetCookie(name, "", 1, "/", config.Cfg.Web.Domain, false, true)
+}
+
 func getID(c *gin.Context) (string, error) {
-	v, err := c.Cookie("id")
-	if v == "" || err != nil {
+	v := getCookie(c, "id")
+	if v == "" {
 		token, err := newToken()
 		if err != nil { return "", err }
-		c.SetCookie("id", token, 0, "/", config.Cfg.Web.Domain,
-				false, true)
+		setCookie(c, "id", token)
 	}
 	_, ok := sessions[v]
 	if !ok { sessions[v] = session{} }
@@ -60,4 +76,10 @@ func has(c *gin.Context) func(string)bool {
 		_, ok := sessions[id][param]
 		return ok
 	}
+}
+
+func loggedAs(c *gin.Context) (db.Account, error) {
+	token := getCookie(c, "token")
+	if token == "" { return db.Account{}, errors.New("unauthenticated") }
+	return db.GetAccountFromToken(token)
 }
