@@ -9,14 +9,14 @@ import (
 	"IB1/db"
 )
 
-func badRequest(c echo.Context, info string) error {
-	return render("error.html", info, c)
+func badRequest(c echo.Context, err error) error {
+	return render("error.html", err.Error(), c)
 }
 
 func renderFile(file string) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		if err := render(file, nil, c); err != nil {
-			return badRequest(c, err.Error())
+			fatalError(c, err)
 		}
 		return nil
 	}

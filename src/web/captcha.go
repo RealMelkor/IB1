@@ -21,7 +21,7 @@ func captchaNew(c echo.Context) (string, error) {
 func captchaImage(c echo.Context) error {
 	id, err := captchaNew(c)
 	if err != nil {
-		return badRequest(c, err.Error())
+		return badRequest(c, err)
 	}
 	c.Response().WriteHeader(http.StatusOK)
 	return captcha.WriteImage(c.Response().Writer, id,

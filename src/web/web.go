@@ -25,10 +25,17 @@ func clientIP(c echo.Context) string {
 	return ip
 }
 
+func fatalError(c echo.Context, err error) {
+	c.Response().Write([]byte("FATAL ERROR: " + err.Error()))
+}
+
 func err(f echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		if err := f(c); err != nil {
-			return badRequest(c, err.Error())
+			if (len(c.Response().Header()) == 0) {
+				return badRequest(c, err)
+			}
+			fatalError(c, err)
 		}
 		return nil
 	}

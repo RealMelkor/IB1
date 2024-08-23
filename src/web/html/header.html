@@ -8,7 +8,11 @@
 		<title>{{.Config.Home.Title}}</title>
 		<link rel="stylesheet" type="text/css" href="/static/common.css">
 		<link rel="stylesheet" type="text/css" href="/static/{{.Theme}}.css">
-		<link rel="icon" type="image/png" href="/static/favicon">
+		{{$mime := .Config.Home.FaviconMime}}
+		{{if (eq $mime "")}}
+		{{$mime = "image/png"}}
+		{{end}}
+		<link rel="icon" type="{{$mime}}" href="/static/favicon">
 	</head>
 	<body>
 	<div class="bar">
