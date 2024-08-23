@@ -80,10 +80,10 @@ func newThread(c echo.Context) error {
 	board, err := db.GetBoard(boardName)
 	if err != nil { return err }
 
-	name, hasName := getPostForm(c, "name")
-	title, hasTitle := getPostForm(c, "title")
+	name, _ := getPostForm(c, "name")
+	title, _ := getPostForm(c, "title")
 	content, hasContent := getPostForm(c, "content")
-	if !hasTitle || !hasContent || !hasName || content == "" { 
+	if !hasContent || content == "" {
 		return errors.New("invalid form")
 	}
 
