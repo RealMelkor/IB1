@@ -16,7 +16,12 @@ import (
 
 func clientIP(c echo.Context) string {
 	ip := c.Request().Header.Get("X-Real-IP")
-	if ip == "" { return c.Request().RemoteAddr }
+	if ip == "" {
+		s := c.Request().RemoteAddr
+		s = strings.Replace(s, "[", "", 1)
+		s = strings.Replace(s, "]", "", 1)
+		return s[:strings.LastIndex(s, ":")]
+	}
 	return ip
 }
 

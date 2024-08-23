@@ -1,38 +1,40 @@
 package db
 
 import (
-	"gorm.io/gorm"
 	"time"
 	"net"
-	"strconv"
-	"encoding/binary"
-	"bytes"
 	"errors"
+
+	"github.com/yl2chen/cidranger"
+	"gorm.io/gorm"
 )
 
 type Ban struct {
 	gorm.Model
-	IP		uint32
-	Mask		uint32
+	CIDR		string
 	Expiry		int64
 }
 
 var BanList = []Ban{}
+var ranger cidranger.Ranger
 
 func LoadBanList() error {
 	tx := db.Find(&BanList)
 	if tx.Error != nil {  return tx.Error }
+	ranger = cidranger.NewPCTrieRanger()
+	for _, v := range BanList {
+		_, cidr, _ := net.ParseCIDR(v.CIDR)
+		ranger.Insert(cidranger.NewBasicRangerEntry(*cidr))
+	}
 	return nil
 }
 
 func IsBanned(_ip string) error {
-	ip, err := parseIP(_ip)
+	ip := net.ParseIP(_ip)
+	if ip == nil { return errors.New("invalid ip") }
+	v, err := ranger.Contains(ip)
 	if err != nil { return err }
-	for _, v := range BanList {
-		if ip & v.Mask == v.IP & v.Mask {
-			return errors.New("banned")
-		}
-	}
+	if v { return errors.New("banned") }
 	return nil
 }
 
@@ -45,61 +47,25 @@ func (ban Ban) To() string {
 }
 
 func (ban Ban) String() string {
-	ip := int(ban.IP)
-	b0 := strconv.Itoa((ip>>24)&0xff)
-	b1 := strconv.Itoa((ip>>16)&0xff)
-	b2 := strconv.Itoa((ip>>8)&0xff)
-	b3 := strconv.Itoa((ip& 0xff))
-	mask := 0
-	for i := ban.Mask; i > 0; i = i<<1 {
-		mask += 1
-	}
-	return b0 + "." + b1 + "." + b2 + "." + b3 + "/" + strconv.Itoa(mask)
-}
-
-func parseIP(ip string) (uint32, error) {
-	_ip := net.ParseIP(ip)
-	if _ip == nil || _ip.To4() == nil {
-		return 0, errors.New("invalid ip")
-	}
-	var i uint32
-	binary.Read(bytes.NewBuffer(_ip.To4()), binary.BigEndian, &i)
-	return i, nil
-}
-
-func parseCIDR(ip string) (uint32, uint32, error) {
-	_ip, _net, err := net.ParseCIDR(ip)
-	if err != nil {
-		i, err := parseIP(ip)
-		return i, 0xFFFFFFFF, err
-	}
-	n, _ := _net.Mask.Size()
-	mask := 0
-	for n > 0 {
-		n--
-		mask |= 0x80000000 >> n
-	}
-	if _ip == nil || _ip.To4() == nil {
-		return 0, 0, errors.New("invalid ip")
-	}
-	var i uint32
-	binary.Read(bytes.NewBuffer(
-		_ip.To4()), binary.BigEndian, &i)
-	return i, uint32(mask), nil
+	return ban.CIDR
 }
 
 func BanIP(ip string, duration int64) error {
-	_ip, mask, err := parseCIDR(ip)
-	if err != nil { return err }
-	ban := Ban{IP: _ip, Mask: mask, Expiry: time.Now().Unix() + duration}
+	_, _, err := net.ParseCIDR(ip)
+	if err != nil {
+		_ip := net.ParseIP(ip)
+		if _ip == nil { return errors.New("invalid ip") }
+		ip = _ip.String() + "/32"
+	}
+	ban := Ban{
+		CIDR: ip,
+		Expiry: time.Now().Unix() + duration,
+	}
 	if err := db.Create(&ban).Error; err != nil { return err }
 	BanList = append(BanList, ban)
-	return nil
-}
-
-func remove(s []int, i int) []int {
-	s[i] = s[len(s) - 1]
-	return s[:len(s) - 1]
+	_, cidr, err := net.ParseCIDR(ip)
+	if err != nil { return err }
+	return ranger.Insert(cidranger.NewBasicRangerEntry(*cidr))
 }
 
 func RemoveBan(id uint) error {
@@ -107,6 +73,9 @@ func RemoveBan(id uint) error {
 	if err != nil { return err }
 	for i, v := range BanList {
 		if v.ID == id {
+			_, cidr, err := net.ParseCIDR(v.CIDR)
+			if err != nil { return err }
+			ranger.Remove(*cidr)
 			BanList[i] = BanList[len(BanList) - 1]
 			BanList = BanList[:len(BanList) - 1]
 			return nil

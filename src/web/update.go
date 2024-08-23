@@ -118,9 +118,8 @@ func newPost(c echo.Context) error {
 	thread, err := db.GetThread(board, threadNumber)
 	if err != nil { return err }
 
-	name, hasName := getPostForm(c, "name")
-	content, hasContent := getPostForm(c, "content")
-	if !hasName || !hasContent { return errors.New("invalid form") }
+	name, _ := getPostForm(c, "name")
+	content, _ := getPostForm(c, "content")
 
 	if err := checkCaptcha(c); err != nil { return err }
 
