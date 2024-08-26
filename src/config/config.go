@@ -30,6 +30,7 @@ type Config struct {
 	Post struct {
 		DefaultName	string
 		AsciiOnly	bool
+		ReadOnly	bool
 	}
 	Board struct {
 		MaxThreads	int

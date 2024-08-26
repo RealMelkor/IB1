@@ -107,6 +107,9 @@ func updateConfig(c echo.Context) error {
 	ascii, _ := getPostForm(c, "ascii")
 	config.Cfg.Post.AsciiOnly = ascii == "on"
 
+	readonly, _ := getPostForm(c, "readonly")
+	config.Cfg.Post.ReadOnly = readonly == "on"
+
 	return db.UpdateConfig()
 }
 

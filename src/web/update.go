@@ -8,7 +8,10 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"IB1/db"
+	"IB1/config"
 )
+
+var readOnlyErr = errors.New("The website is currently read-only")
 
 func loginAs(c echo.Context) error {
 	name := c.Request().PostFormValue("username")
@@ -74,6 +77,7 @@ func ban(c echo.Context) error {
 
 func newThread(c echo.Context) error {
 
+	if config.Cfg.Post.ReadOnly { return readOnlyErr }
 	if err := isBanned(c); err != nil { return err }
 
 	boardName := c.Param("board")
@@ -106,6 +110,7 @@ func newThread(c echo.Context) error {
 
 func newPost(c echo.Context) error {
 
+	if config.Cfg.Post.ReadOnly { return readOnlyErr }
 	if err := isBanned(c); err != nil { return err }
 
 	boardName := c.Param("board")

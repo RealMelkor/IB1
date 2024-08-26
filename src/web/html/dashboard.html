@@ -51,6 +51,10 @@
 			<td>Ascii-Only Mode</td>
 			<td><input type="checkbox" name="ascii" {{if .Config.Post.AsciiOnly}}checked{{end}}></td>
 		</tr>
+		<tr>
+			<td>Read-Only Mode</td>
+			<td><input type="checkbox" name="readonly" {{if .Config.Post.ReadOnly}}checked{{end}}></td>
+		</tr>
 	</table>
 	<p class="error">{{once "config-error"}}</p>
 	<div>
