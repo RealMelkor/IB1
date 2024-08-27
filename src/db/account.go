@@ -80,3 +80,12 @@ func AccountsCount() (int, error) {
 	if result.Error != nil { return -1, result.Error }
 	return int(result.RowsAffected), nil
 }
+
+func ChangePassword(name string, password string) error {
+	var account Account
+	err := db.First(&account, "name = ?", name).Error
+	if err != nil { return err }
+	hash, err := hashPassword(password)
+	if err != nil { return err }
+	return db.Model(&account).Update("password", hash).Error
+}

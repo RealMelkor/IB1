@@ -76,9 +76,21 @@ func parseArguments() error {
 		if len(os.Args) > 3 { db.Type = os.Args[3] }
 		db.Path = os.Args[2]
 		return nil
+	case "passwd":
+		if len(os.Args) < 3 {
+			return errors.New(os.Args[0] + " passwd <name>")
+		}
+		password, err := askPassword()
+		if err != nil { return err }
+		if err := db.Init(); err != nil { return err }
+		if err := db.ChangePassword(os.Args[2], password); err != nil {
+			return err
+		}
+		fmt.Println("password changed")
 	default:
 		fmt.Println(os.Args[0] +
 			" register <name> <trusted|moderator|admin>")
+		fmt.Println(os.Args[0] + " passwd <name>")
 		fmt.Println(os.Args[0] + " domain <domain>")
 		fmt.Println(os.Args[0] + " db <path> [sqlite|sqlite3|mysql]")
 	}
