@@ -36,10 +36,13 @@ cd ..
 ## Database configuration
 
 The default database configuration is sqlite with the path "./ib1.db".
-The database path can be overridden using the environment variable 'IB1_DB_PATH'.
-The database type can be overridden using the environment variable 'IB1_DB_TYPE'.
 
 Three database types are available:
 * mysql 
 * sqlite3
 * sqlite (CGO not required)
+
+# Environment variables
+* IB1_DB_PATH - Database path or connection string
+* IB1_DB_TYPE - Database type: "mysql", "sqlite3" or "sqlite"
+* IB1_LISTENER - Address and port to listen on: "0.0.0.0:8080"

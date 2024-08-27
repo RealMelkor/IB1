@@ -192,5 +192,8 @@ func Init() error {
 		r.Static("/media", config.Cfg.Media.Path)
 	}
 
+	if s := os.Getenv("IB1_LISTENER"); s != "" {
+		return r.Start(s)
+	}
 	return r.Start(config.Cfg.Web.Listener)
 }
