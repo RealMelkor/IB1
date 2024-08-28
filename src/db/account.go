@@ -5,7 +5,7 @@ import (
 )
 
 const (
-	RANK_TRUSTED = iota
+	RANK_TRUSTED = iota + 1
 	RANK_MODERATOR
 	RANK_ADMIN
 )
@@ -88,4 +88,37 @@ func ChangePassword(name string, password string) error {
 	hash, err := hashPassword(password)
 	if err != nil { return err }
 	return db.Model(&account).Update("password", hash).Error
+}
+
+func GetAccounts() ([]Account, error) {
+	var accounts []Account
+	if err := db.Find(&accounts).Error; err != nil { return nil, err }
+	return accounts, nil
+}
+
+func UpdateAccount(id int, name string, password string, rank int) error {
+	acc := db.Model(&Account{}).Where("id = ?", id)
+	if acc.Error != nil { return acc.Error }
+	if password != "" {
+		var err error
+		password, err = hashPassword(password)
+		if err != nil { return err }
+	}
+	sessions = map[string]Account{}
+	return acc.Updates(Account{
+		Name: name, Rank: rank, Password: password}).Error
+}
+
+func RemoveAccount(id uint) error {
+	err := db.Unscoped().Delete(&Account{}, id).Error
+	if err != nil { return err }
+	db.Where("account_id = ?", id).Delete(&Session{})
+	sessions = map[string]Account{}
+	return nil
+}
+
+func (account Account) HasRank(rank string) bool {
+	i, err := StringToRank(rank)
+	if err != nil { return false }
+	return account.Rank >= i
 }

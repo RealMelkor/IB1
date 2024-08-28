@@ -1,7 +1,7 @@
 {{define "thread-template"}}
 {{range .Posts}}
-{{$logged := isLogged}}
-{{if (or (not .Disabled) $logged)}}
+{{$moderator := hasRank "moderator"}}
+{{if (or (not .Disabled) $moderator)}}
 <div>
 <div class="post{{if .Disabled}} post-hidden{{end}}" id="{{.Number}}">
 <p>
@@ -11,7 +11,7 @@
 	<span class="name">{{.Name}}</span>
 	<abbr title="{{.FormatAge}}">{{.FormatTimestamp}}</abbr>
 	<a class="post-link" href="#{{.Number}}">No.{{.Number}}</a>
-	{{if $logged}}
+	{{if $moderator}}
 	[<span class="ip">IP: {{.IP}}</span>]
 	[<a class="action" href="/{{$.Board.Name}}/hide/{{.Number}}">{{if .Disabled}}Unhide{{else}}Hide{{end}}</a>]
 	[<a class="action" href="/{{$.Board.Name}}/remove/{{.Number}}">Remove</a>]

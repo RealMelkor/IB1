@@ -174,6 +174,12 @@ func Init() error {
 		handleConfig(clearFavicon, "favicon-error"))
 	r.POST("/config/ban/create", handleConfig(addBan, "ban-error"))
 	r.POST("/config/ban/cancel/:id", handleConfig(deleteBan, "ban-error"))
+	r.POST("/config/account/create",
+		handleConfig(addAccount, "account-error"))
+	r.POST("/config/account/update/:id",
+		handleConfig(updateAccount, "account-error"))
+	r.POST("/config/account/delete/:id",
+		handleConfig(deleteAccount, "account-error"))
 
 	if config.Cfg.Media.InDatabase {
 		r.GET("/media/:hash", func(c echo.Context) error {

@@ -61,6 +61,7 @@
 		<input class="input-center" type="submit" value="Update">
 	</div>
 	</form>
+
 	<div style="padding: 30px;"></div>
 	<table>
 	<tr>
@@ -93,6 +94,7 @@
 </form>
 	</tr>
 	</table>
+
 	<div style="padding: 30px;"></div>
 	<table>
 	<tr>
@@ -120,6 +122,7 @@
 </form>
 	</tr>
 	</table>
+
 	<div style="padding: 30px;"></div>
 	<table>
 	<tr>
@@ -137,6 +140,7 @@
 </form>
 	</tr>
 	</table>
+
 	<div style="padding: 30px;"></div>
 	<table>
 	<tr>
@@ -164,4 +168,49 @@
 </form>
 	</tr>
 	</table>
+	<p class="error">{{once "ban-error"}}</p>
+
+<div style="padding: 30px;"></div>
+	<table>
+	<tr>
+		<th>Name</th>
+		<th>Rank</th>
+		<th>Password</th>
+		<th></th>
+		<th></th>
+	</tr>
+{{range .Accounts}}
+	<tr>
+<form method="POST" action="/config/account/update/{{.ID}}">
+		<td><input type="text" name="name" required value="{{.Name}}"></td>
+		<td>
+			<select name="rank">
+				<option {{if eq (rank "trusted") .Rank}}selected{{end}} value="trusted">Trusted</option>
+				<option {{if eq (rank "moderator") .Rank}}selected{{end}} value="moderator">Moderator</option>
+				<option {{if eq (rank "admin") .Rank}}selected{{end}} value="admin">Administrator</option>
+			</select>
+		</td>
+		<td><input type="password" name="password"></td>
+		<td><input type="submit" value="Update"></td>
+		<td><input type="submit" value="Delete" formaction="/config/account/delete/{{.ID}}"{{if isSelf .}} disabled{{end}}></td>
+</form>
+	</tr>
+{{end}}
+	<tr>
+<form method="POST" action="/config/account/create">
+		<td><input type="text" name="name" required></td>
+		<td>
+			<select name="rank">
+				<option selected="selected" value="admin">Administrator</option>
+				<option value="moderator">Moderator</option>
+				<option value="trusted">Trusted</option>
+			</select>
+		</td>
+		<td><input type="password" name="password" required></td>
+		<td><input type="submit" value="Add"></td>
+</form>
+	</tr>
+	</table>
+	<p class="error">{{once "account-error"}}</p>
+
 </div>

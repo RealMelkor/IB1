@@ -45,6 +45,16 @@ func render(_template string, data any, c echo.Context) error {
 		"set": set(c),
 		"has": has(c),
 		"isLogged": func() bool { return isLogged(c) },
+		"hasRank": func(rank string) bool {
+			acc, err := loggedAs(c)
+			if err != nil { return false }
+			return acc.HasRank(rank)
+		},
+		"isSelf": func(acc db.Account) bool {
+			self, err := loggedAs(c)
+			if err != nil { return false }
+			return self.ID == acc.ID
+		},
 	}
 	err := templates.Lookup("header").Execute(w, header(c))
 	if err != nil { return err }
@@ -72,6 +82,12 @@ func initTemplate() error {
 		"get": func(string, string) string {return ""},
 		"once": func(string) string {return ""},
 		"has": func(string) bool {return false},
+		"rank": func(rank string) int {
+			i, _ := db.StringToRank(rank)
+			return i
+		},
+		"hasRank": func(string) bool {return false},
+		"isSelf": func(db.Account) bool {return false},
 	}
 	templates, err = template.New("gmi").Funcs(funcs).
 				ParseFS(templatesFS, "html/*.html")
@@ -109,8 +125,11 @@ func header(c echo.Context) any {
 func renderDashboard(c echo.Context) error {
 	boards, err := db.GetBoards()
 	if err != nil { return err }
+	accounts, err := db.GetAccounts()
+	if err != nil { return err }
 	themes, _ := db.GetThemes()
 	data := struct {
+		Accounts	[]db.Account
 		Boards		[]db.Board
 		Config		config.Config
 		Theme		string
@@ -119,6 +138,7 @@ func renderDashboard(c echo.Context) error {
 		UserThemes	[]db.Theme
 		Header		any
 	}{
+		Accounts: accounts,
 		Boards: boards,
 		Config: config.Cfg,
 		Bans:	db.BanList,

@@ -208,13 +208,35 @@ func addBan(c echo.Context) error {
 			duration =  expiration.Unix() - time.Now().Unix()
 		}
 	}
-	db.BanIP(ip, duration)
-	return nil
+	return db.BanIP(ip, duration)
 }
 
 func deleteBan(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil { return errors.New("invalid theme") }
-	err = db.RemoveBan(uint(id))
-	return nil
+	return db.RemoveBan(uint(id))
+}
+
+func addAccount(c echo.Context) error {
+	name := c.Request().PostFormValue("name")
+	password := c.Request().PostFormValue("password")
+	rank, err := db.StringToRank(c.Request().PostFormValue("rank"))
+	if err != nil { return err }
+	return db.CreateAccount(name, password, rank)
+}
+
+func updateAccount(c echo.Context) error {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil { return errors.New("invalid user") }
+	name := c.Request().PostFormValue("name")
+	password := c.Request().PostFormValue("password")
+	rank, err := db.StringToRank(c.Request().PostFormValue("rank"))
+	if err != nil { return err }
+	return db.UpdateAccount(id, name, password, rank)
+}
+
+func deleteAccount(c echo.Context) error {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil { return errors.New("invalid user") }
+	return db.RemoveAccount(uint(id))
 }
