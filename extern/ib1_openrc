@@ -1,0 +1,17 @@
+#!/sbin/openrc-run
+
+name=ib1
+directory="/var/lib/ib1"
+command="/usr/bin/IB1"
+export IB1_DB_TYPE="sqlite"
+export IB1_DB_PATH="ib1.db"
+command_background=true
+pidfile="/run/${RC_SVCNAME}.pid"
+error_log="/var/log/ib1.log"
+output_log="/var/log/ib1.log"
+command_user="ib1:ib1"
+
+depend() {
+	need net
+	after firewall
+}
