@@ -2,6 +2,9 @@
 	<form method="POST" action="/config/update">
 	<table>
 		<tr>
+			<th colspan="2">Configuration</th>
+		</tr>
+		<tr>
 			<td>Default theme</td>
 			<td>
 				<select name="theme">
@@ -55,14 +58,15 @@
 			<td>Read-Only Mode</td>
 			<td><input type="checkbox" name="readonly" {{if .Config.Post.ReadOnly}}checked{{end}}></td>
 		</tr>
+		<tr>
+			<td colspan="2"><div class="center"><input type="submit" value="Update"></div></td>
+		</tr>
 	</table>
 	<p class="error">{{once "config-error"}}</p>
-	<div>
-		<input class="input-center" type="submit" value="Update">
-	</div>
 	</form>
 
 	<div style="padding: 30px;"></div>
+	<div class="center"><h3>Boards</h3></div>
 	<table>
 	<tr>
 		<th>Enabled</th>
@@ -96,6 +100,7 @@
 	</table>
 
 	<div style="padding: 30px;"></div>
+	<div class="center"><h3>Themes</h3></div>
 	<table>
 	<tr>
 		<th>Enabled</th>
@@ -124,6 +129,7 @@
 	</table>
 
 	<div style="padding: 30px;"></div>
+	<div class="center"><h3>Favicon</h3></div>
 	<table>
 	<tr>
 		<th>Favicon</th>
@@ -142,6 +148,7 @@
 	</table>
 
 	<div style="padding: 30px;"></div>
+	<div class="center"><h3>Bans</h3></div>
 	<table>
 	<tr>
 		<th>IP</th>
@@ -171,6 +178,7 @@
 	<p class="error">{{once "ban-error"}}</p>
 
 <div style="padding: 30px;"></div>
+	<div class="center"><h3>Accounts</h3></div>
 	<table>
 	<tr>
 		<th>Name</th>

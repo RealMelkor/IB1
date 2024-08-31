@@ -36,18 +36,18 @@ body {
 
 .form {
 	position: -webkit-sticky;
-        position: sticky;
-        top: 10px;
+	position: sticky;
+	top: 10px;
 	left: 100%;
 	margin-right: 10px;
 	width: 245px;
 }
 
 .form-container {
-        top: 10px;
+	top: 10px;
 	height: 0;
 	position: -webkit-sticky;
-        position: sticky;
+	position: sticky;
 }
 
 .post {
@@ -241,10 +241,9 @@ body {
 	color: red;
 }
 
-.input-center {
-	margin: 50%;
-	margin-bottom: 0;
-	margin-top: 10px;
+.center {
+	margin: auto;
+	width: fit-content;
 }
 
 .error p {
