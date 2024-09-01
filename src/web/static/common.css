@@ -249,3 +249,7 @@ body {
 .error p {
 	text-align: center;
 }
+
+:root {
+  --pc: #a6aac0; /* preview color */
+}
