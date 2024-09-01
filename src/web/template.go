@@ -185,7 +185,8 @@ func addLinks(content string, thread uint) (string, []int) {
 		if err != nil { continue }
 		if _, err := db.GetPost(thread, n); err != nil { continue }
 		refs = append(refs, n)
-		str := "<a href=\"#" + number + "\">&gt;&gt;" + number + "</a>"
+		str := "<a class=\"l-" + number + "\" href=\"#" + number +
+			"\">&gt;&gt;" + number + "</a>"
 		content = content[:i - len(quote)] + str + content[j:]
 		i += len(str) - len(quote)
 	}
@@ -247,6 +248,7 @@ func minifyCSS(in []byte) ([]byte, error) {
 func minifyHTML(w io.Writer) io.WriteCloser {
 	m := minify.New()
 	m.AddFunc("text/html", html.Minify)
+	m.AddFunc("text/css", css.Minify)
 	return m.Writer("text/html", w)
 }
 

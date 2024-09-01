@@ -1,9 +1,34 @@
 {{define "thread-template"}}
+<style>
+{{range .Posts}}
+{{$id := .Number}}
+{{range .ReferredBy}}
+#t{{$.Number}}:has(.ref-{{.From}}:hover) #p{{.From}} {
+	position: -webkit-sticky;
+	position: sticky;
+	bottom: 10px;
+}
+#t{{$.Number}}:has(.ref-{{.From}}:hover) #p{{.From}} div {
+	background-color: #a6aac0;
+}
+#t{{$.Number}}:has(.l-{{$id}}:hover) #p{{$id}} {
+	position: -webkit-sticky;
+	position: sticky;
+	top: 10px;
+}
+#t{{$.Number}}:has(.l-{{$id}}:hover) #p{{$id}} div {
+	background-color: #a6aac0;
+}
+{{end}}
+{{end}}
+</style>
+<div id="t{{$.Number}}">
 {{range .Posts}}
 {{$moderator := hasRank "moderator"}}
 {{if (or (not .Disabled) $moderator)}}
-<div>
-<div class="post{{if .Disabled}} post-hidden{{end}}" id="{{.Number}}">
+<div id="{{.Number}}"></div>
+<div id="p{{.Number}}">
+<div class="post{{if .Disabled}} post-hidden{{end}}">
 <p>
 {{if eq .Number $.Number}}
 	<span class="title">{{$.Title}}</span>
@@ -18,7 +43,7 @@
 	[<a class="action" href="/{{$.Board.Name}}/ban/{{.IP}}">Ban</a>]
 	{{end}}
 	{{range .ReferredBy}}
-	<a class="post-ref" href="#{{.From}}">&gt;&gt;{{.From}}</a>
+	<a class="post-ref ref-{{.From}}" href="#{{.From}}">&gt;&gt;{{.From}}</a>
 	{{end}}
 </p>
 {{if .Media}}
@@ -36,3 +61,4 @@
 {{end}}
 {{end}}
 {{end}}
+</div>
