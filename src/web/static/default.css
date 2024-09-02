@@ -22,6 +22,9 @@ body {
 .post-ref {
 	color: #34345c;
 }
+.post-ref:hover {
+	color: #D00;
+}
 .post-hidden {
 	background-color: #99c;
 }

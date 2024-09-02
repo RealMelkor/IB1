@@ -10,6 +10,10 @@ import (
 )
 
 func AddMedia(data []byte, thumbnail []byte, hash string, mime string) error {
+	var media Media
+	var count int64
+	db.First(&media, "hash = ?", hash).Count(&count)
+	if count > 0 { return nil }
 	return db.Create(&Media{
 		Hash: hash, Mime: mime, Data: data, Thumbnail: thumbnail,
 	}).Error
@@ -30,9 +34,9 @@ func GetMedia(hash string) ([]byte, string, error) {
 }
 
 func cleanOrphanMedias() error {
-	query := "SELECT a.hash FROM media a " +
-		"LEFT OUTER JOIN posts b ON a.hash = b.media_hash " +
+	join := "LEFT OUTER JOIN posts b ON a.hash = b.media_hash " +
 		"WHERE b.media_hash IS NULL"
+	query := "SELECT a.hash FROM media a " + join
 	if !config.Cfg.Media.InDatabase {
 		var orphans []Media
 		if err := db.Raw(query).Scan(&orphans).Error; err != nil {
@@ -47,6 +51,9 @@ func cleanOrphanMedias() error {
 			os.Remove(config.Cfg.Media.Path +
 					"/thumbnail/" + v.Hash + ".png")
 		}
+	}
+	if dbType == TYPE_MYSQL {
+		return db.Exec("DELETE a FROM media a " + join).Error
 	}
 	return db.Exec("DELETE FROM media WHERE hash IN (" + query + ")").Error
 }

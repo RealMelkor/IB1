@@ -5,7 +5,6 @@ import (
 	"io"
 	"time"
 	"fmt"
-	"strings"
 	"errors"
 	"crypto/rand"
 	"crypto/sha256"
@@ -41,12 +40,12 @@ func sha256sum(path string) (string, error) {
 }
 
 var extensions = map[string]bool{
-	"png": true,
-	"jpg": true,
-	"jpeg": true,
-	"webp": true,
-	"webm": false,
-	"mp4": false,
+	".png": true,
+	".jpg": true,
+	".jpeg": true,
+	".webp": true,
+	".webm": false,
+	".mp4": false,
 }
 
 func saveUploadedFile(file *multipart.FileHeader, out string) error {
@@ -62,31 +61,38 @@ func saveUploadedFile(file *multipart.FileHeader, out string) error {
 	return err
 }
 
+func validExtension(extension string) error {
+	allowed, exist := extensions[extension]
+	if !allowed || !exist {
+		return errors.New("forbidden file extension")
+	}
+	return nil
+}
+
 func uploadFile(file *multipart.FileHeader) (string, error) {
 
 	if uint64(file.Size) > config.Cfg.Media.MaxSize {
 		return "", errors.New("media is above size limit")
 	}
 
-	// verify extension
-	parts := strings.Split(file.Filename, ".")
-	if len(parts) < 2 { return "", errors.New("no name extension") }
-	extension := parts[len(parts) - 1]
-	allowed, exist := extensions[extension]
-	if !allowed || !exist {
-		return "", errors.New("forbidden file extension")
-	}
-
 	// write file to disk
 	name, err := uniqueRandomName()
 	if err != nil { return "", err }
-	path := config.Cfg.Media.Tmp + "/" + name + "." + extension
+	path := config.Cfg.Media.Tmp + "/" + name
 	if err = saveUploadedFile(file, path); err != nil { return "", err }
+	defer os.Remove(path)
+
+	// verify extension
+	mime, err := mimetype.DetectFile(path)
+	if err != nil { return "", err }
+	extension := mime.Extension()
+	if err := validExtension(extension); err != nil { return "", err }
 
 	// clean up the metadata
-	out := config.Cfg.Media.Tmp + "/clean_" + name + "." + extension
+	out := config.Cfg.Media.Tmp + "/clean_" + name + extension
 	if err := cleanImage(path, out); err != nil { return "", err }
 	os.Remove(path)
+	defer os.Remove(out)
 
 	// rename to the sha256 hash of itself
 	hash, err := sha256sum(out)
@@ -95,20 +101,17 @@ func uploadFile(file *multipart.FileHeader) (string, error) {
 		tn := config.Cfg.Media.Tmp + "/thumbnail_" + hash + ".png"
 		if err := thumbnail(out, tn); err != nil { return "", err }
 		defer os.Remove(tn)
-		defer os.Remove(out)
 		tn_data, err := os.ReadFile(tn)
 		if err != nil { return "", err }
 		data, err := os.ReadFile(out)
 		if err != nil { return "", err }
-		mime := mimetype.Detect(data).String()
-		err = db.AddMedia(data, tn_data, hash, mime)
+		err = db.AddMedia(data, tn_data, hash, mime.String())
 		if err != nil { return "", err }
-		return hash + "." + extension, nil
-	} else {
-		err = db.AddMedia(nil, nil, hash, "")
-		if err != nil { return "", err }
+		return hash + extension, nil
 	}
-	media := config.Cfg.Media.Path + "/" + hash + "." + extension
+	err = db.AddMedia(nil, nil, hash, "")
+	if err != nil { return "", err }
+	media := config.Cfg.Media.Path + "/" + hash + extension
 	err = move(out, media)
 	if err != nil { return "", err }
 
@@ -117,7 +120,7 @@ func uploadFile(file *multipart.FileHeader) (string, error) {
 				"/thumbnail/" + hash + ".png");
 	if err != nil { return "", err }
 
-	return hash + "." + extension, nil
+	return hash + extension, nil
 }
 
 func move(source string, destination string) error {

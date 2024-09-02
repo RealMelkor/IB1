@@ -58,3 +58,6 @@ input:disabled {
 	background-color: #a2a2a2;
 	border-color: #2a2a2a;
 }
+:root {
+  --pc: #484b4d; /* preview color */
+}
