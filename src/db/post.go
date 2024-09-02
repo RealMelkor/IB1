@@ -91,6 +91,7 @@ func CreatePost(thread Thread, content template.HTML, name string,
 			Board: thread.Board, Thread: thread, Name: name,
 			Content: content, Timestamp: time.Now().Unix(),
 			Number: thread.Board.Posts, Media: media,
+			MediaHash: strings.Split(media, ".")[0],
 			IP: ip,
 		})
 		if ret.Error != nil { return err }

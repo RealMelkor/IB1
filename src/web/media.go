@@ -12,7 +12,6 @@ import (
 	"mime/multipart"
 
 	"github.com/gabriel-vasile/mimetype"
-	"github.com/labstack/echo/v4"
 
 	"IB1/config"
 	"IB1/db"
@@ -63,7 +62,7 @@ func saveUploadedFile(file *multipart.FileHeader, out string) error {
 	return err
 }
 
-func uploadFile(c echo.Context, file *multipart.FileHeader) (string, error) {
+func uploadFile(file *multipart.FileHeader) (string, error) {
 
 	if uint64(file.Size) > config.Cfg.Media.MaxSize {
 		return "", errors.New("media is above size limit")
@@ -105,6 +104,9 @@ func uploadFile(c echo.Context, file *multipart.FileHeader) (string, error) {
 		err = db.AddMedia(data, tn_data, hash, mime)
 		if err != nil { return "", err }
 		return hash + "." + extension, nil
+	} else {
+		err = db.AddMedia(nil, nil, hash, "")
+		if err != nil { return "", err }
 	}
 	media := config.Cfg.Media.Path + "/" + hash + "." + extension
 	err = move(out, media)

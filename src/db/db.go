@@ -55,6 +55,7 @@ type Post struct {
 	gorm.Model
 	Content		template.HTML
 	Media		string
+	MediaHash	string
 	From		string
 	Name		string
 	ThreadID	int
@@ -142,6 +143,7 @@ func Init() error {
 	if err := LoadBoards(); err != nil { return err }
 	if err := LoadBanList(); err != nil { return err }
 	if err := LoadConfig(); err != nil { return err }
+	go cleanMediaTask()
 
 	return nil
 }

@@ -96,7 +96,7 @@ func newThread(c echo.Context) error {
 	media := ""
 	file, err := c.FormFile("media")
 	if err != nil { return err }
-	if media, err = uploadFile(c, file); err != nil { return err }
+	if media, err = uploadFile(file); err != nil { return err }
 
 	parsed, _ := parseContent(content, 0)
 	number, err := db.CreateThread(board, title, name, media,
@@ -131,9 +131,7 @@ func newPost(c echo.Context) error {
 	media := ""
 	file, err := c.FormFile("media")
 	if err == nil { 
-		if media, err = uploadFile(c, file); err != nil { 
-			return err
-		}
+		if media, err = uploadFile(file); err != nil { return err }
 	}
 
 	parsed, refs := parseContent(content, thread.ID)

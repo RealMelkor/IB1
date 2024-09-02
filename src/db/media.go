@@ -1,5 +1,14 @@
 package db
 
+import (
+	"time"
+	"os"
+	"log"
+	"path/filepath"
+
+	"IB1/config"
+)
+
 func AddMedia(data []byte, thumbnail []byte, hash string, mime string) error {
 	return db.Create(&Media{
 		Hash: hash, Mime: mime, Data: data, Thumbnail: thumbnail,
@@ -18,4 +27,35 @@ func GetMedia(hash string) ([]byte, string, error) {
 	err := db.Select("data", "mime").First(&media, "hash = ?", hash).Error
 	if err != nil { return nil, "", err }
 	return media.Data, media.Mime, nil
+}
+
+func cleanOrphanMedias() error {
+	query := "SELECT a.hash FROM media a " +
+		"LEFT OUTER JOIN posts b ON a.hash = b.media_hash " +
+		"WHERE b.media_hash IS NULL"
+	if !config.Cfg.Media.InDatabase {
+		var orphans []Media
+		if err := db.Raw(query).Scan(&orphans).Error; err != nil {
+			return err
+		}
+		if len(orphans) == 0 { return nil }
+		for _, v := range orphans {
+			files, err := filepath.Glob(
+				config.Cfg.Media.Path + "/" + v.Hash + ".*")
+			if err != nil { continue }
+			for _, v := range files { os.Remove(v) }
+			os.Remove(config.Cfg.Media.Path +
+					"/thumbnail/" + v.Hash + ".png")
+		}
+	}
+	return db.Exec("DELETE FROM media WHERE hash IN (" + query + ")").Error
+}
+
+func cleanMediaTask() {
+	for {
+		if err := cleanOrphanMedias(); err != nil {
+			log.Println(err)
+		}
+		time.Sleep(time.Hour)
+	}
 }
