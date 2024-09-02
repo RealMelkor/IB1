@@ -59,6 +59,10 @@
 			<td><input type="checkbox" name="readonly" {{if .Config.Post.ReadOnly}}checked{{end}}></td>
 		</tr>
 		<tr>
+			<td>Maximum threads per board</td>
+			<td><input type="text" name="maxthreads" value="{{.Config.Board.MaxThreads}}" required></td>
+		</tr>
+		<tr>
 			<td colspan="2"><div class="center"><input type="submit" value="Update"></div></td>
 		</tr>
 	</table>

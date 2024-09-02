@@ -110,6 +110,11 @@ func updateConfig(c echo.Context) error {
 	readonly, _ := getPostForm(c, "readonly")
 	config.Cfg.Post.ReadOnly = readonly == "on"
 
+	threadsStr, _ := getPostForm(c, "maxthreads")
+	threads, err := strconv.ParseUint(threadsStr, 10, 64)
+	if err != nil { return err }
+	config.Cfg.Board.MaxThreads = uint(threads)
+
 	return db.UpdateConfig()
 }
 

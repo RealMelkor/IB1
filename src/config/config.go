@@ -33,7 +33,7 @@ type Config struct {
 		ReadOnly	bool
 	}
 	Board struct {
-		MaxThreads	int
+		MaxThreads	uint
 	}
 }
 
@@ -53,6 +53,7 @@ func LoadDefault() {
 	Cfg.Media.Tmp = "/tmp/ib1"
 	Cfg.Post.DefaultName = "Anonymous"
 	Cfg.Post.AsciiOnly = false
+	Cfg.Board.MaxThreads = 40
 }
 
 func LoadConfig(data []byte) error {

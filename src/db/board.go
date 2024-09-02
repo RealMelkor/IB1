@@ -45,7 +45,7 @@ func LoadBoards() error {
 	return nil
 }
 
-func RefreshBoard(board *Board) error {
+func refreshBoard(board *Board, limit uint) error {
 	board.Threads = []Thread{}
 	hide := ""
 	err := db.Raw(
@@ -53,13 +53,17 @@ func RefreshBoard(board *Board) error {
 		"INNER JOIN threads b ON a.thread_id = b.id " +
 		"WHERE a.board_id = ? " + hide + "GROUP BY a.thread_id " +
 		"ORDER BY MAX(a.timestamp) DESC LIMIT ?;",
-		board.ID, config.Cfg.Board.MaxThreads).
+		board.ID, limit).
 		Scan(&board.Threads).Error
 	if err != nil { return err }
 	for i := range board.Threads {
 		board.Threads[i].Board = *board
 	}
 	return nil
+}
+
+func RefreshBoard(board *Board) error {
+	return refreshBoard(board, config.Cfg.Board.MaxThreads)
 }
 
 func GetThread(board Board, number int) (Thread, error) {
@@ -89,6 +93,19 @@ func CreateBoard(name string, longName string, description string) error {
 	return nil
 }
 
+func DeleteThreads(board Board) error {
+	maxThreads := config.Cfg.Board.MaxThreads
+	if maxThreads == 0 { return nil }
+	if err := refreshBoard(&board, ^uint(0)); err != nil { return err }
+	if uint(len(board.Threads)) <= maxThreads { return nil }
+	threads := board.Threads[maxThreads:len(board.Threads)]
+	for _, v := range threads {
+		err := Remove(v.Board.Name, int(v.Number))
+		if err != nil { return err }
+	}
+	return nil
+}
+
 func CreateThread(board Board, title string, name string, media string,
 		ip string, content template.HTML) (int, error) {
 	number := -1
@@ -103,6 +120,7 @@ func CreateThread(board Board, title string, name string, media string,
 		err = tx.Model(thread).Update("Number", number).Error
 		return err
 	})
+	if err == nil { err = DeleteThreads(board) }
 	return number, err
 }
 func UpdateBoard(board Board) error {
