@@ -78,8 +78,8 @@ func initTemplate() error {
 		},
 		"config": func() config.Config { return config.Cfg },
 		"isLogged": func() bool { return false },
-		"set": func(string) string {return ""},
-		"get": func(string, string) string {return ""},
+		"set": func(string, string) string {return ""},
+		"get": func(string) string {return ""},
 		"once": func(string) string {return ""},
 		"has": func(string) bool {return false},
 		"rank": func(rank string) int {

@@ -2,6 +2,11 @@ body {
 	padding: 0;
 }
 
+.info {
+	color: green;
+	text-align: center;
+}
+
 .error {
 	color: red;
 	text-align: center;

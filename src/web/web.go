@@ -180,6 +180,8 @@ func Init() error {
 		handleConfig(updateAccount, "account-error"))
 	r.POST("/config/account/delete/:id",
 		handleConfig(deleteAccount, "account-error"))
+	r.POST("/config/restart",
+		handleConfig(restart, "config-error"))
 
 	if config.Cfg.Media.InDatabase {
 		r.GET("/media/:hash", func(c echo.Context) error {

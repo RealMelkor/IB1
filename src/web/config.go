@@ -4,6 +4,7 @@ import (
 	"errors"
 	"strconv"
 	"os"
+	"syscall"
 	"time"
 	"net/http"
 	"IB1/db"
@@ -244,4 +245,17 @@ func deleteAccount(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil { return errors.New("invalid user") }
 	return db.RemoveAccount(uint(id))
+}
+
+func restart(c echo.Context) error {
+	go func() {
+		time.Sleep(time.Second)
+		err := syscall.Exec(os.Args[0], os.Args, os.Environ())
+		if err != nil {
+			set(c)("restart-error",
+				"Restart failed: " + err.Error())
+		}
+	}()
+	set(c)("restart", "Restart is in progress")
+	return c.Redirect(http.StatusFound, "/dashboard")
 }

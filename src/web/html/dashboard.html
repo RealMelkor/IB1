@@ -63,12 +63,17 @@
 			<td><input type="text" name="maxthreads" value="{{.Config.Board.MaxThreads}}" required></td>
 		</tr>
 		<tr>
+			<td>Restart process</td>
+			<td><input type="submit" formaction="/config/restart" value="Restart"></td>
+		</tr>
+		<tr>
 			<td colspan="2"><div class="center"><input type="submit" value="Update"></div></td>
 		</tr>
 	</table>
 	<p class="error">{{once "config-error"}}</p>
+	<p class="info">{{once "restart"}}</p>
+	<p class="error">{{once "restart-error"}}</p>
 	</form>
-
 	<div style="padding: 30px;"></div>
 	<div class="center"><h3>Boards</h3></div>
 	<table>

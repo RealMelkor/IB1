@@ -42,7 +42,7 @@ Three database types are available:
 * sqlite3
 * sqlite (CGO not required)
 
-# Environment variables
+## Environment variables
 * IB1_DB_PATH - Database path or connection string
 * IB1_DB_TYPE - Database type: "mysql", "sqlite3" or "sqlite"
 * IB1_LISTENER - Address and port to listen on: "0.0.0.0:8080"
