@@ -62,10 +62,16 @@ func setDefaultTheme(c echo.Context) error {
 }
 
 func updateConfig(c echo.Context) error {
+	requireRestart := false
+
 	if err := setDefaultTheme(c); err != nil { return err }
 
 	indb, _ := getPostForm(c, "indb")
-	config.Cfg.Media.InDatabase = indb == "on"
+	v := indb == "on"
+	if v != config.Cfg.Media.InDatabase {
+		config.Cfg.Media.InDatabase = v
+		requireRestart = true
+	}
 
 	title, ok := getPostForm(c, "title")
         if !ok { return errors.New("invalid form") }
@@ -116,7 +122,9 @@ func updateConfig(c echo.Context) error {
 	if err != nil { return err }
 	config.Cfg.Board.MaxThreads = uint(threads)
 
-	return db.UpdateConfig()
+	if err := db.UpdateConfig(); err != nil { return err }
+	if requireRestart { return restart(c) }
+	return nil
 }
 
 func createBoard(c echo.Context) error {
