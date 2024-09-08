@@ -50,19 +50,23 @@ func logger(next echo.HandlerFunc) echo.HandlerFunc {
 			h.Write([]byte(id))
 			id = strconv.Itoa(int(h.Sum32()))
 		}
+		username := ""
+		user, err := loggedAs(c)
+		if err == nil { username = "[" + user.Name + "]" }
 		err = next(c)
 		t2 := time.Now()
 		r := c.Request()
 		ip := clientIP(c)
-		log.Println("[" + id + "][" + ip + "][" + r.Method + "]",
-		r.URL.String(), t2.Sub(t1))
+		log.Println(
+			username + "[" + id + "][" + ip + "][" + r.Method + "]",
+			r.URL.String(), t2.Sub(t1))
 		return err
 	}
 }
 
 func isBanned(c echo.Context) error {
 	_, err := loggedAs(c)
-	if err == nil { return err }
+	if err == nil { return nil }
 	return db.IsBanned(clientIP(c))
 }
 
@@ -142,12 +146,14 @@ func Init() error {
 	}
 	r.GET("/:board", boardIndex)
 	r.GET("/:board/catalog", catalog)
-	r.POST("/:board", catch(newThread, "new-thread-error"))
+	r.POST("/:board", catch(readOnly(newThread), "new-thread-error"))
 	r.GET("/:board/:thread", thread)
-	r.POST("/:board/:thread", catch(newPost, "new-post-error"))
+	r.POST("/:board/:thread", catch(readOnly(newPost), "new-post-error"))
 	r.GET("/disconnect", disconnect)
 	r.GET("/login", unauth(renderFile("login.html")))
 	r.POST("/login", unauth(catch(loginAs, "login-error")))
+	r.GET("/register", unauth(renderFile("register.html")))
+	r.POST("/register", unauth(catch(readOnly(register), "register-error")))
 	r.GET("/:board/remove/:id", hasRank(remove, db.RANK_ADMIN))
 	r.GET("/:board/hide/:id", hasRank(hide, db.RANK_MODERATOR))
 	r.GET("/:board/ban/:ip", hasRank(ban, db.RANK_MODERATOR))

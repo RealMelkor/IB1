@@ -36,8 +36,9 @@ func captchaVerify(c echo.Context, answer string) bool {
 
 func checkCaptcha(c echo.Context) error {
 	if !config.Cfg.Captcha.Enabled { return nil }
-	_, err := loggedAs(c)
-	if err == nil { return nil } // captcha not needed if logged
+	user, err := loggedAs(c)
+	// trusted users don't need captcha
+	if err == nil && user.HasRank("trusted") { return nil }
 	return verifyCaptcha(c)
 }
 

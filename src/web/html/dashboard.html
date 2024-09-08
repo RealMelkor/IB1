@@ -59,6 +59,10 @@
 			<td><input type="checkbox" name="readonly" {{if .Config.Post.ReadOnly}}checked{{end}}></td>
 		</tr>
 		<tr>
+			<td>Allow registration</td>
+			<td><input type="checkbox" name="registration" {{if .Config.Accounts.AllowRegistration}}checked{{end}}></td>
+		</tr>
+		<tr>
 			<td>Maximum threads per board</td>
 			<td><input type="text" name="maxthreads" value="{{.Config.Board.MaxThreads}}" required></td>
 		</tr>
@@ -202,9 +206,10 @@
 		<td><input type="text" name="name" required value="{{.Name}}"></td>
 		<td>
 			<select name="rank">
-				<option {{if eq (rank "trusted") .Rank}}selected{{end}} value="trusted">Trusted</option>
-				<option {{if eq (rank "moderator") .Rank}}selected{{end}} value="moderator">Moderator</option>
-				<option {{if eq (rank "admin") .Rank}}selected{{end}} value="admin">Administrator</option>
+				{{$Rank := .Rank}}
+				{{range ranks}}
+				<option {{if eq (rank .) $Rank}}selected{{end}} value="{{.}}">{{capitalize .}}</option>
+				{{end}}
 			</select>
 		</td>
 		<td><input type="password" name="password"></td>
@@ -218,9 +223,9 @@
 		<td><input type="text" name="name" required></td>
 		<td>
 			<select name="rank">
-				<option selected="selected" value="admin">Administrator</option>
-				<option value="moderator">Moderator</option>
-				<option value="trusted">Trusted</option>
+				{{range ranks}}
+				<option value="{{.}}">{{capitalize .}}</option>
+				{{end}}
 			</select>
 		</td>
 		<td><input type="password" name="password" required></td>

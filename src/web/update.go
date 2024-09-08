@@ -11,12 +11,33 @@ import (
 	"IB1/config"
 )
 
-var readOnlyErr = errors.New("The website is currently read-only")
+func readOnly(f echo.HandlerFunc) echo.HandlerFunc {
+	if !config.Cfg.Post.ReadOnly { return f }
+	return func(echo.Context) error {
+		return errors.New("The website is currently read-only")
+	}
+}
 
 func loginAs(c echo.Context) error {
 	name := c.Request().PostFormValue("username")
 	password := c.Request().PostFormValue("password")
 	err := verifyCaptcha(c)
+	if err != nil { return err }
+	token, err := db.Login(name, password)
+	if err != nil { return errors.New("invalid credentials") }
+	setCookie(c, "token", token)
+	c.Redirect(http.StatusFound, "/")
+	return nil
+}
+
+func register(c echo.Context) error {
+	name := c.Request().PostFormValue("username")
+	password := c.Request().PostFormValue("password")
+	confirm := c.Request().PostFormValue("confirm")
+	if confirm != password { return errors.New("passwords don't match") }
+	err := verifyCaptcha(c)
+	if err != nil { return err }
+	err = db.CreateAccount(name, password, db.RANK_USER)
 	if err != nil { return err }
 	token, err := db.Login(name, password)
 	if err != nil { return errors.New("invalid credentials") }
@@ -77,7 +98,6 @@ func ban(c echo.Context) error {
 
 func newThread(c echo.Context) error {
 
-	if config.Cfg.Post.ReadOnly { return readOnlyErr }
 	if err := isBanned(c); err != nil { return err }
 
 	boardName := c.Param("board")
@@ -110,7 +130,6 @@ func newThread(c echo.Context) error {
 
 func newPost(c echo.Context) error {
 
-	if config.Cfg.Post.ReadOnly { return readOnlyErr }
 	if err := isBanned(c); err != nil { return err }
 
 	boardName := c.Param("board")

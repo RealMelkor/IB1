@@ -35,6 +35,9 @@ type Config struct {
 	Board struct {
 		MaxThreads	uint
 	}
+	Accounts struct {
+		AllowRegistration	bool
+	}
 }
 
 func LoadDefault() {

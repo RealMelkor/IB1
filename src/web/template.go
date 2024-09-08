@@ -88,6 +88,13 @@ func initTemplate() error {
 		},
 		"hasRank": func(string) bool {return false},
 		"isSelf": func(db.Account) bool {return false},
+		"ranks": func() []string {
+			return db.Ranks()
+		},
+		"capitalize": func(s string) string {
+			if s == "" { return "" }
+			return strings.ToUpper(s[0:1]) + s[1:]
+		},
 	}
 	templates, err = template.New("gmi").Funcs(funcs).
 				ParseFS(templatesFS, "html/*.html")

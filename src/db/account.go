@@ -5,18 +5,31 @@ import (
 )
 
 const (
-	RANK_TRUSTED = iota + 1
-	RANK_MODERATOR
-	RANK_ADMIN
+	RANK_USER = 100
+	RANK_TRUSTED = 200
+	RANK_MODERATOR = 300
+	RANK_ADMIN = 400
 )
 
+func Ranks() []string {
+	return []string{
+		"user",
+		"trusted",
+		"moderator",
+		"administrator",
+	}
+}
+
 func StringToRank(rank string) (int, error) {
+	ranks := Ranks()
 	switch rank {
-	case "trusted":
+	case ranks[0]:
+		return RANK_USER, nil
+	case ranks[1]:
 		return RANK_TRUSTED, nil
-	case "moderator":
+	case ranks[2]:
 		return RANK_MODERATOR, nil
-	case "admin":
+	case ranks[3]:
 		return RANK_ADMIN, nil
 	}
 	return -1, errors.New("invalid rank")

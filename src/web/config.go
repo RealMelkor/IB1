@@ -117,6 +117,9 @@ func updateConfig(c echo.Context) error {
 	readonly, _ := getPostForm(c, "readonly")
 	config.Cfg.Post.ReadOnly = readonly == "on"
 
+	registration, _ := getPostForm(c, "registration")
+	config.Cfg.Accounts.AllowRegistration = registration == "on"
+
 	threadsStr, _ := getPostForm(c, "maxthreads")
 	threads, err := strconv.ParseUint(threadsStr, 10, 64)
 	if err != nil { return err }

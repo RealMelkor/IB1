@@ -28,12 +28,15 @@
 			<div style="float: right;">
 			{{if .Logged}}
 			<span>Logged in as {{.Account.Name}}</span>
-			{{if .Account.HasRank "admin"}}
+			{{if .Account.HasRank "administrator"}}
 			[<a href="/dashboard">Dashboard</a>]
 			{{end}}
 			[<a href="/disconnect">Disconnect</a>]
 			{{else}}
 			[<a href="/login">Login</a>]
+			{{if .Config.Accounts.AllowRegistration}}
+			[<a href="/register">Register</a>]
+			{{end}}
 			{{end}}
 			[<a href="/">Home</a>]
 			</div>
@@ -43,9 +46,9 @@
 		<form method="POST" action="/config/client/theme?origin={{.Url}}">
 			<label>Theme:</label>
 			<select name="theme">
-		{{range .Themes}}
+{{range .Themes}}
 			<option {{if eq $.Theme .}}selected="selected"{{end}}value="{{.}}">{{.}}</option>
-		{{end}}
+{{end}}
 			</select>
 			<input type="submit" value="Update">
 		</form>

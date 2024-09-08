@@ -15,7 +15,7 @@
 			<th>Subject</th>
 			<td><input type="text" id="title" name="title"></td>
 		</tr>
-{{if and isCaptchaEnabled (not isLogged)}}
+{{if and isCaptchaEnabled (not (hasRank "trusted"))}}
 		<tr>
 			<th></th>
 			<td><img class="captcha" loading="lazy" src="/captcha" alt="captcha"></td>
