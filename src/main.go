@@ -7,7 +7,7 @@ import (
 	"IB1/config"
 )
 
-const VERSION = "v0.1"
+const VERSION = "v0.2"
 
 func main() {
 

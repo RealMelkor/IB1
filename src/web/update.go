@@ -73,6 +73,31 @@ func remove(c echo.Context) error {
 	return nil
 }
 
+func cancel(c echo.Context) error {
+	board := c.Param("board")
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil { return err }
+
+	post, err := db.GetPostFromBoard(board, id)
+	if err != nil { return err }
+	if post.Session != getCookie(c, "id") || post.Session == "" {
+		user, err := loggedAs(c)
+		if err != nil || user.ID != post.OwnerID {
+			return errors.New("invalid post")
+		}
+	}
+
+	err = db.Remove(board, id)
+	if err != nil { return err }
+
+	dst := "/" + board
+	if id != post.Thread.Number {
+		dst += "/" + strconv.Itoa(post.Thread.Number)
+	}
+	c.Redirect(http.StatusFound, dst)
+	return nil
+}
+
 func hide(c echo.Context) error {
 	var id int
 	var post db.Post
@@ -119,8 +144,9 @@ func newThread(c echo.Context) error {
 	if media, err = uploadFile(file); err != nil { return err }
 
 	parsed, _ := parseContent(content, 0)
-	number, err := db.CreateThread(board, title, name, media,
-					clientIP(c), parsed)
+	user, _ := loggedAs(c)
+	number, err := db.CreateThread(board, title, name, media, clientIP(c),
+					getCookie(c, "id"), user, parsed)
 	if err != nil { return err }
 
 	c.Redirect(http.StatusFound, c.Request().URL.Path + "/" +
@@ -154,8 +180,9 @@ func newPost(c echo.Context) error {
 	}
 
 	parsed, refs := parseContent(content, thread.ID)
-	number, err := db.CreatePost(thread, parsed, name, media,
-					clientIP(c), nil)
+	user, _ := loggedAs(c)
+	number, err := db.CreatePost(thread, parsed, name, media, clientIP(c),
+			getCookie(c, "id"), user, nil)
 	if err != nil { return err }
 
 	for _, v := range refs {

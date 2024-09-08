@@ -50,15 +50,15 @@ func logger(next echo.HandlerFunc) echo.HandlerFunc {
 			h.Write([]byte(id))
 			id = strconv.Itoa(int(h.Sum32()))
 		}
-		username := ""
+		name := ""
 		user, err := loggedAs(c)
-		if err == nil { username = "[" + user.Name + "]" }
+		if err == nil { name = "[" + user.Name + "]" }
 		err = next(c)
 		t2 := time.Now()
 		r := c.Request()
 		ip := clientIP(c)
 		log.Println(
-			username + "[" + id + "][" + ip + "][" + r.Method + "]",
+			"[" + id + "][" + ip + "][" + r.Method + "]" + name,
 			r.URL.String(), t2.Sub(t1))
 		return err
 	}
@@ -154,6 +154,7 @@ func Init() error {
 	r.POST("/login", unauth(catch(loginAs, "login-error")))
 	r.GET("/register", unauth(renderFile("register.html")))
 	r.POST("/register", unauth(catch(readOnly(register), "register-error")))
+	r.GET("/:board/cancel/:id", cancel)
 	r.GET("/:board/remove/:id", hasRank(remove, db.RANK_ADMIN))
 	r.GET("/:board/hide/:id", hasRank(hide, db.RANK_MODERATOR))
 	r.GET("/:board/ban/:ip", hasRank(ban, db.RANK_MODERATOR))

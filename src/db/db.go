@@ -66,6 +66,9 @@ type Post struct {
 	Timestamp	int64
 	IP		string
 	Disabled	bool
+	OwnerID		uint
+	Owner		Account
+	Session		string `gorm:"size:32"`
 }
 
 type Reference struct {

@@ -34,6 +34,10 @@
 	[<a class="action" href="/{{$.Board.Name}}/hide/{{.Number}}">{{if .Disabled}}Unhide{{else}}Hide{{end}}</a>]
 	[<a class="action" href="/{{$.Board.Name}}/remove/{{.Number}}">Remove</a>]
 	[<a class="action" href="/{{$.Board.Name}}/ban/{{.IP}}">Ban</a>]
+	{{else}}
+	{{if (or (and (eq .Session session) (not (eq .Session ""))) (and (eq self.ID .OwnerID) (not (eq .OwnerID 0))))}}
+	[<a class="action" href="/{{$.Board.Name}}/cancel/{{.Number}}">Remove</a>]
+	{{end}}
 	{{end}}
 	{{range .ReferredBy}}
 	<a class="post-ref ref-{{.From}}" href="#{{.From}}">&gt;&gt;{{.From}}</a>

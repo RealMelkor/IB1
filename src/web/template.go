@@ -44,6 +44,7 @@ func render(_template string, data any, c echo.Context) error {
 		"once": once(c),
 		"set": set(c),
 		"has": has(c),
+		"session": func() string { return getCookie(c, "id") },
 		"isLogged": func() bool { return isLogged(c) },
 		"hasRank": func(rank string) bool {
 			acc, err := loggedAs(c)
@@ -54,6 +55,11 @@ func render(_template string, data any, c echo.Context) error {
 			self, err := loggedAs(c)
 			if err != nil { return false }
 			return self.ID == acc.ID
+		},
+		"self": func() db.Account {
+			self, err := loggedAs(c)
+			if err != nil { return db.Account{} }
+			return self
 		},
 	}
 	err := templates.Lookup("header").Execute(w, header(c))
@@ -82,12 +88,14 @@ func initTemplate() error {
 		"get": func(string) string {return ""},
 		"once": func(string) string {return ""},
 		"has": func(string) bool {return false},
+		"session": func() string {return ""},
 		"rank": func(rank string) int {
 			i, _ := db.StringToRank(rank)
 			return i
 		},
 		"hasRank": func(string) bool {return false},
 		"isSelf": func(db.Account) bool {return false},
+		"self": func() db.Account {return db.Account{}} ,
 		"ranks": func() []string {
 			return db.Ranks()
 		},

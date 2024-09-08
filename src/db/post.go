@@ -72,7 +72,9 @@ func (post Post) ReferredBy() []Reference {
 
 var newPostLock sync.Mutex
 func CreatePost(thread Thread, content template.HTML, name string,
-		media string, ip string, custom *gorm.DB) (int, error) {
+		media string, ip string, session string, account Account,
+		custom *gorm.DB) (int, error) {
+	if len(session) != 32 { return -1, errors.New("invalid session") }
 	if custom == nil { custom = db }
 	if name == "" { name = config.Cfg.Post.DefaultName }
 	if dbType == TYPE_SQLITE {
@@ -92,6 +94,7 @@ func CreatePost(thread Thread, content template.HTML, name string,
 			Content: content, Timestamp: time.Now().Unix(),
 			Number: thread.Board.Posts, Media: media,
 			MediaHash: strings.Split(media, ".")[0],
+			Session: session, OwnerID: account.ID,
 			IP: ip,
 		})
 		if ret.Error != nil { return err }
