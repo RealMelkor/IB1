@@ -72,5 +72,7 @@ func setTheme(c echo.Context) error {
 	_, ok := themesTable[theme]
 	if !ok { return errors.New("invalid theme") }
 	setCookiePermanent(c, "theme", theme)
-	return nil
+	user, err := loggedAs(c)
+	if err != nil { return nil }
+	return user.SetTheme(theme)
 }

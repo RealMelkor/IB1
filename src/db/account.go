@@ -135,3 +135,14 @@ func (account Account) HasRank(rank string) bool {
 	if err != nil { return false }
 	return account.Rank >= i
 }
+
+func (account *Account) SetTheme(name string) error {
+	return db.Model(account).Updates(Account{Theme: name}).Error
+}
+
+func GetUserTheme(name string) (string, error) {
+	var account Account
+	err := db.First(&account, "name = ?", name).Error
+	if err != nil { return "", err }
+	return account.Theme, nil
+}

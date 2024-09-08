@@ -26,6 +26,9 @@ func loginAs(c echo.Context) error {
 	token, err := db.Login(name, password)
 	if err != nil { return errors.New("invalid credentials") }
 	setCookie(c, "token", token)
+	theme, err := db.GetUserTheme(name)
+	if err != nil { return err }
+	setCookiePermanent(c, "theme", theme)
 	c.Redirect(http.StatusFound, "/")
 	return nil
 }

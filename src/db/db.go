@@ -85,6 +85,7 @@ type Account struct {
 	Password	string
 	Rank		int
 	Logged		bool	`gorm:"-:all"`
+	Theme		string
 }
 
 type Session struct {
