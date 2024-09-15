@@ -3,12 +3,20 @@
 <h2 class="board-title">/{{$board.Name}}/ - {{$board.LongName}}</h2>
 {{ template "top" $board.Name }}
 <div class="form-container">
-<div class="post form">
+<div class="post form new-form">
 <label for="show-form" class="btn">Hide new-reply box</label>
 <input type="checkbox" id="show-form" {{if (not (has "new-post-error"))}} checked{{end}}>
 <form method="post" enctype="multipart/form-data" id="new-reply">
 	<label for="name">Name:</label><br>
 	<input type="text" id="name" name="name"><br>
+{{if isLogged}}
+	<label for="signed">Signed:</label>
+	<input type="checkbox" name="signed"><br>
+{{end}}
+{{if hasRank "moderator"}}
+	<label for="rank">Show rank:</label>
+	<input type="checkbox" name="rank"><br>
+{{end}}
 {{if and isCaptchaEnabled (not (hasRank "trusted"))}}
 	<label for="captcha">Captcha:</label><br>
 	<img class="captcha" loading="lazy" src="/captcha" alt="captcha"><br>

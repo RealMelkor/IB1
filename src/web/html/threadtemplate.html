@@ -26,7 +26,15 @@
 {{if eq .Number $.Number}}
 	<span class="title">{{$.Title}}</span>
 {{end}}
-	<span class="name">{{.Name}}</span>
+{{if .Signed}}
+	<abbr title="Signed"><span class="name ">{{.Name}}</span></abbr>
+{{else}}
+	<span class="name ">{{.Name}}</span>
+{{end}}
+{{if .Rank}}
+{{$rank := rankToString .Rank}}
+<span class="{{$rank}}">{{capitalize $rank}}</span>
+{{end}}
 	<abbr title="{{.FormatAge}}">{{.FormatTimestamp}}</abbr>
 	<a class="post-link" href="#{{.Number}}">No.{{.Number}}</a>
 	{{if $moderator}}

@@ -107,8 +107,8 @@ func DeleteThreads(board Board) error {
 }
 
 func CreateThread(board Board, title string, name string, media string,
-		ip string, session string, account Account,
-		content template.HTML) (int, error) {
+		ip string, session string, account Account, signed bool,
+		rank bool, content template.HTML) (int, error) {
 	number := -1
 	err := db.Transaction(func(tx *gorm.DB) error {
 		var err error
@@ -117,7 +117,7 @@ func CreateThread(board Board, title string, name string, media string,
 		if ret.Error != nil { return ret.Error }
 		if err := ret.Find(&thread).Error; err != nil { return err }
 		number, err = CreatePost(*thread, content, name, media, ip,
-				session, account, tx)
+				session, account, signed, rank, tx)
 		if err != nil { return err }
 		err = tx.Model(thread).Update("Number", number).Error
 		return err
@@ -125,6 +125,7 @@ func CreateThread(board Board, title string, name string, media string,
 	if err == nil { err = DeleteThreads(board) }
 	return number, err
 }
+
 func UpdateBoard(board Board) error {
 	return db.Save(&board).Error
 }

@@ -93,6 +93,10 @@ func initTemplate() error {
 			i, _ := db.StringToRank(rank)
 			return i
 		},
+		"rankToString": func(rank int) string {
+			s, _ := db.RankToString(rank)
+			return s
+		},
 		"hasRank": func(string) bool {return false},
 		"isSelf": func(db.Account) bool {return false},
 		"self": func() db.Account {return db.Account{}} ,

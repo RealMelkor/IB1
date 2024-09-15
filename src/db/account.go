@@ -20,6 +20,23 @@ func Ranks() []string {
 	}
 }
 
+
+func RankToString(rank int) (string, error) {
+	ranks := Ranks()
+	switch rank {
+	case RANK_USER:
+		return ranks[0], nil
+	case RANK_TRUSTED:
+		return ranks[1], nil
+	case RANK_MODERATOR:
+		return ranks[2], nil
+	case RANK_ADMIN:
+		return ranks[3], nil
+	}
+	return "", errors.New("invalid rank")
+
+}
+
 func StringToRank(rank string) (int, error) {
 	ranks := Ranks()
 	switch rank {

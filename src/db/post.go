@@ -73,7 +73,7 @@ func (post Post) ReferredBy() []Reference {
 var newPostLock sync.Mutex
 func CreatePost(thread Thread, content template.HTML, name string,
 		media string, ip string, session string, account Account,
-		custom *gorm.DB) (int, error) {
+		signed bool, rank bool, custom *gorm.DB) (int, error) {
 	if len(session) != 32 { return -1, errors.New("invalid session") }
 	if custom == nil { custom = db }
 	if name == "" { name = config.Cfg.Post.DefaultName }
@@ -89,13 +89,16 @@ func CreatePost(thread Thread, content template.HTML, name string,
 			Update("Posts", thread.Board.Posts + 1).Error
 		if err != nil { return err }
 
+		rankValue := 0
+		if rank { rankValue = account.Rank }
+
 		ret := tx.Create(&Post{
 			Board: thread.Board, Thread: thread, Name: name,
 			Content: content, Timestamp: time.Now().Unix(),
 			Number: thread.Board.Posts, Media: media,
 			MediaHash: strings.Split(media, ".")[0],
 			Session: session, OwnerID: account.ID,
-			IP: ip,
+			IP: ip, Signed: signed, Rank: rankValue,
 		})
 		if ret.Error != nil { return err }
 

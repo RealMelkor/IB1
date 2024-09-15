@@ -1,6 +1,6 @@
 {{define "newthread"}}
 <div class="separator"></div>
-<div class="new-thread">
+<div class="new-thread new-form">
 <input id="new-thread-check" type="checkbox"{{if (has "new-thread-error")}} checked{{end}}>
 <label for="new-thread-check">
 [<span>Start a New Thread</span>]
@@ -9,8 +9,20 @@
 	<table>
 		<tr>
 			<th>Name</th>
-			<td><input type="text" id="name" name="name"></td>
+			<td><input class="namefield" type="text" id="name" name="name"></td>
 		</tr>
+{{if isLogged}}
+		<tr>
+			<th>Signed</th>
+			<td><input type="checkbox" name="signed" style="width:auto;"></td>
+		</tr>
+{{end}}
+{{if hasRank "moderator"}}
+		<tr>
+			<th>Show rank</th>
+			<td><input type="checkbox" name="rank" style="width:auto;"></td>
+		</tr>
+{{end}}
 		<tr>
 			<th>Subject</th>
 			<td><input type="text" id="title" name="title"></td>

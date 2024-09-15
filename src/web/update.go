@@ -134,6 +134,8 @@ func newThread(c echo.Context) error {
 
 	name, _ := getPostForm(c, "name")
 	title, _ := getPostForm(c, "title")
+	signed, _ := getPostForm(c, "signed")
+	rank, _ := getPostForm(c, "rank")
 	content, hasContent := getPostForm(c, "content")
 	if !hasContent || content == "" {
 		return errors.New("invalid form")
@@ -149,7 +151,8 @@ func newThread(c echo.Context) error {
 	parsed, _ := parseContent(content, 0)
 	user, _ := loggedAs(c)
 	number, err := db.CreateThread(board, title, name, media, clientIP(c),
-					getCookie(c, "id"), user, parsed)
+					getCookie(c, "id"), user,
+					signed == "on", rank == "on", parsed)
 	if err != nil { return err }
 
 	c.Redirect(http.StatusFound, c.Request().URL.Path + "/" +
@@ -173,6 +176,8 @@ func newPost(c echo.Context) error {
 
 	name, _ := getPostForm(c, "name")
 	content, _ := getPostForm(c, "content")
+	signed, _ := getPostForm(c, "signed")
+	rank, _ := getPostForm(c, "rank")
 
 	if err := checkCaptcha(c); err != nil { return err }
 
@@ -183,9 +188,11 @@ func newPost(c echo.Context) error {
 	}
 
 	parsed, refs := parseContent(content, thread.ID)
-	user, _ := loggedAs(c)
+	user, err := loggedAs(c)
+	if err == nil && signed == "on" { name = user.Name }
 	number, err := db.CreatePost(thread, parsed, name, media, clientIP(c),
-			getCookie(c, "id"), user, nil)
+			getCookie(c, "id"), user, signed == "on", rank == "on",
+			nil)
 	if err != nil { return err }
 
 	for _, v := range refs {

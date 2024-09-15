@@ -69,6 +69,8 @@ type Post struct {
 	OwnerID		uint
 	Owner		Account
 	Session		string `gorm:"size:32"`
+	Signed		bool
+	Rank		int
 }
 
 type Reference struct {

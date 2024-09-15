@@ -258,3 +258,16 @@ body {
 :root {
   --pc: #d6bad0; /* preview color */
 }
+
+.new-form:has(input[name=signed]:checked) input[name=name] {
+	opacity: 0.5 !important;
+	pointer-events: none;
+}
+
+.administrator {
+	color: darkred;
+}
+
+.moderator {
+	color: darkgreen;
+}
