@@ -27,6 +27,12 @@ var static embed.FS
 //go:embed static/favicon.png
 var favicon []byte
 
+//go:embed static/pending.png
+var pendingMedia []byte
+
+//go:embed static/error.png
+var mediaError []byte
+
 var templates *template.Template
 
 func isLogged(c echo.Context) bool {

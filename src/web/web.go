@@ -30,6 +30,16 @@ func fatalError(c echo.Context, err error) {
 	c.Response().Write([]byte("FATAL ERROR: " + err.Error()))
 }
 
+func imageError(f echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		if err := f(c); err == nil { return nil }
+		c.Response().Writer.Header().Add("Content-Type", "image/png")
+		c.Response().WriteHeader(http.StatusOK)
+		c.Response().Write(mediaError)
+		return nil
+	}
+}
+
 func mediaCheck(f echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		for config.Cfg.Media.ApprovalQueue {
@@ -41,7 +51,7 @@ func mediaCheck(f echo.HandlerFunc) echo.HandlerFunc {
 			c.Response().Writer.Header().Add(
                 		"Content-Type", "image/png")
 			c.Response().WriteHeader(http.StatusOK)
-			c.Response().Write(favicon)
+			c.Response().Write(pendingMedia)
 			return nil
 		}
 		return f(c)
@@ -226,20 +236,20 @@ func Init() error {
 		handleConfig(restart, "config-error"))
 
 	if config.Cfg.Media.InDatabase {
-		r.GET("/media/:hash", mediaCheck(
+		r.GET("/media/:hash", imageError(mediaCheck(
 			func(c echo.Context) error {
 				parts := strings.Split(c.Param("hash"), ".")
 				data, mime, err := db.GetMedia(parts[0])
 				if err != nil { return err }
 				return c.Blob(http.StatusOK, mime, data)
-			}))
-		r.GET("/media/thumbnail/:hash", mediaCheck(
+			})))
+		r.GET("/media/thumbnail/:hash", imageError(mediaCheck(
 			func(c echo.Context) error {
 				parts := strings.Split(c.Param("hash"), ".")
 				data, err := db.GetThumbnail(parts[0])
 				if err != nil { return err }
 				return c.Blob(http.StatusOK, "image/png", data)
-			}))
+			})))
 	} else if config.Cfg.Media.ApprovalQueue {
 		f := func(c echo.Context) error {
 			path := c.Request().RequestURI
@@ -264,8 +274,8 @@ func Init() error {
 			}
 			return nil
 		}
-		r.GET("/media/:hash", mediaCheck(f))
-		r.GET("/media/thumbnail/:hash", mediaCheck(f))
+		r.GET("/media/:hash", imageError(mediaCheck(f)))
+		r.GET("/media/thumbnail/:hash", imageError(mediaCheck(f)))
 
 	} else {
 		r.Static("/media", config.Cfg.Media.Path)
