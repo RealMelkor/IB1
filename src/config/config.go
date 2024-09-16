@@ -1,6 +1,9 @@
 package config
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"crypto/rand"
+)
 
 var Cfg Config
 
@@ -23,6 +26,7 @@ type Config struct {
 		Tmp		string
 		MaxSize		uint64
 		ApprovalQueue	bool
+		Key		[]byte
 	}
 	Captcha struct {
 		Enabled		bool
@@ -61,7 +65,11 @@ func LoadDefault() {
 }
 
 func LoadConfig(data []byte) error {
-        return json.Unmarshal(data, &Cfg)
+	if err := json.Unmarshal(data, &Cfg); err != nil { return err }
+	if Cfg.Media.Key != nil { return nil }
+	Cfg.Media.Key = make([]byte, 64)
+	_, err := rand.Read(Cfg.Media.Key)
+	return err
 }
 
 func GetRaw() ([]byte, error) {

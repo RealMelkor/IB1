@@ -150,6 +150,7 @@ func Init() error {
 	if err := LoadBoards(); err != nil { return err }
 	if err := LoadBanList(); err != nil { return err }
 	if err := LoadConfig(); err != nil { return err }
+	if err := UpdateConfig(); err != nil { return err }
 	go cleanMediaTask()
 
 	return nil

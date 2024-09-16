@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"errors"
 	"crypto/rand"
-	"crypto/sha256"
+	"golang.org/x/crypto/blake2b"
 	"mime/multipart"
 
 	"github.com/gabriel-vasile/mimetype"
@@ -28,12 +28,13 @@ func uniqueRandomName() (string, error) {
 	return str, nil
 }
 
-func sha256sum(path string) (string, error) {
+func hashFile(path string) (string, error) {
 	f, err := os.Open(path)
 	if err != nil { return "", err }
 	defer f.Close()
 
-	h := sha256.New()
+	h, err := blake2b.New256(config.Cfg.Media.Key)
+	if err != nil { return "", err }
 	if _, err := io.Copy(h, f); err != nil { return "", err }
 
 	return fmt.Sprintf("%x", h.Sum(nil)), nil
@@ -94,8 +95,8 @@ func uploadFile(file *multipart.FileHeader, approved bool) (string, error) {
 	os.Remove(path)
 	defer os.Remove(out)
 
-	// rename to the sha256 hash of itself
-	hash, err := sha256sum(out)
+	// rename to the hash of itself
+	hash, err := hashFile(out)
 	if err != nil { return "", err }
 	if config.Cfg.Media.InDatabase { // store media in database
 		tn := config.Cfg.Media.Tmp + "/thumbnail_" + hash + ".png"
