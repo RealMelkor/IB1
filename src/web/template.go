@@ -12,6 +12,7 @@ import (
 	"github.com/tdewolff/minify/v2/css"
 	"github.com/tdewolff/minify/v2/html"
 	"github.com/labstack/echo/v4"
+	"github.com/gabriel-vasile/mimetype"
 
 	"IB1/db"
 	"IB1/config"
@@ -107,8 +108,18 @@ func initTemplate() error {
 			if s == "" { return "" }
 			return strings.ToUpper(s[0:1]) + s[1:]
 		},
+		"pendingMedia": func() string {
+			hash, mime, err := db.GetPendingApproval()
+			if err != nil { return "" }
+			m := mimetype.Lookup(mime)
+			if m == nil { return "" }
+			return hash + m.Extension()
+		},
+		"thumbnail": func(media string) string {
+			return strings.Split(media, ".")[0] + ".png"
+		},
 	}
-	templates, err = template.New("gmi").Funcs(funcs).
+	templates, err = template.New("frontend").Funcs(funcs).
 				ParseFS(templatesFS, "html/*.html")
 	if err != nil { return err }
 	if err := minifyStylesheet(); err != nil { return err }

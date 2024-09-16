@@ -26,6 +26,7 @@ type Media struct {
 	Mime		string
 	Data		[]byte
 	Thumbnail	[]byte
+	Approved	bool
 }
 
 type Board struct {

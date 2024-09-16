@@ -2,6 +2,7 @@ package web
 
 import (
 	"github.com/labstack/echo/v4"
+	"github.com/gabriel-vasile/mimetype"
 	"net/http"
 	"hash/fnv"
 	"os"
@@ -27,6 +28,32 @@ func clientIP(c echo.Context) string {
 
 func fatalError(c echo.Context, err error) {
 	c.Response().Write([]byte("FATAL ERROR: " + err.Error()))
+}
+
+func mediaCheck(f echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		for config.Cfg.Media.ApprovalQueue {
+			user, err := loggedAs(c)
+			if err == nil && user.HasRank("moderator") { break }
+			err = db.IsApproved(
+				strings.Split(c.Param("hash"), ".")[0])
+			if err == nil { break }
+			c.Response().Writer.Header().Add(
+                		"Content-Type", "image/png")
+			c.Response().WriteHeader(http.StatusOK)
+			c.Response().Write(favicon)
+			return nil
+		}
+		return f(c)
+	}
+}
+
+func approveMedia(c echo.Context) error {
+	return db.Approve(strings.Split(c.FormValue("media"), ".")[0])
+}
+
+func denyMedia(c echo.Context) error {
+	return db.RemoveMedia(strings.Split(c.FormValue("media"), ".")[0])
 }
 
 func err(f echo.HandlerFunc) echo.HandlerFunc {
@@ -158,6 +185,14 @@ func Init() error {
 	r.GET("/:board/remove/:id", hasRank(remove, db.RANK_ADMIN))
 	r.GET("/:board/hide/:id", hasRank(hide, db.RANK_MODERATOR))
 	r.GET("/:board/ban/:ip", hasRank(ban, db.RANK_MODERATOR))
+	if config.Cfg.Media.ApprovalQueue {
+		r.GET("/approval", hasRank(
+			renderFile("approval.html"), db.RANK_MODERATOR))
+		r.POST("/approval/accept", hasRank(redirect(
+			approveMedia, "/approval"), db.RANK_MODERATOR))
+		r.POST("/approval/deny", hasRank(redirect(
+			denyMedia, "/approval"), db.RANK_MODERATOR))
+	}
 	r.GET("/dashboard", hasRank(renderDashboard, db.RANK_ADMIN))
 	r.POST("/config/client/theme", func(c echo.Context) error {
 		return redirect(setTheme, c.QueryParam("origin"))(c)
@@ -191,18 +226,47 @@ func Init() error {
 		handleConfig(restart, "config-error"))
 
 	if config.Cfg.Media.InDatabase {
-		r.GET("/media/:hash", func(c echo.Context) error {
-			parts := strings.Split(c.Param("hash"), ".")
-			data, mime, err := db.GetMedia(parts[0])
+		r.GET("/media/:hash", mediaCheck(
+			func(c echo.Context) error {
+				parts := strings.Split(c.Param("hash"), ".")
+				data, mime, err := db.GetMedia(parts[0])
+				if err != nil { return err }
+				return c.Blob(http.StatusOK, mime, data)
+			}))
+		r.GET("/media/thumbnail/:hash", mediaCheck(
+			func(c echo.Context) error {
+				parts := strings.Split(c.Param("hash"), ".")
+				data, err := db.GetThumbnail(parts[0])
+				if err != nil { return err }
+				return c.Blob(http.StatusOK, "image/png", data)
+			}))
+	} else if config.Cfg.Media.ApprovalQueue {
+		f := func(c echo.Context) error {
+			path := c.Request().RequestURI
+			path = strings.TrimPrefix(path, "/media")
+			path = config.Cfg.Media.Path + path
+			m, err := mimetype.DetectFile(path)
 			if err != nil { return err }
-			return c.Blob(http.StatusOK, mime, data)
-		})
-		r.GET("/media/thumbnail/:hash", func(c echo.Context) error {
-			parts := strings.Split(c.Param("hash"), ".")
-			data, err := db.GetThumbnail(parts[0])
+			c.Response().Writer.Header().Add(
+					"Content-Type", m.String())
+			c.Response().WriteHeader(http.StatusOK)
+			f, err := os.Open(path)
 			if err != nil { return err }
-			return c.Blob(http.StatusOK, "image/png", data)
-		})
+			for {
+				var buf [4096]byte
+				n, err := f.Read(buf[:])
+				if err != nil {
+					if err.Error() == "EOF" { break }
+					return err
+				}
+				c.Response().Write(buf[:n])
+				if n != len(buf) { break }
+			}
+			return nil
+		}
+		r.GET("/media/:hash", mediaCheck(f))
+		r.GET("/media/thumbnail/:hash", mediaCheck(f))
+
 	} else {
 		r.Static("/media", config.Cfg.Media.Path)
 	}

@@ -73,6 +73,13 @@ func updateConfig(c echo.Context) error {
 		requireRestart = true
 	}
 
+	approval, _ := getPostForm(c, "approval")
+	v = approval == "on"
+	if v != config.Cfg.Media.ApprovalQueue {
+		config.Cfg.Media.ApprovalQueue = v
+		requireRestart = true
+	}
+
 	title, ok := getPostForm(c, "title")
         if !ok { return errors.New("invalid form") }
 	config.Cfg.Home.Title = title

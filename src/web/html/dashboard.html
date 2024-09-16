@@ -43,6 +43,10 @@
 			<td><input type="text" name="maxsize" value="{{.Config.Media.MaxSize}}" required></td>
 		</tr>
 		<tr>
+			<td>Media approval queue</td>
+			<td><input type="checkbox" name="approval" {{if .Config.Media.ApprovalQueue}}checked{{end}}></td>
+		</tr>
+		<tr>
 			<td>Store media inside the database</td>
 			<td><input type="checkbox" name="indb" {{if .Config.Media.InDatabase}}checked{{end}}></td>
 		</tr>

@@ -1,0 +1,22 @@
+{{$hash := pendingMedia}}
+<div class="boards">
+<div class="new-thread">
+{{if $hash}}
+<div class="media-container">
+  <input type="checkbox" class="zoom-check" id="zoom-check">
+    <label for="zoom-check">
+    <img class="thumbnail" src="/media/thumbnail/{{thumbnail $hash}}" alt="thumbnail">
+    <img class="media" loading="lazy" src="/media/{{$hash}}" alt="media">
+  </label>
+</div>
+<br>
+<form method="POST" action="/approval/accept">
+<button>Approve</button>
+<button formaction="/approval/deny" style="float: right">Deny</button>
+<input type="hidden" name="media" value="{{$hash}}">
+</form>
+{{else}}
+<p>No media left in the queue</p>
+{{end}}
+</div>
+</div>

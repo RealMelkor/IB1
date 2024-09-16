@@ -69,7 +69,7 @@ func validExtension(extension string) error {
 	return nil
 }
 
-func uploadFile(file *multipart.FileHeader) (string, error) {
+func uploadFile(file *multipart.FileHeader, approved bool) (string, error) {
 
 	if uint64(file.Size) > config.Cfg.Media.MaxSize {
 		return "", errors.New("media is above size limit")
@@ -105,11 +105,11 @@ func uploadFile(file *multipart.FileHeader) (string, error) {
 		if err != nil { return "", err }
 		data, err := os.ReadFile(out)
 		if err != nil { return "", err }
-		err = db.AddMedia(data, tn_data, hash, mime.String())
+		err = db.AddMedia(data, tn_data, hash, mime.String(), approved)
 		if err != nil { return "", err }
 		return hash + extension, nil
 	}
-	err = db.AddMedia(nil, nil, hash, "")
+	err = db.AddMedia(nil, nil, hash, mime.String(), approved)
 	if err != nil { return "", err }
 	media := config.Cfg.Media.Path + "/" + hash + extension
 	err = move(out, media)

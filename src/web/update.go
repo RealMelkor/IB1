@@ -146,10 +146,13 @@ func newThread(c echo.Context) error {
 	media := ""
 	file, err := c.FormFile("media")
 	if err != nil { return err }
-	if media, err = uploadFile(file); err != nil { return err }
+	user, err := loggedAs(c)
+	if err == nil && signed == "on" { name = user.Name }
+	if media, err = uploadFile(file, user.HasRank("trusted")); err != nil {
+		return err
+	}
 
 	parsed, _ := parseContent(content, 0)
-	user, _ := loggedAs(c)
 	number, err := db.CreateThread(board, title, name, media, clientIP(c),
 					getCookie(c, "id"), user,
 					signed == "on", rank == "on", parsed)
@@ -182,14 +185,15 @@ func newPost(c echo.Context) error {
 	if err := checkCaptcha(c); err != nil { return err }
 
 	media := ""
+	user, err := loggedAs(c)
+	if err == nil && signed == "on" { name = user.Name }
 	file, err := c.FormFile("media")
 	if err == nil { 
-		if media, err = uploadFile(file); err != nil { return err }
+		media, err = uploadFile(file, user.HasRank("trusted"))
+		if err != nil { return err }
 	}
 
 	parsed, refs := parseContent(content, thread.ID)
-	user, err := loggedAs(c)
-	if err == nil && signed == "on" { name = user.Name }
 	number, err := db.CreatePost(thread, parsed, name, media, clientIP(c),
 			getCookie(c, "id"), user, signed == "on", rank == "on",
 			nil)

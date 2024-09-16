@@ -5,17 +5,20 @@ import (
 	"os"
 	"log"
 	"path/filepath"
+	"errors"
 
 	"IB1/config"
 )
 
-func AddMedia(data []byte, thumbnail []byte, hash string, mime string) error {
+func AddMedia(data []byte, thumbnail []byte,
+		hash string, mime string, approved bool) error {
 	var media Media
 	var count int64
 	db.First(&media, "hash = ?", hash).Count(&count)
 	if count > 0 { return nil }
 	return db.Create(&Media{
 		Hash: hash, Mime: mime, Data: data, Thumbnail: thumbnail,
+		Approved: approved,
 	}).Error
 }
 
@@ -65,4 +68,36 @@ func cleanMediaTask() {
 		}
 		time.Sleep(time.Hour)
 	}
+}
+
+func GetPendingApproval() (string, string, error) {
+	var media Media
+	err := db.First(&media, "approved = 0").Error
+	if err != nil { err = db.First(&media, "approved IS NULL").Error }
+	return media.Hash, media.Mime, err
+}
+
+func Approve(hash string) error {
+	return db.Model(&Media{}).Where("hash = ?", hash).
+			Update("approved", true).Error
+}
+
+func RemoveMedia(hash string) error {
+	if !config.Cfg.Media.InDatabase {
+		files, err := filepath.Glob(
+			config.Cfg.Media.Path + "/" + hash + ".*")
+		if err != nil { return err }
+		for _, v := range files { os.Remove(v) }
+		os.Remove(
+			config.Cfg.Media.Path + "/thumbnail/" + hash + ".png")
+	}
+	return db.Where("hash = ?", hash).Delete(&Media{}).Error
+}
+
+func IsApproved(hash string) error {
+	var media Media
+	err := db.First(&media, "hash = ?", hash).Error
+	if err != nil { return err }
+	if media.Approved { return nil }
+	return errors.New("media is not yet approved")
 }

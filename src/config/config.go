@@ -22,6 +22,7 @@ type Config struct {
 		Path		string
 		Tmp		string
 		MaxSize		uint64
+		ApprovalQueue	bool
 	}
 	Captcha struct {
 		Enabled		bool
