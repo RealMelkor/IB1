@@ -121,6 +121,9 @@ func initTemplate() error {
 			if m == nil { return "" }
 			return hash + m.Extension()
 		},
+		"isPending": func(media string) bool {
+			return db.IsApproved(media) != nil
+		},
 		"thumbnail": func(media string) string {
 			return strings.Split(media, ".")[0] + ".png"
 		},

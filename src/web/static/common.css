@@ -271,3 +271,8 @@ body {
 .moderator {
 	color: darkgreen;
 }
+
+.pending-approval {
+	background-color: black;
+	border: 2px dashed yellow;
+}

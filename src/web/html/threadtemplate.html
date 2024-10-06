@@ -55,8 +55,12 @@
 <div class="media-container">
 	<input type="checkbox" class="zoom-check" id="zoom-check-{{.Number}}">
 		<label for="zoom-check-{{.Number}}">
-		<img class="thumbnail" src="/media/thumbnail/{{.Thumbnail}}" alt="{{.Number}}">
-		<img class="media" loading="lazy" src="/media/{{.Media}}" alt="{{.Number}}">
+{{$border := ""}}
+{{if (and (hasRank "moderator") (isPending .MediaHash))}}
+{{$border = "pending-approval"}}
+{{end}}
+<img class="thumbnail {{$border}}" src="/media/thumbnail/{{.Thumbnail}}" alt="{{.Number}}">
+		<img class="media {{$border}}" loading="lazy" src="/media/{{.Media}}" alt="{{.Number}}">
 	</label>
 </div>
 {{end}}

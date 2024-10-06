@@ -59,7 +59,7 @@ func parseArguments() error {
 	case "register":
 		if len(os.Args) <= 3 {
 			return errors.New(os.Args[0] + " register <name> " +
-				"<trusted|moderator|admin>")
+				"<user|trusted|moderator|administrator>")
 		}
 		rank, err := db.StringToRank(os.Args[3])
 		if err != nil { return err }
