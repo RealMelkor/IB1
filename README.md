@@ -4,6 +4,10 @@ An imageboard that does not require Javascript.
 
 ![pic0](./img/img0.png)
 
+## Demo
+
+An instance of IB1 is hosted at [zanaris.ca](https://zanaris.ca).
+
 ## Requirements
 
 * go compiler
