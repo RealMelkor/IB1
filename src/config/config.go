@@ -19,6 +19,14 @@ type Config struct {
 	Web struct {
 		Domain		string
 		Listener	string
+		DisableHTTP	bool
+		RedirectToSSL	bool
+	}
+	SSL struct {
+		Enabled		bool
+		Certificate	[]byte
+		Key		[]byte
+		Listener	string
 	}
 	Media struct {
 		InDatabase	bool

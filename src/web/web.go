@@ -284,5 +284,9 @@ func Init() error {
 	if s := os.Getenv("IB1_LISTENER"); s != "" {
 		return r.Start(s)
 	}
+	if config.Cfg.SSL.Enabled {
+		return r.StartTLS(config.Cfg.Web.Listener,
+			config.Cfg.SSL.Certificate, config.Cfg.SSL.Key)
+	}
 	return r.Start(config.Cfg.Web.Listener)
 }

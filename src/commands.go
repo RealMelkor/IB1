@@ -87,12 +87,43 @@ func parseArguments() error {
 			return err
 		}
 		fmt.Println("password changed")
+	case "ssl":
+		err := errors.New(os.Args[0] + " ssl <key|cert|toggle> [path]")
+		if len(os.Args) < 3 { return err }
+		if err := db.Init(); err != nil { return err }
+		var isKey bool
+		switch os.Args[2] {
+		case "key": isKey = true
+		case "cert": isKey = false
+		case "toggle":
+			config.Cfg.SSL.Enabled = !config.Cfg.SSL.Enabled
+			if config.Cfg.SSL.Enabled {
+				fmt.Println("SSL enabled")
+			} else {
+				fmt.Println("SSL disabled")
+			}
+			if err := db.UpdateConfig(); err != nil { return err }
+			return errors.New("")
+		default: return err
+		}
+		if len(os.Args) < 4 { return err }
+		data, err := os.ReadFile(os.Args[3])
+		if err != nil { return err }
+		if isKey {
+			config.Cfg.SSL.Key = data
+			fmt.Println("SSL key saved")
+		} else {
+			config.Cfg.SSL.Certificate = data
+			fmt.Println("SSL certificate save")
+		}
+		if err := db.UpdateConfig(); err != nil { return err }
 	default:
 		fmt.Println(os.Args[0] +
 			" register <name> <trusted|moderator|admin>")
 		fmt.Println(os.Args[0] + " passwd <name>")
 		fmt.Println(os.Args[0] + " domain <domain>")
 		fmt.Println(os.Args[0] + " db <path> [sqlite|sqlite3|mysql]")
+		fmt.Println(os.Args[0] + " ssl <key|cert|toggle> [path]")
 	}
 	return errors.New("")
 }
