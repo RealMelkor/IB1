@@ -6,6 +6,7 @@ import (
 	"os"
 	"syscall"
 	"time"
+	"io"
 	"net/http"
 	"IB1/db"
 	"IB1/config"
@@ -88,6 +89,13 @@ func updateConfig(c echo.Context) error {
         if !ok { return errors.New("invalid form") }
 	config.Cfg.Home.Description = description
 
+	listener, ok := getPostForm(c, "listener")
+        if !ok { return errors.New("invalid form") }
+	if !requireRestart {
+		requireRestart = config.Cfg.Web.Listener != listener
+	}
+	config.Cfg.Web.Listener = listener
+
 	domain, ok := getPostForm(c, "domain")
         if !ok { return errors.New("invalid form") }
 	config.Cfg.Web.Domain = domain
@@ -136,6 +144,39 @@ func updateConfig(c echo.Context) error {
 	if requireRestart { return restart(c) }
 	return nil
 }
+
+func loadFile(c echo.Context, name string) ([]byte, error) {
+	file, err := c.FormFile(name)
+        if err != nil { return nil, err }
+	f, err := file.Open()
+	if err != nil { return nil, err }
+	return io.ReadAll(f)
+}
+
+func updateSSL(c echo.Context) error {
+
+	v, _ := getPostForm(c, "enabled")
+	config.Cfg.SSL.Enabled = v == "on"
+
+	v, _ = getPostForm(c, "disable-http")
+	config.Cfg.SSL.DisableHTTP = v == "on"
+
+	v, _ = getPostForm(c, "redirect")
+	config.Cfg.SSL.RedirectToSSL = v == "on"
+
+	listener, ok := getPostForm(c, "address")
+        if !ok { return errors.New("invalid form") }
+	config.Cfg.SSL.Listener = listener
+
+	data, err := loadFile(c, "certificate")
+        if err == nil { config.Cfg.SSL.Certificate = data }
+	data, err = loadFile(c, "key")
+        if err == nil { config.Cfg.SSL.Key = data }
+
+	if err := db.UpdateConfig(); err != nil { return err }
+	return restart(c)
+}
+
 
 func createBoard(c echo.Context) error {
 	board, hasBoard := getPostForm(c, "board")

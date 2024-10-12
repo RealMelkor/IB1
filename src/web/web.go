@@ -21,7 +21,9 @@ func clientIP(c echo.Context) string {
 		s := c.Request().RemoteAddr
 		s = strings.Replace(s, "[", "", 1)
 		s = strings.Replace(s, "]", "", 1)
-		return s[:strings.LastIndex(s, ":")]
+		i := strings.LastIndex(s, ":")
+		if i == -1 { return s }
+		return s[:i]
 	}
 	return ip
 }
@@ -98,6 +100,23 @@ func logger(next echo.HandlerFunc) echo.HandlerFunc {
 			"[" + id + "][" + ip + "][" + r.Method + "]" + name,
 			r.URL.String(), t2.Sub(t1))
 		return err
+	}
+}
+
+func redirectHTTPS(next echo.HandlerFunc) echo.HandlerFunc {
+	return func (c echo.Context) error {
+		parts := strings.Split(c.Request().Host, ":")
+		host := parts[0]
+		port := ""
+		if len(parts) > 1 {
+			parts = strings.Split(config.Cfg.SSL.Listener, ":")
+			if len(parts) > 1 {
+				port = ":" + parts[1]
+			}
+		}
+		c.Redirect(http.StatusFound,
+			"https://" + host + port + c.Request().RequestURI)
+		return nil
 	}
 }
 
@@ -208,6 +227,7 @@ func Init() error {
 		return redirect(setTheme, c.QueryParam("origin"))(c)
 	})
 	r.POST("/config/update", handleConfig(updateConfig, "config-error"))
+	r.POST("/config/ssl/update", handleConfig(updateSSL, "ssl-error"))
 	r.POST("/config/board/create",
 		handleConfig(createBoard, "board-error"))
 	r.POST("/config/board/update/:board",
@@ -284,9 +304,16 @@ func Init() error {
 	if s := os.Getenv("IB1_LISTENER"); s != "" {
 		return r.Start(s)
 	}
-	if config.Cfg.SSL.Enabled {
-		return r.StartTLS(config.Cfg.Web.Listener,
-			config.Cfg.SSL.Certificate, config.Cfg.SSL.Key)
+	if !config.Cfg.SSL.Enabled {
+		return r.Start(config.Cfg.Web.Listener)
 	}
-	return r.Start(config.Cfg.Web.Listener)
+	if config.Cfg.SSL.RedirectToSSL {
+		rdr := echo.New()
+		rdr.Pre(redirectHTTPS)
+		go rdr.Start(config.Cfg.Web.Listener)
+	} else if !config.Cfg.SSL.DisableHTTP {
+		go r.Start(config.Cfg.Web.Listener)
+	}
+	return r.StartTLS(config.Cfg.SSL.Listener,
+		config.Cfg.SSL.Certificate, config.Cfg.SSL.Key)
 }

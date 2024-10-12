@@ -19,14 +19,14 @@ type Config struct {
 	Web struct {
 		Domain		string
 		Listener	string
-		DisableHTTP	bool
-		RedirectToSSL	bool
 	}
 	SSL struct {
 		Enabled		bool
 		Certificate	[]byte
 		Key		[]byte
 		Listener	string
+		DisableHTTP	bool
+		RedirectToSSL	bool
 	}
 	Media struct {
 		InDatabase	bool
@@ -60,6 +60,7 @@ func LoadDefault() {
 	Cfg.Home.Theme = "default"
 	Cfg.Web.Domain = "localhost"
 	Cfg.Web.Listener = ":8080"
+	Cfg.SSL.Listener = ":8443"
 	Cfg.Captcha.Enabled = true
 	Cfg.Captcha.Length = 7
 	Cfg.Board.MaxThreads = 40

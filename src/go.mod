@@ -10,6 +10,7 @@ require (
 	github.com/h2non/bimg v1.1.9
 	github.com/labstack/echo/v4 v4.12.0
 	github.com/tdewolff/minify/v2 v2.20.34
+	github.com/yl2chen/cidranger v1.0.2
 	golang.org/x/crypto v0.22.0
 	golang.org/x/term v0.19.0
 	gorm.io/driver/mysql v1.5.1
@@ -33,7 +34,6 @@ require (
 	github.com/tdewolff/parse/v2 v2.7.15 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
-	github.com/yl2chen/cidranger v1.0.2 // indirect
 	golang.org/x/image v0.0.0-20190703141733-d6a02ce849c9 // indirect
 	golang.org/x/net v0.24.0 // indirect
 	golang.org/x/sys v0.19.0 // indirect
