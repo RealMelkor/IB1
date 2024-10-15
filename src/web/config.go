@@ -328,9 +328,13 @@ func fetchSSL(c echo.Context) error {
 	v, _ := getPostForm(c, "disable-www")
 	config.Cfg.Acme.DisableWWW = v == "ok"
 	config.Cfg.Acme.Port = strconv.Itoa(rand.Int() % 62535 + 2048)
-	err := acme.Generate(config.Cfg.Web.Domain, config.Cfg.Acme.DisableWWW)
+	crt, key, err := acme.Generate(
+		config.Cfg.Web.Domain, config.Cfg.Acme.Email,
+		config.Cfg.Acme.Port, !config.Cfg.Acme.DisableWWW)
 	config.Cfg.Acme.Port = ""
 	if err != nil { return err }
+	config.Cfg.SSL.Certificate = crt
+	config.Cfg.SSL.Key = key
 	if err := db.UpdateConfig(); err != nil { return err }
 	return restart(c)
 }
