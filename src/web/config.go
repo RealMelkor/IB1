@@ -7,9 +7,13 @@ import (
 	"syscall"
 	"time"
 	"io"
+	"context"
+	"net"
 	"net/http"
+	"math/rand"
 	"IB1/db"
 	"IB1/config"
+	"IB1/acme"
 
 	"github.com/labstack/echo/v4"
 )
@@ -317,4 +321,39 @@ func restart(c echo.Context) error {
 	}()
 	set(c)("restart", "Restart is in progress")
 	return c.Redirect(http.StatusFound, "/dashboard")
+}
+
+func fetchSSL(c echo.Context) error {
+	config.Cfg.Acme.Email, _ = getPostForm(c, "email")
+	v, _ := getPostForm(c, "disable-www")
+	config.Cfg.Acme.DisableWWW = v == "ok"
+	config.Cfg.Acme.Port = strconv.Itoa(rand.Int() % 62535 + 2048)
+	err := acme.Generate(config.Cfg.Web.Domain, config.Cfg.Acme.DisableWWW)
+	config.Cfg.Acme.Port = ""
+	if err != nil { return err }
+	if err := db.UpdateConfig(); err != nil { return err }
+	return restart(c)
+}
+
+func proxyAcme(c echo.Context) error {
+	if config.Cfg.Acme.Port == "" { return errors.New("not found") }
+	dialer := &net.Dialer{
+		Timeout:   30 * time.Second,
+		KeepAlive: 30 * time.Second,
+	}
+	transport := http.DefaultTransport.(*http.Transport)
+	transport.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
+		return dialer.DialContext(ctx, network,
+				"127.0.0.1:" + config.Cfg.Acme.Port)
+	}
+	client := &http.Client{
+		Transport: transport,
+	}
+	resp, err := client.Get(
+		"http://" + config.Cfg.Web.Domain + c.Request().RequestURI)
+	if err != nil { return err }
+	defer resp.Body.Close()
+	data, err := io.ReadAll(resp.Body)
+	if err != nil { return err }
+	return c.Blob(resp.StatusCode, resp.Header.Get("Content-Type"), data)
 }

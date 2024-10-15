@@ -105,6 +105,10 @@ func logger(next echo.HandlerFunc) echo.HandlerFunc {
 
 func redirectHTTPS(next echo.HandlerFunc) echo.HandlerFunc {
 	return func (c echo.Context) error {
+		prefix := "/.well-known/acme-challenge/"
+		if strings.HasPrefix(c.Request().RequestURI, prefix) {
+			return proxyAcme(c)
+		}
 		parts := strings.Split(c.Request().Host, ":")
 		host := parts[0]
 		port := ""
@@ -114,9 +118,8 @@ func redirectHTTPS(next echo.HandlerFunc) echo.HandlerFunc {
 				port = ":" + parts[1]
 			}
 		}
-		c.Redirect(http.StatusFound,
+		return c.Redirect(http.StatusFound,
 			"https://" + host + port + c.Request().RequestURI)
-		return nil
 	}
 }
 
@@ -254,6 +257,8 @@ func Init() error {
 		handleConfig(deleteAccount, "account-error"))
 	r.POST("/config/restart",
 		handleConfig(restart, "config-error"))
+	r.POST("/config/acme/update", handleConfig(fetchSSL, "acme-error"))
+	r.GET("/.well-known/acme-challenge/:token", proxyAcme)
 
 	if config.Cfg.Media.InDatabase {
 		r.GET("/media/:hash", imageError(mediaCheck(
@@ -296,7 +301,6 @@ func Init() error {
 		}
 		r.GET("/media/:hash", imageError(mediaCheck(f)))
 		r.GET("/media/thumbnail/:hash", imageError(mediaCheck(f)))
-
 	} else {
 		r.Static("/media", config.Cfg.Media.Path)
 	}

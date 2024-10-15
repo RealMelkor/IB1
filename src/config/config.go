@@ -20,6 +20,11 @@ type Config struct {
 		Domain		string
 		Listener	string
 	}
+	Acme struct {
+		Email           string
+		Port		string
+		DisableWWW	bool
+	}
 	SSL struct {
 		Enabled		bool
 		Certificate	[]byte
