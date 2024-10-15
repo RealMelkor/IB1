@@ -354,7 +354,7 @@ func proxyAcme(c echo.Context) error {
 		Transport: transport,
 	}
 	resp, err := client.Get(
-		"http://" + config.Cfg.Web.Domain + c.Request().RequestURI)
+		"http://" + c.Request().Host + c.Request().RequestURI)
 	if err != nil { return err }
 	defer resp.Body.Close()
 	data, err := io.ReadAll(resp.Body)
