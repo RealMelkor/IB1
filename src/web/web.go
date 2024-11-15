@@ -50,6 +50,7 @@ func mediaCheck(f echo.HandlerFunc) echo.HandlerFunc {
 			err = db.IsApproved(
 				strings.Split(c.Param("hash"), ".")[0])
 			if err == nil { break }
+			if err.Error() != db.NoYetApproved { return err }
 			c.Response().Writer.Header().Add(
                 		"Content-Type", "image/png")
 			c.Response().WriteHeader(http.StatusOK)
@@ -62,6 +63,10 @@ func mediaCheck(f echo.HandlerFunc) echo.HandlerFunc {
 
 func approveMedia(c echo.Context) error {
 	return db.Approve(strings.Split(c.FormValue("media"), ".")[0])
+}
+
+func approveAll(c echo.Context) error {
+	return db.ApproveAll()
 }
 
 func denyMedia(c echo.Context) error {
@@ -214,8 +219,12 @@ func Init() error {
 	r.GET("/register", unauth(renderFile("register.html")))
 	r.POST("/register", unauth(catch(readOnly(register), "register-error")))
 	r.GET("/:board/cancel/:id", cancel)
-	r.GET("/:board/remove/:id", hasRank(remove, db.RANK_ADMIN))
-	r.GET("/:board/hide/:id", hasRank(hide, db.RANK_MODERATOR))
+	r.GET("/:board/remove/:id", hasRank(onPost(remove), db.RANK_ADMIN))
+	r.GET("/:board/hide/:id", hasRank(onPost(hide), db.RANK_MODERATOR))
+	r.GET("/:board/remove_media/:id",
+		hasRank(onPost(removeMedia), db.RANK_MODERATOR))
+	r.GET("/:board/approve/:id",
+		hasRank(onPost(approveMediaFromPost), db.RANK_MODERATOR))
 	r.GET("/:board/ban/:ip", hasRank(ban, db.RANK_MODERATOR))
 	if config.Cfg.Media.ApprovalQueue {
 		r.GET("/approval", hasRank(
@@ -224,6 +233,8 @@ func Init() error {
 			approveMedia, "/approval"), db.RANK_MODERATOR))
 		r.POST("/approval/deny", hasRank(redirect(
 			denyMedia, "/approval"), db.RANK_MODERATOR))
+		r.POST("/approval/accept/all", hasRank(redirect(
+			approveAll, "/approval"), db.RANK_MODERATOR))
 	}
 	r.GET("/dashboard", hasRank(renderDashboard, db.RANK_ADMIN))
 	r.POST("/config/client/theme", func(c echo.Context) error {

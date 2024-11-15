@@ -41,6 +41,12 @@
 	[<span class="ip">IP: {{.IP}}</span>]
 	[<a class="action" href="/{{$.Board.Name}}/hide/{{.Number}}">{{if .Disabled}}Unhide{{else}}Hide{{end}}</a>]
 	[<a class="action" href="/{{$.Board.Name}}/remove/{{.Number}}">Remove</a>]
+{{if .Media}}
+	[<a class="action" href="/{{$.Board.Name}}/remove_media/{{.Number}}">Delete Media</a>]
+{{if isPending .MediaHash}}
+	[<a class="action" href="/{{$.Board.Name}}/approve/{{.Number}}">Approve Media</a>]
+{{end}}
+{{end}}
 	[<a class="action" href="/{{$.Board.Name}}/ban/{{.IP}}">Ban</a>]
 	{{else}}
 	{{if (or (and (eq .Session session) (not (eq .Session ""))) (and (eq self.ID .OwnerID) (not (eq .OwnerID 0))))}}

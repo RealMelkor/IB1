@@ -82,6 +82,15 @@ func Approve(hash string) error {
 			Update("approved", true).Error
 }
 
+func ApproveAll() error {
+	return db.Model(&Media{}).Where("1 = 1").Update("approved", true).Error
+}
+
+func HasUnapproved() bool {
+	return db.Where("approved = ?", false).
+		First(&Media{}).RowsAffected != 0
+}
+
 func RemoveMedia(hash string) error {
 	if !config.Cfg.Media.InDatabase {
 		files, err := filepath.Glob(
@@ -94,10 +103,12 @@ func RemoveMedia(hash string) error {
 	return db.Where("hash = ?", hash).Delete(&Media{}).Error
 }
 
+const NoYetApproved = "media is not yet approved"
+
 func IsApproved(hash string) error {
 	var media Media
 	err := db.First(&media, "hash = ?", hash).Error
 	if err != nil { return err }
 	if media.Approved { return nil }
-	return errors.New("media is not yet approved")
+	return errors.New(NoYetApproved)
 }

@@ -136,12 +136,9 @@ func CreateReference(thread uint, from int, to int) error {
 	return db.Create(&ref).Error
 }
 
-func Hide(board string, id int, reverse bool) error {
-	b, ok := Boards[board]
-	if !ok { return errors.New("board not found") }
-	return db.Model(&Post{}).
-		Where("board_id = ? AND number = ?", b.ID, id).
-		Update("Disabled", !reverse).Error
+func Hide(id uint, reverse bool) error {
+	return db.Model(&Post{}).Where("id = ?", id).
+			Update("Disabled", !reverse).Error
 }
 
 func Remove(board string, id int) error {
@@ -155,4 +152,8 @@ func Remove(board string, id int) error {
 	if err != nil { return err }
 	db.Unscoped().Delete(&Thread{}, post.ThreadID)
 	return err
+}
+
+func RemovePostByID(id int) error {
+	return db.Delete(&Post{}, id).Error
 }

@@ -20,7 +20,6 @@ func Ranks() []string {
 	}
 }
 
-
 func RankToString(rank int) (string, error) {
 	ranks := Ranks()
 	switch rank {

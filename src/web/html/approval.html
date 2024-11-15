@@ -18,5 +18,12 @@
 {{else}}
 <p>No media left in the queue</p>
 {{end}}
+{{if hasUnapproved}}
+<div class="new-thread">
+<form method="POST" action="/approval/accept">
+<button formaction="/approval/accept/all">Approve All</button>
+</form>
+</div>
+{{end}}
 </div>
 </div>

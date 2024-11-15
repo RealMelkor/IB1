@@ -122,7 +122,11 @@ func initTemplate() error {
 			return hash + m.Extension()
 		},
 		"isPending": func(media string) bool {
-			return db.IsApproved(media) != nil
+			return config.Cfg.Media.ApprovalQueue &&
+					db.IsApproved(media) != nil
+		},
+		"hasUnapproved": func() bool {
+			return db.HasUnapproved()
 		},
 		"thumbnail": func(media string) string {
 			return strings.Split(media, ".")[0] + ".png"

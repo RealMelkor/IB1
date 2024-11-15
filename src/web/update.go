@@ -58,22 +58,40 @@ func disconnect(c echo.Context) error {
 	return nil
 }
 
-func remove(c echo.Context) error {
-	board := c.Param("board")
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil { return err }
+func onPost(f func(db.Post) error) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		board := c.Param("board")
+		id, err := strconv.Atoi(c.Param("id"))
+		if err != nil { return err }
 
-	post, err := db.GetPostFromBoard(board, id)
-	if err != nil { return err }
-	err = db.Remove(board, id)
-	if err != nil { return err }
+		post, err := db.GetPostFromBoard(board, id)
+		if err != nil { return err }
+		err = f(post)
+		if err != nil { return err }
 
-	dst := "/" + board
-	if id != post.Thread.Number {
-		dst += "/" + strconv.Itoa(post.Thread.Number)
+		dst := "/" + board
+		if id != post.Thread.Number {
+			dst += "/" + strconv.Itoa(post.Thread.Number)
+		}
+		c.Redirect(http.StatusFound, dst)
+		return nil
 	}
-	c.Redirect(http.StatusFound, dst)
-	return nil
+}
+
+func remove(post db.Post) error {
+	return db.Remove(post.Board.Name, post.Number)
+}
+
+func removeMedia(post db.Post) error {
+	return db.RemoveMedia(post.MediaHash)
+}
+
+func approveMediaFromPost(post db.Post) error {
+	return db.Approve(post.MediaHash)
+}
+
+func hide(post db.Post) error {
+	return db.Hide(post.ID, post.Disabled)
 }
 
 func cancel(c echo.Context) error {
@@ -99,21 +117,6 @@ func cancel(c echo.Context) error {
 	}
 	c.Redirect(http.StatusFound, dst)
 	return nil
-}
-
-func hide(c echo.Context) error {
-	var id int
-	var post db.Post
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil { return err }
-	board := c.Param("board")
-	post, err = db.GetPostFromBoard(board, id)
-	if err != nil { return err }
-	err = db.Hide(board, id, post.Disabled)
-	if err != nil { return err }
-	c.Redirect(http.StatusFound, "/" + board + "/" +
-			strconv.Itoa(post.Thread.Number))
-	return err
 }
 
 func ban(c echo.Context) error {
