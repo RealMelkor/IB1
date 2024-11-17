@@ -2,6 +2,7 @@ package web
 
 import (
 	"os"
+	"os/exec"
 	"io"
 	"time"
 	"fmt"
@@ -40,13 +41,14 @@ func hashFile(path string) (string, error) {
 	return fmt.Sprintf("%x", h.Sum(nil)), nil
 }
 
-var extensions = map[string]bool{
-	".png": true,
-	".jpg": true,
-	".jpeg": true,
-	".webp": true,
-	".webm": false,
-	".mp4": false,
+var extensions = map[string]db.MediaType{
+	".png": db.MEDIA_PICTURE,
+	".jpg": db.MEDIA_PICTURE,
+	".jpeg": db.MEDIA_PICTURE,
+	".gif": db.MEDIA_PICTURE,
+	".webp": db.MEDIA_PICTURE,
+	".webm": db.MEDIA_VIDEO,
+	".mp4": db.MEDIA_VIDEO,
 }
 
 func saveUploadedFile(file *multipart.FileHeader, out string) error {
@@ -62,12 +64,15 @@ func saveUploadedFile(file *multipart.FileHeader, out string) error {
 	return err
 }
 
-func validExtension(extension string) error {
-	allowed, exist := extensions[extension]
-	if !allowed || !exist {
-		return errors.New("forbidden file extension")
+func validExtension(extension string) (db.MediaType, error) {
+	mediaType, exist := extensions[extension]
+	if mediaType == db.MEDIA_VIDEO && !config.Cfg.Media.AllowVideos {
+		return 0, errors.New("video support not enabled")
 	}
-	return nil
+	if !exist {
+		return 0, errors.New("forbidden file extension")
+	}
+	return mediaType, nil
 }
 
 func uploadFile(file *multipart.FileHeader, approved bool) (string, error) {
@@ -87,41 +92,75 @@ func uploadFile(file *multipart.FileHeader, approved bool) (string, error) {
 	mime, err := mimetype.DetectFile(path)
 	if err != nil { return "", err }
 	extension := mime.Extension()
-	if err := validExtension(extension); err != nil { return "", err }
+	mediaType, err := validExtension(extension)
+	if err != nil { return "", err }
 
 	// clean up the metadata
 	out := config.Cfg.Media.Tmp + "/clean_" + name + extension
-	if err := cleanImage(path, out); err != nil { return "", err }
-	os.Remove(path)
-	defer os.Remove(out)
+	if mediaType == db.MEDIA_PICTURE && extension != ".gif" {
+		if err := cleanImage(path, out); err != nil { return "", err }
+		os.Remove(path)
+		defer os.Remove(out)
+	} else {
+		out = path
+	}
 
 	// rename to the hash of itself
 	hash, err := hashFile(out)
 	if err != nil { return "", err }
 	if config.Cfg.Media.InDatabase { // store media in database
 		tn := config.Cfg.Media.Tmp + "/thumbnail_" + hash + ".png"
-		if err := thumbnail(out, tn); err != nil { return "", err }
+		src := out
+		if mediaType == db.MEDIA_VIDEO {
+			src = config.Cfg.Media.Tmp + "/frame_" + hash + ".png"
+			if err := extractFrame(out, src); err != nil {
+				return "", err
+			}
+			defer os.Remove(src)
+		}
+		if err := thumbnail(src, tn); err != nil { return "", err }
 		defer os.Remove(tn)
 		tn_data, err := os.ReadFile(tn)
 		if err != nil { return "", err }
 		data, err := os.ReadFile(out)
 		if err != nil { return "", err }
-		err = db.AddMedia(data, tn_data, hash, mime.String(), approved)
+		err = db.AddMedia(data, tn_data, mediaType,
+			hash, mime.String(), approved)
 		if err != nil { return "", err }
 		return hash + extension, nil
 	}
-	err = db.AddMedia(nil, nil, hash, mime.String(), approved)
+	err = db.AddMedia(nil, nil, mediaType, hash, mime.String(), approved)
 	if err != nil { return "", err }
 	media := config.Cfg.Media.Path + "/" + hash + extension
 	err = move(out, media)
 	if err != nil { return "", err }
 
 	// create thumbnail
-	err = thumbnail(media, config.Cfg.Media.Path +
-				"/thumbnail/" + hash + ".png");
+	if mediaType == db.MEDIA_VIDEO {
+		dst := config.Cfg.Media.Tmp + "/frame_" + hash + ".png"
+		if err := extractFrame(media, dst); err != nil {
+			return "", err
+		}
+		media = dst
+		defer os.Remove(media)
+	}
+	err = thumbnail(media,
+		config.Cfg.Media.Path + "/thumbnail/" + hash + ".png");
 	if err != nil { return "", err }
 
 	return hash + extension, nil
+}
+
+func extractFrame(in string, out string) error {
+	c := exec.Command(
+		"ffmpeg", "-i", in, "-vf", "select=eq(n\\,34)",
+		"-vframes", "1", out,
+	)
+	c.Stderr = os.Stderr
+	c.Stdout = nil
+	c.Run()
+	_, err := os.Stat(out)
+	return err
 }
 
 func move(source string, destination string) error {

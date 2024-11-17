@@ -60,13 +60,25 @@
 {{if .Media}}
 <div class="media-container">
 	<input type="checkbox" class="zoom-check" id="zoom-check-{{.Number}}">
-		<label for="zoom-check-{{.Number}}">
+	<label for="zoom-check-{{.Number}}">
 {{$border := ""}}
 {{if (and (hasRank "moderator") (isPending .MediaHash))}}
 {{$border = "pending-approval"}}
 {{end}}
-<img class="thumbnail {{$border}}" src="/media/thumbnail/{{.Thumbnail}}" alt="{{.Number}}">
-		<img class="media {{$border}}" loading="lazy" src="/media/{{.Media}}" alt="{{.Number}}">
+		<img class="thumbnail {{$border}}" src="/media/thumbnail/{{.Thumbnail}}" alt="{{.Number}}">
+{{if isPicture .Media}}
+                <img class="media {{$border}}" loading="lazy" src="/media/{{.Media}}" alt="{{.Number}}">
+{{end}}
+{{if isVideo .Media}}
+                <div class="media media-video">
+                        <p>[-]</p>
+                        <video class="{{$border}}" controls>
+                        <source src="/media/{{.Media}}" type="video/{{extension .Media}}">
+                        Your browser does not support this video format.
+                        </video>
+                </div>
+{{end}}
+
 	</label>
 </div>
 {{end}}

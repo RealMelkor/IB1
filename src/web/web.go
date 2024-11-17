@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"hash/fnv"
 	"os"
+	"io"
 	"strings"
 	"time"
 	"strconv"
@@ -298,17 +299,8 @@ func Init() error {
 			c.Response().WriteHeader(http.StatusOK)
 			f, err := os.Open(path)
 			if err != nil { return err }
-			for {
-				var buf [4096]byte
-				n, err := f.Read(buf[:])
-				if err != nil {
-					if err.Error() == "EOF" { break }
-					return err
-				}
-				c.Response().Write(buf[:n])
-				if n != len(buf) { break }
-			}
-			return nil
+			_, err = io.Copy(c.Response().Writer, f)
+			return err
 		}
 		r.GET("/media/:hash", imageError(mediaCheck(f)))
 		r.GET("/media/thumbnail/:hash", imageError(mediaCheck(f)))

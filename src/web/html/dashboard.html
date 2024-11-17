@@ -51,6 +51,11 @@
 			<td><input type="checkbox" name="approval" {{if .Config.Media.ApprovalQueue}}checked{{end}}></td>
 		</tr>
 		<tr>
+			<td>Enable video support</td>
+			<td><input type="checkbox" name="video" {{if .Config.Media.AllowVideos}}checked{{end}}></td>
+		</tr>
+
+		<tr>
 			<td>Store media inside the database</td>
 			<td><input type="checkbox" name="indb" {{if .Config.Media.InDatabase}}checked{{end}}></td>
 		</tr>

@@ -66,8 +66,9 @@ func onPost(f func(db.Post) error) echo.HandlerFunc {
 
 		post, err := db.GetPostFromBoard(board, id)
 		if err != nil { return err }
-		err = f(post)
+		post.Board, err = db.GetBoard(board)
 		if err != nil { return err }
+		if err := f(post);  err != nil { return err }
 
 		dst := "/" + board
 		if id != post.Thread.Number {

@@ -35,6 +35,16 @@ body {
 	display: none;
 }
 
+.media-video p {
+	font-size: 12px;
+	padding: 0;
+	margin: 0;
+}
+
+.media-video video {
+	cursor: auto;
+}
+
 #show-form:checked ~ #new-reply {
 	display: none;
 }

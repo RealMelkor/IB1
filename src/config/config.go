@@ -39,6 +39,7 @@ type Config struct {
 		Tmp		string
 		MaxSize		uint64
 		ApprovalQueue	bool
+		AllowVideos	bool
 		Key		[]byte
 	}
 	Captcha struct {

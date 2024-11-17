@@ -4,6 +4,7 @@ import (
 	"errors"
 	"strconv"
 	"os"
+	"os/exec"
 	"syscall"
 	"time"
 	"io"
@@ -126,6 +127,14 @@ func updateConfig(c echo.Context) error {
 	size, err := strconv.ParseUint(sizeStr, 10, 64)
 	if err != nil { return err }
 	config.Cfg.Media.MaxSize = size
+
+	video, _ := getPostForm(c, "video")
+	v = video == "on"
+	if v && !config.Cfg.Media.AllowVideos {
+		c := exec.Command("ffmpeg", "-version")
+		if err := c.Run(); err != nil { return err }
+	}
+	config.Cfg.Media.AllowVideos = v
 
 	captcha, _ := getPostForm(c, "captcha")
 	config.Cfg.Captcha.Enabled = captcha == "on"

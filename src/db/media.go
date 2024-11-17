@@ -10,7 +10,7 @@ import (
 	"IB1/config"
 )
 
-func AddMedia(data []byte, thumbnail []byte,
+func AddMedia(data []byte, thumbnail []byte, mediaType MediaType,
 		hash string, mime string, approved bool) error {
 	var media Media
 	var count int64
@@ -18,7 +18,7 @@ func AddMedia(data []byte, thumbnail []byte,
 	if count > 0 { return nil }
 	return db.Create(&Media{
 		Hash: hash, Mime: mime, Data: data, Thumbnail: thumbnail,
-		Approved: approved,
+		Approved: approved, Type: mediaType,
 	}).Error
 }
 

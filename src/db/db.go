@@ -21,12 +21,20 @@ type Theme struct {
 	Disabled	bool
 }
 
+type MediaType uint8
+const (
+	MEDIA_PICTURE MediaType = iota
+	MEDIA_VIDEO
+	MEDIA_AUDIO
+)
+
 type Media struct {
 	Hash		string `gorm:"unique"`
 	Mime		string
 	Data		[]byte
 	Thumbnail	[]byte
 	Approved	bool
+	Type		MediaType
 }
 
 type Board struct {

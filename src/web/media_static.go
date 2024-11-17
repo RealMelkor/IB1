@@ -4,7 +4,10 @@ package web
 import (
 	"github.com/anthonynsimon/bild/imgio"
 	"github.com/anthonynsimon/bild/transform"
+	"os"
 	"strings"
+
+	"IB1/config"
 )
 
 func cleanImage(in string, out string) error {
@@ -21,6 +24,16 @@ func cleanImage(in string, out string) error {
 }
 
 func thumbnail(in string, out string) error {
+
+	// fallback to ffmpeg if source is a gif image
+	parts := strings.Split(in, ".")
+	if len(parts) > 0 && parts[len(parts) - 1] == "gif" {
+		parts = strings.Split(out, "/")
+		dst := config.Cfg.Media.Tmp + "/frame_" + parts[len(parts) - 1]
+		if err := extractFrame(in, dst); err != nil { return err }
+		defer os.Remove(dst)
+		in = dst
+	}
 
 	img, err := imgio.Open(in)
 	if err != nil { return err }
