@@ -43,6 +43,7 @@ body {
 
 .media-video video {
 	cursor: auto;
+	max-width: 900px;
 }
 
 #show-form:checked ~ #new-reply {

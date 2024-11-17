@@ -11,10 +11,8 @@ import (
 )
 
 func captchaNew(c echo.Context) (string, error) {
-	id, err := getID(c)
-	if err != nil { return "", err }
 	captchaID := captcha.New()
-	sessions[id]["captcha"] = captchaID
+	set(c)("captcha", captchaID)
 	return captchaID, nil
 }
 

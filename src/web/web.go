@@ -2,11 +2,10 @@ package web
 
 import (
 	"github.com/labstack/echo/v4"
-	"github.com/gabriel-vasile/mimetype"
 	"net/http"
 	"hash/fnv"
+	"bytes"
 	"os"
-	"io"
 	"strings"
 	"time"
 	"strconv"
@@ -176,6 +175,8 @@ func notFound(c echo.Context) error {
 
 func Init() error {
 
+	sessions.Init()
+
 	if !config.Cfg.Media.InDatabase {
 		os.MkdirAll(config.Cfg.Media.Path + "/thumbnail", 0700)
 	}
@@ -276,9 +277,13 @@ func Init() error {
 		r.GET("/media/:hash", imageError(mediaCheck(
 			func(c echo.Context) error {
 				parts := strings.Split(c.Param("hash"), ".")
-				data, mime, err := db.GetMedia(parts[0])
+				data, _, err := db.GetMedia(parts[0])
 				if err != nil { return err }
-				return c.Blob(http.StatusOK, mime, data)
+				r := bytes.NewReader(data)
+				http.ServeContent(c.Response().Writer,
+					c.Request(), c.Param("hash"),
+					time.Now(), r)
+				return nil
 			})))
 		r.GET("/media/thumbnail/:hash", imageError(mediaCheck(
 			func(c echo.Context) error {
@@ -292,15 +297,12 @@ func Init() error {
 			path := c.Request().RequestURI
 			path = strings.TrimPrefix(path, "/media")
 			path = config.Cfg.Media.Path + path
-			m, err := mimetype.DetectFile(path)
-			if err != nil { return err }
-			c.Response().Writer.Header().Add(
-					"Content-Type", m.String())
-			c.Response().WriteHeader(http.StatusOK)
 			f, err := os.Open(path)
 			if err != nil { return err }
-			_, err = io.Copy(c.Response().Writer, f)
-			return err
+			http.ServeContent(c.Response().Writer,
+				c.Request(), c.Param("hash"),
+				time.Now(), f)
+			return nil
 		}
 		r.GET("/media/:hash", imageError(mediaCheck(f)))
 		r.GET("/media/thumbnail/:hash", imageError(mediaCheck(f)))

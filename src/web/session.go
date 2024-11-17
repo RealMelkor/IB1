@@ -11,7 +11,7 @@ import (
 )
 
 type session map[string]any
-var sessions = map[string]session{}
+var sessions = safeMap[session]{}
 
 func setCookie(c echo.Context, name string, value string) {
 	cookie := http.Cookie{
@@ -57,8 +57,8 @@ func getID(c echo.Context) (string, error) {
 		setCookie(c, "id", token)
 		v = token
 	}
-	_, ok := sessions[v]
-	if !ok { sessions[v] = session{} }
+	_, ok := sessions.get(v)
+	if !ok { sessions.set(v, session{}) }
 	return v, nil
 }
 
@@ -66,7 +66,9 @@ func get(c echo.Context) func(string)any {
 	id, err := getID(c)
 	if err != nil { return func(string)any { return nil } }
 	return func(param string)any {
-		v, ok := sessions[id][param]
+		m, ok := sessions.get(id)
+		if !ok { return nil }
+		v, ok := m[param]
 		if !ok { return nil }
 		return v
 	}
@@ -76,9 +78,12 @@ func set(c echo.Context) func(string, any) any {
 	id, err := getID(c)
 	if err != nil { return func(string, any) any { return "" } }
 	return func(param string, value any) any {
-		_, ok := sessions[id]
-		if !ok { sessions[id] = session{} }
-		sessions[id][param] = value
+		_, ok := sessions.get(id)
+		if !ok { sessions.set(id, session{}) }
+		m, ok := sessions.get(id)
+		if !ok { return nil }
+		m[param] = value
+		sessions.set(id, m)
 		return nil
 	}
 }
@@ -87,9 +92,11 @@ func once(c echo.Context) func(string)any {
 	id, err := getID(c)
 	if err != nil { return func(string)any { return nil } }
 	return func(param string)any {
-		v, ok := sessions[id][param]
+		m, ok := sessions.get(id)
 		if !ok { return nil }
-		delete(sessions[id], param)
+		v, ok := m[param]
+		delete(m, param)
+		sessions.set(id, m)
 		return v
 	}
 }
@@ -98,7 +105,9 @@ func has(c echo.Context) func(string)bool {
 	id, err := getID(c)
 	if err != nil { return func(string)bool { return false } }
 	return func(param string)bool {
-		_, ok := sessions[id][param]
+		m, ok := sessions.get(id)
+		if !ok { return false }
+		_, ok = m[param]
 		return ok
 	}
 }
