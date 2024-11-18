@@ -66,10 +66,9 @@
 {{$border = "pending-approval"}}
 {{end}}
 		<img class="thumbnail {{$border}}" src="/media/thumbnail/{{.Thumbnail}}" alt="{{.Number}}">
-{{if isPicture .Media}}
+{{if or (isPicture .Media) (and (isPending .MediaHash) (not (hasRank "moderator")))}}
                 <img class="media {{$border}}" loading="lazy" src="/media/{{.Media}}" alt="{{.Number}}">
-{{end}}
-{{if isVideo .Media}}
+{{else if (isVideo .Media)}}
                 <div class="media media-video">
                         <p>[-]</p>
                         <video class="{{$border}}" controls>

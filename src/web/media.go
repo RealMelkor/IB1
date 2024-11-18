@@ -111,7 +111,7 @@ func uploadFile(file *multipart.FileHeader, approved bool) (string, error) {
 	if config.Cfg.Media.InDatabase { // store media in database
 		tn := config.Cfg.Media.Tmp + "/thumbnail_" + hash + ".png"
 		src := out
-		if mediaType == db.MEDIA_VIDEO {
+		if mediaType == db.MEDIA_VIDEO || extension == ".gif" {
 			src = config.Cfg.Media.Tmp + "/frame_" + hash + ".png"
 			if err := extractFrame(out, src); err != nil {
 				return "", err
