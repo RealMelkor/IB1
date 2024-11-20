@@ -10,21 +10,27 @@ import (
 	"IB1/db"
 )
 
-func updateFavicon(c echo.Context) error {
-	file, err := c.FormFile("theme")
-        if err != nil { return err }
+func handleImage(c echo.Context, param string) ([]byte, string, error) {
+	file, err := c.FormFile(param)
+        if err != nil { return nil, "", err }
 	f, err := file.Open()
-        if err != nil { return err }
+        if err != nil { return nil, "", err }
 	defer f.Close()
 	data := make([]byte, file.Size)
 	_, err = f.Read(data)
-        if err != nil { return err }
+        if err != nil { return nil, "", err }
 
 	mime := mimetype.Detect(data)
 	if strings.Index(mime.String(), "image/") != 0 {
-		return errors.New("invalid mime type")
+		return nil, "", errors.New("invalid mime type")
 	}
-	config.Cfg.Home.FaviconMime = mime.String()
+	return data, mime.String(), nil
+}
+
+func updateFavicon(c echo.Context) error {
+	data, mime, err := handleImage(c, "favicon")
+	if err != nil { return err }
+	config.Cfg.Home.FaviconMime = mime
 	config.Cfg.Home.Favicon = data
 	db.UpdateConfig()
 	return nil

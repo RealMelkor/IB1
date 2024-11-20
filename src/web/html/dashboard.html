@@ -39,31 +39,6 @@
 			<td><input type="text" name="defaultname" value="{{.Config.Post.DefaultName}}" required></td>
 		</tr>
 		<tr>
-			<td>Media</td>
-			<td><input type="text" name="media" value="{{.Config.Media.Path}}" {{if .Config.Media.InDatabase}}disabled{{else}}required{{end}}></td>
-		</tr>
-		<tr>
-			<td>Maximum media size</td>
-			<td><input type="text" name="maxsize" value="{{.Config.Media.MaxSize}}" required></td>
-		</tr>
-		<tr>
-			<td>Media approval queue</td>
-			<td><input type="checkbox" name="approval" {{if .Config.Media.ApprovalQueue}}checked{{end}}></td>
-		</tr>
-		<tr>
-			<td>Enable video support</td>
-			<td><input type="checkbox" name="video" {{if .Config.Media.AllowVideos}}checked{{end}}></td>
-		</tr>
-
-		<tr>
-			<td>Store media inside the database</td>
-			<td><input type="checkbox" name="indb" {{if .Config.Media.InDatabase}}checked{{end}}></td>
-		</tr>
-		<tr>
-			<td>Temporary Directory Path</td>
-			<td><input type="text" name="tmp" value="{{.Config.Media.Tmp}}" required></td>
-		</tr>
-		<tr>
 			<td>Ascii-Only Mode</td>
 			<td><input type="checkbox" name="ascii" {{if .Config.Post.AsciiOnly}}checked{{end}}></td>
 		</tr>
@@ -88,35 +63,53 @@
 		</tr>
 	</table>
 	<p class="error">{{once "config-error"}}</p>
-	<p class="info">{{once "restart"}}</p>
-	<p class="error">{{once "restart-error"}}</p>
 	</form>
+
 	<div style="padding: 30px;"></div>
-	<form method="POST" action="/config/acme/update">
+	<form method="POST" action="/config/media/update" enctype="multipart/form-data">
 	<table>
 		<tr>
-			<th colspan="2">Let's Encrypt ACME</th>
+			<th colspan="2">Media</th>
 		</tr>
 		<tr>
-			<td>Email</td>
-			<td><input type="text" name="address" value="{{.Config.Acme.Email}}"></td>
+			<td>Media storage path</td>
+			<td><input type="text" name="media" value="{{.Config.Media.Path}}" {{if .Config.Media.InDatabase}}disabled{{else}}required{{end}}></td>
 		</tr>
 		<tr>
-			<td>Disable 'www.'</td>
-			<td><input type="checkbox" name="disable-www" {{if .Config.Acme.DisableWWW}}checked{{end}}></td>
+			<td>Temporary directory path</td>
+			<td><input type="text" name="tmp" value="{{.Config.Media.Tmp}}" required></td>
 		</tr>
-{{$no_acme := false}}
-{{if (and .Config.SSL.DisableHTTP .Config.SSL.Enabled)}}{{$no_acme = true}}{{end}}
-{{if $no_acme}}
 		<tr>
-			<td colspan="2">HTTP must be enabled and accesible from port 80</td>
+			<td>Maximum media size</td>
+			<td><input type="text" name="maxsize" value="{{.Config.Media.MaxSize}}" required></td>
 		</tr>
-{{end}}
 		<tr>
-			<td colspan="2"><div class="center"><input {{if $no_acme}}disabled{{end}} type="submit" value="Generate"></div></td>
+			<td>Media approval queue</td>
+			<td><input type="checkbox" name="approval" {{if .Config.Media.ApprovalQueue}}checked{{end}}></td>
+		</tr>
+		<tr>
+			<td>Enable video support</td>
+			<td><input type="checkbox" name="video" {{if .Config.Media.AllowVideos}}checked{{end}}></td>
+		</tr>
+		<tr>
+			<td>Store media inside the database</td>
+			<td><input type="checkbox" name="indb" {{if .Config.Media.InDatabase}}checked{{end}}></td>
+		</tr>
+		<tr>
+			<td colspan="2"><div class="center"><img class="icon" src="/static/pending" alt="favicon"></div></th>
+		</tr>
+		<tr>
+			<td>'Pending Approval' custom image</td>
+			<td>
+				<input type="file" name="pending">
+				<input type="submit" value="Clear" formaction="/config/media/clear">
+			</td>
+		</tr>
+		<tr>
+			<td colspan="2"><div class="center"><input type="submit" value="Update"></div></td>
 		</tr>
 	</table>
-	<p class="error">{{once "acme-error"}}</p>
+	<p class="error">{{once "media-error"}}</p>
 	</form>
 
 	<div style="padding: 30px;"></div>
@@ -155,6 +148,35 @@
 	</table>
 	<p class="error">{{once "ssl-error"}}</p>
 	</form>
+
+	<div style="padding: 30px;"></div>
+	<form method="POST" action="/config/acme/update">
+	<table>
+		<tr>
+			<th colspan="2">Let's Encrypt ACME</th>
+		</tr>
+		<tr>
+			<td>Email</td>
+			<td><input type="text" name="address" value="{{.Config.Acme.Email}}"></td>
+		</tr>
+		<tr>
+			<td>Disable 'www.'</td>
+			<td><input type="checkbox" name="disable-www" {{if .Config.Acme.DisableWWW}}checked{{end}}></td>
+		</tr>
+{{$no_acme := false}}
+{{if (and .Config.SSL.DisableHTTP .Config.SSL.Enabled)}}{{$no_acme = true}}{{end}}
+{{if $no_acme}}
+		<tr>
+			<td colspan="2">HTTP must be enabled and accesible from port 80</td>
+		</tr>
+{{end}}
+		<tr>
+			<td colspan="2"><div class="center"><input {{if $no_acme}}disabled{{end}} type="submit" value="Generate"></div></td>
+		</tr>
+	</table>
+	<p class="error">{{once "acme-error"}}</p>
+	</form>
+
 	<div style="padding: 30px;"></div>
 	<div class="center"><h3>Boards</h3></div>
 	<table>
@@ -219,16 +241,16 @@
 	</table>
 
 	<div style="padding: 30px;"></div>
-	<div class="center"><h3>Favicon</h3></div>
 	<table>
 	<tr>
-		<th>Favicon</th>
-		<th></th>
-		<th></th>
+		<th colspan="3">Favicon</th>
+	</tr>
+	<tr>
+		<td colspan="3"><div class="center"><img class="icon" src="/static/favicon" alt="favicon"></div></th>
 	</tr>
 	<tr>
 <form method="POST" action="/config/favicon/update" enctype="multipart/form-data">
-		<td><input type="file" name="theme" required></td>
+		<td><input type="file" name="favicon" required></td>
 		<td><input type="submit" value="Upload"></td>
 </form>
 <form method="POST" action="/config/favicon/clear">

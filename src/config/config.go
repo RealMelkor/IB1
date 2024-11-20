@@ -41,6 +41,8 @@ type Config struct {
 		ApprovalQueue	bool
 		AllowVideos	bool
 		Key		[]byte
+		PendingMedia	[]byte
+		PendingMime	string
 	}
 	Captcha struct {
 		Enabled		bool

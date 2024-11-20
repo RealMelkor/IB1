@@ -19,6 +19,8 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+var invalidForm = errors.New("invalid form")
+
 func getPostForm(c echo.Context, param string) (string, bool) {
 	v := c.Request().PostFormValue(param)
 	return v, v != ""
@@ -60,7 +62,7 @@ func canSetConfig(c echo.Context, f echo.HandlerFunc) echo.HandlerFunc {
 
 func setDefaultTheme(c echo.Context) error {
 	theme, ok := getPostForm(c, "theme")
-        if !ok { return errors.New("invalid form") }
+        if !ok { return invalidForm }
         _, ok = getThemesTable()[theme]
         if !ok { return errors.New("invalid theme") }
 	config.Cfg.Home.Theme = theme
@@ -71,6 +73,54 @@ func updateConfig(c echo.Context) error {
 	requireRestart := false
 
 	if err := setDefaultTheme(c); err != nil { return err }
+
+	title, ok := getPostForm(c, "title")
+        if !ok { return invalidForm }
+	config.Cfg.Home.Title = title
+
+	description, ok := getPostForm(c, "description")
+        if !ok { return invalidForm }
+	config.Cfg.Home.Description = description
+
+	listener, ok := getPostForm(c, "listener")
+        if !ok { return invalidForm }
+	if !requireRestart {
+		requireRestart = config.Cfg.Web.Listener != listener
+	}
+	config.Cfg.Web.Listener = listener
+
+	domain, ok := getPostForm(c, "domain")
+        if !ok { return invalidForm }
+	config.Cfg.Web.Domain = domain
+
+	defaultname, ok := getPostForm(c, "defaultname")
+        if !ok { return invalidForm }
+	config.Cfg.Post.DefaultName = defaultname
+
+	captcha, _ := getPostForm(c, "captcha")
+	config.Cfg.Captcha.Enabled = captcha == "on"
+
+	ascii, _ := getPostForm(c, "ascii")
+	config.Cfg.Post.AsciiOnly = ascii == "on"
+
+	readonly, _ := getPostForm(c, "readonly")
+	config.Cfg.Post.ReadOnly = readonly == "on"
+
+	registration, _ := getPostForm(c, "registration")
+	config.Cfg.Accounts.AllowRegistration = registration == "on"
+
+	threadsStr, _ := getPostForm(c, "maxthreads")
+	threads, err := strconv.ParseUint(threadsStr, 10, 64)
+	if err != nil { return err }
+	config.Cfg.Board.MaxThreads = uint(threads)
+
+	if err := db.UpdateConfig(); err != nil { return err }
+	if requireRestart { return restart(c) }
+	return nil
+}
+
+func updateMedia(c echo.Context) error {
+	requireRestart := false
 
 	indb, _ := getPostForm(c, "indb")
 	v := indb == "on"
@@ -86,31 +136,8 @@ func updateConfig(c echo.Context) error {
 		requireRestart = true
 	}
 
-	title, ok := getPostForm(c, "title")
-        if !ok { return errors.New("invalid form") }
-	config.Cfg.Home.Title = title
-
-	description, ok := getPostForm(c, "description")
-        if !ok { return errors.New("invalid form") }
-	config.Cfg.Home.Description = description
-
-	listener, ok := getPostForm(c, "listener")
-        if !ok { return errors.New("invalid form") }
-	if !requireRestart {
-		requireRestart = config.Cfg.Web.Listener != listener
-	}
-	config.Cfg.Web.Listener = listener
-
-	domain, ok := getPostForm(c, "domain")
-        if !ok { return errors.New("invalid form") }
-	config.Cfg.Web.Domain = domain
-
-	defaultname, ok := getPostForm(c, "defaultname")
-        if !ok { return errors.New("invalid form") }
-	config.Cfg.Post.DefaultName = defaultname
-
 	tmp, ok := getPostForm(c, "tmp")
-        if !ok { return errors.New("invalid form") }
+        if !ok { return invalidForm }
 	err := os.MkdirAll(config.Cfg.Media.Tmp, 0700)
 	if err != nil { return err }
 	config.Cfg.Media.Tmp = tmp
@@ -136,25 +163,21 @@ func updateConfig(c echo.Context) error {
 	}
 	config.Cfg.Media.AllowVideos = v
 
-	captcha, _ := getPostForm(c, "captcha")
-	config.Cfg.Captcha.Enabled = captcha == "on"
-
-	ascii, _ := getPostForm(c, "ascii")
-	config.Cfg.Post.AsciiOnly = ascii == "on"
-
-	readonly, _ := getPostForm(c, "readonly")
-	config.Cfg.Post.ReadOnly = readonly == "on"
-
-	registration, _ := getPostForm(c, "registration")
-	config.Cfg.Accounts.AllowRegistration = registration == "on"
-
-	threadsStr, _ := getPostForm(c, "maxthreads")
-	threads, err := strconv.ParseUint(threadsStr, 10, 64)
-	if err != nil { return err }
-	config.Cfg.Board.MaxThreads = uint(threads)
+	data, mime, err := handleImage(c, "pending")
+	if err == nil {
+		config.Cfg.Media.PendingMedia = data
+		config.Cfg.Media.PendingMime = mime
+	}
 
 	if err := db.UpdateConfig(); err != nil { return err }
 	if requireRestart { return restart(c) }
+	return nil
+}
+
+func clearPendingMediaImage(c echo.Context) error {
+	config.Cfg.Media.PendingMime = ""
+	config.Cfg.Media.PendingMedia = nil
+	db.UpdateConfig()
 	return nil
 }
 
@@ -178,7 +201,7 @@ func updateSSL(c echo.Context) error {
 	config.Cfg.SSL.RedirectToSSL = v == "on"
 
 	listener, ok := getPostForm(c, "address")
-        if !ok { return errors.New("invalid form") }
+        if !ok { return invalidForm }
 	config.Cfg.SSL.Listener = listener
 
 	data, err := loadFile(c, "certificate")
@@ -194,7 +217,7 @@ func updateSSL(c echo.Context) error {
 func createBoard(c echo.Context) error {
 	board, hasBoard := getPostForm(c, "board")
 	name, hasName := getPostForm(c, "name")
-        if !hasBoard || !hasName { return errors.New("invalid form") }
+        if !hasBoard || !hasName { return invalidForm }
 	description, _ := getPostForm(c, "description")
 	err := db.CreateBoard(board, name, description)
 	if err != nil { return err }
@@ -204,7 +227,7 @@ func createBoard(c echo.Context) error {
 func updateBoard(c echo.Context) error {
 	board, hasBoard := getPostForm(c, "board")
 	name, hasName := getPostForm(c, "name")
-        if !hasBoard || !hasName { return errors.New("invalid form") }
+        if !hasBoard || !hasName { return invalidForm }
 	enabled, _ := getPostForm(c, "enabled")
 	description, _ := getPostForm(c, "description")
 	boards, err := db.GetBoards()
@@ -236,7 +259,7 @@ func createTheme(c echo.Context) error {
 	file, err := c.FormFile("theme")
         if err != nil { return err }
 	name, hasName := getPostForm(c, "name")
-        if !hasName { return errors.New("invalid form") }
+        if !hasName { return invalidForm }
 	enabled, _ := getPostForm(c, "enabled")
 	disabled := enabled != "on"
 	data := make([]byte, file.Size)
@@ -257,7 +280,7 @@ func updateTheme(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil { return errors.New("invalid theme") }
 	name, hasName := getPostForm(c, "name")
-        if !hasName { return errors.New("invalid form") }
+        if !hasName { return invalidForm }
 	enabled, _ := getPostForm(c, "enabled")
 	disabled := enabled != "on"
 	err = db.UpdateThemeByID(id, name, disabled)
@@ -277,7 +300,7 @@ func deleteTheme(c echo.Context) error {
 
 func addBan(c echo.Context) error {
 	ip, hasIP := getPostForm(c, "ip")
-        if !hasIP { return errors.New("invalid form") }
+        if !hasIP { return invalidForm }
 	expiry, hasExpiry := getPostForm(c, "expiration")
 	duration := int64(3600)
         if hasExpiry {

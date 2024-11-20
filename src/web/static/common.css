@@ -287,3 +287,8 @@ body {
 	background-color: black;
 	border: 2px dashed yellow;
 }
+
+.icon {
+	max-width: 64px;
+	max-height: 64px;
+}

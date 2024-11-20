@@ -51,11 +51,7 @@ func mediaCheck(f echo.HandlerFunc) echo.HandlerFunc {
 				strings.Split(c.Param("hash"), ".")[0])
 			if err == nil { break }
 			if err.Error() != db.NoYetApproved { return err }
-			c.Response().Writer.Header().Add(
-                		"Content-Type", "image/png")
-			c.Response().WriteHeader(http.StatusOK)
-			c.Response().Write(pendingMedia)
-			return nil
+			return pendingMediaImage(c)
 		}
 		return f(c)
 	}
@@ -173,6 +169,14 @@ func notFound(c echo.Context) error {
 	return c.Blob(http.StatusNotFound, "text/plain", []byte("Not Found"))
 }
 
+func pendingMediaImage(c echo.Context) error {
+	if config.Cfg.Media.PendingMime == "" {
+		return c.Blob(http.StatusOK, "image/png", pendingMedia)
+	}
+	return c.Blob(http.StatusOK, config.Cfg.Media.PendingMime,
+			config.Cfg.Media.PendingMedia)
+}
+
 func Init() error {
 
 	sessions.Init()
@@ -197,6 +201,7 @@ func Init() error {
 		return c.Blob(http.StatusOK, config.Cfg.Home.FaviconMime,
 				config.Cfg.Home.Favicon)
 	})
+	r.GET("/static/pending", pendingMediaImage)
 	r.GET("/static/common.css", func(c echo.Context) error {
 		return c.Blob(http.StatusOK, "text/css", stylesheet)
 	})
@@ -243,6 +248,10 @@ func Init() error {
 		return redirect(setTheme, c.QueryParam("origin"))(c)
 	})
 	r.POST("/config/update", handleConfig(updateConfig, "config-error"))
+	r.POST("/config/media/update",
+		handleConfig(updateMedia, "media-error"))
+	r.POST("/config/media/clear",
+		handleConfig(clearPendingMediaImage, "media-error"))
 	r.POST("/config/ssl/update", handleConfig(updateSSL, "ssl-error"))
 	r.POST("/config/board/create",
 		handleConfig(createBoard, "board-error"))
