@@ -26,6 +26,7 @@
 {{end}}
 		</table>
 		<p class="error">{{once "register-error"}}</p>
+		<input type="hidden" name="csrf" value="{{csrf}}">
 		<input class="btn" type="submit" value="Login">
 	</form>
 </div>

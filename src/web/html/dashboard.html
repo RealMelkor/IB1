@@ -63,6 +63,7 @@
 		</tr>
 	</table>
 	<p class="error">{{once "config-error"}}</p>
+	<input type="hidden" name="csrf" value="{{csrf}}">
 	</form>
 
 	<div style="padding: 30px;"></div>
@@ -110,6 +111,7 @@
 		</tr>
 	</table>
 	<p class="error">{{once "media-error"}}</p>
+	<input type="hidden" name="csrf" value="{{csrf}}">
 	</form>
 
 	<div style="padding: 30px;"></div>
@@ -147,6 +149,7 @@
 		</tr>
 	</table>
 	<p class="error">{{once "ssl-error"}}</p>
+	<input type="hidden" name="csrf" value="{{csrf}}">
 	</form>
 
 	<div style="padding: 30px;"></div>
@@ -175,6 +178,7 @@
 		</tr>
 	</table>
 	<p class="error">{{once "acme-error"}}</p>
+	<input type="hidden" name="csrf" value="{{csrf}}">
 	</form>
 
 	<div style="padding: 30px;"></div>
@@ -197,6 +201,7 @@
 		<td><input type="text" name="description" value="{{.Description}}" required></td>
 		<td><input type="submit" value="Update"></td>
 		<td><input type="submit" value="Delete" formaction="/config/board/delete/{{.ID}}" {{if not .Disabled}} disabled{{end}}></td>
+		<input type="hidden" name="csrf" value="{{csrf}}">
 </form>
 	</tr>
 {{end}}
@@ -207,6 +212,7 @@
 		<td><input type="text" name="name" required></td>
 		<td><input type="text" name="description" required></td>
 		<td><input type="submit" value="Create"></td>
+		<input type="hidden" name="csrf" value="{{csrf}}">
 </form>
 	</tr>
 	</table>
@@ -227,6 +233,7 @@
 		<td><input type="text" name="name" value="{{.Name}}" required></td>
 		<td><input type="submit" value="Update"></td>
 		<td><input type="submit" value="Delete" formaction="/config/theme/delete/{{.ID}}"></td>
+		<input type="hidden" name="csrf" value="{{csrf}}">
 </form>
 	</tr>
 {{end}}
@@ -236,6 +243,7 @@
 		<td><input type="text" name="name" required></td>
 		<td><input type="file" name="theme" required></td>
 		<td><input type="submit" value="Import"></td>
+		<input type="hidden" name="csrf" value="{{csrf}}">
 </form>
 	</tr>
 	</table>
@@ -252,9 +260,11 @@
 <form method="POST" action="/config/favicon/update" enctype="multipart/form-data">
 		<td><input type="file" name="favicon" required></td>
 		<td><input type="submit" value="Upload"></td>
+		<input type="hidden" name="csrf" value="{{csrf}}">
 </form>
 <form method="POST" action="/config/favicon/clear">
 		<td><input type="submit" value="Reset"></td>
+		<input type="hidden" name="csrf" value="{{csrf}}">
 </form>
 	</tr>
 	</table>
@@ -275,6 +285,7 @@
 		<td>{{.From}}</td>
 		<td>{{.To}}</td>
 		<td><input type="submit" value="Cancel"></td>
+		<input type="hidden" name="csrf" value="{{csrf}}">
 </form>
 	</tr>
 {{end}}
@@ -284,6 +295,7 @@
 		<td></td>
 		<td><input type="datetime-local" name="expiration"></td>
 		<td><input type="submit" value="Ban"></td>
+		<input type="hidden" name="csrf" value="{{csrf}}">
 </form>
 	</tr>
 	</table>
@@ -314,6 +326,7 @@
 		<td><input type="password" name="password"></td>
 		<td><input type="submit" value="Update"></td>
 		<td><input type="submit" value="Delete" formaction="/config/account/delete/{{.ID}}"{{if isSelf .}} disabled{{end}}></td>
+		<input type="hidden" name="csrf" value="{{csrf}}">
 </form>
 	</tr>
 {{end}}
@@ -329,6 +342,7 @@
 		</td>
 		<td><input type="password" name="password" required></td>
 		<td><input type="submit" value="Add"></td>
+		<input type="hidden" name="csrf" value="{{csrf}}">
 </form>
 	</tr>
 	</table>

@@ -34,9 +34,9 @@
 			{{if .Account.HasRank "administrator"}}
 			[<a href="/dashboard">Dashboard</a>]
 			{{end}}
-			[<a href="/disconnect">Disconnect</a>]
+			[<a href="/disconnect/{{csrf}}">Disconnect</a>]
 			{{else}}
-			[<a href="/login">Login</a>]
+			[<a href="/login">Login </a>]
 			{{if .Config.Accounts.AllowRegistration}}
 			[<a href="/register">Register</a>]
 			{{end}}

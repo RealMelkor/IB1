@@ -39,18 +39,18 @@
 	<a class="post-link" href="#{{.Number}}">No.{{.Number}}</a>
 	{{if $moderator}}
 	[<span class="ip">IP: {{.IP}}</span>]
-	[<a class="action" href="/{{$.Board.Name}}/hide/{{.Number}}">{{if .Disabled}}Unhide{{else}}Hide{{end}}</a>]
-	[<a class="action" href="/{{$.Board.Name}}/remove/{{.Number}}">Remove</a>]
+	[<a class="action" href="/{{$.Board.Name}}/hide/{{.Number}}/{{csrf}}">{{if .Disabled}}Unhide{{else}}Hide{{end}}</a>]
+	[<a class="action" href="/{{$.Board.Name}}/remove/{{.Number}}/{{csrf}}">Remove</a>]
 {{if .Media}}
-	[<a class="action" href="/{{$.Board.Name}}/remove_media/{{.Number}}">Delete Media</a>]
+	[<a class="action" href="/{{$.Board.Name}}/remove_media/{{.Number}}/{{csrf}}">Delete Media</a>]
 {{if isPending .MediaHash}}
-	[<a class="action" href="/{{$.Board.Name}}/approve/{{.Number}}">Approve Media</a>]
+	[<a class="action" href="/{{$.Board.Name}}/approve/{{.Number}}/{{csrf}}">Approve Media</a>]
 {{end}}
 {{end}}
-	[<a class="action" href="/{{$.Board.Name}}/ban/{{.IP}}">Ban</a>]
+	[<a class="action" href="/{{$.Board.Name}}/ban/{{.IP}}/{{csrf}}">Ban</a>]
 	{{else}}
 	{{if (or (and (eq .Session session) (not (eq .Session ""))) (and (eq self.ID .OwnerID) (not (eq .OwnerID 0))))}}
-	[<a class="action" href="/{{$.Board.Name}}/cancel/{{.Number}}">Remove</a>]
+	[<a class="action" href="/{{$.Board.Name}}/cancel/{{.Number}}/{{csrf}}">Remove</a>]
 	{{end}}
 	{{end}}
 	{{range .ReferredBy}}

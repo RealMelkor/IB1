@@ -52,6 +52,13 @@ func render(_template string, data any, c echo.Context) error {
 		"set": set(c),
 		"has": has(c),
 		"session": func() string { return getCookie(c, "id") },
+		"csrf": func() string {
+			id := getCookie(c, "id")
+			if id == "" { return "" }
+			v, ok := tokens[id]
+			if !ok { return "" }
+			return v
+		},
 		"isLogged": func() bool { return isLogged(c) },
 		"hasRank": func(rank string) bool {
 			acc, err := loggedAs(c)
@@ -69,7 +76,7 @@ func render(_template string, data any, c echo.Context) error {
 			return self
 		},
 	}
-	err := templates.Lookup("header").Execute(w, header(c))
+	err := templates.Funcs(funcs).Lookup("header").Execute(w, header(c))
 	if err != nil { return err }
 	err = templates.Funcs(funcs).Lookup(_template).Execute(w, data)
 	if err != nil { return err }
@@ -105,6 +112,7 @@ func initTemplate() error {
 		"once": func(string) string {return ""},
 		"has": func(string) bool {return false},
 		"session": func() string {return ""},
+		"csrf": func() string { return "" },
 		"rank": func(rank string) int {
 			i, _ := db.StringToRank(rank)
 			return i

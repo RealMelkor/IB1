@@ -191,6 +191,7 @@ func Init() error {
 
 	r.Use(logger)
 	r.Use(err)
+	r.Use(csrf)
 
 	r.GET("/", renderFile("index.html"))
 	r.GET("/favicon.ico", notFound)
@@ -220,19 +221,22 @@ func Init() error {
 	r.POST("/:board", catch(readOnly(newThread), "new-thread-error"))
 	r.GET("/:board/:thread", thread)
 	r.POST("/:board/:thread", catch(readOnly(newPost), "new-post-error"))
-	r.GET("/disconnect", disconnect)
+	r.GET("/disconnect/:csrf", disconnect)
 	r.GET("/login", unauth(renderFile("login.html")))
 	r.POST("/login", unauth(catch(loginAs, "login-error")))
 	r.GET("/register", unauth(renderFile("register.html")))
 	r.POST("/register", unauth(catch(readOnly(register), "register-error")))
-	r.GET("/:board/cancel/:id", cancel)
-	r.GET("/:board/remove/:id", hasRank(onPost(remove), db.RANK_ADMIN))
-	r.GET("/:board/hide/:id", hasRank(onPost(hide), db.RANK_MODERATOR))
-	r.GET("/:board/remove_media/:id",
+	r.GET("/:board/cancel/:id/:csrf",
+		cancel)
+	r.GET("/:board/remove/:id/:csrf",
+		hasRank(onPost(remove), db.RANK_ADMIN))
+	r.GET("/:board/hide/:id/:csrf",
+		hasRank(onPost(hide), db.RANK_MODERATOR))
+	r.GET("/:board/remove_media/:id/:csrf",
 		hasRank(onPost(removeMedia), db.RANK_MODERATOR))
-	r.GET("/:board/approve/:id",
+	r.GET("/:board/approve/:id/:csrf",
 		hasRank(onPost(approveMediaFromPost), db.RANK_MODERATOR))
-	r.GET("/:board/ban/:ip", hasRank(ban, db.RANK_MODERATOR))
+	r.GET("/:board/ban/:ip/:csrf", hasRank(ban, db.RANK_MODERATOR))
 	if config.Cfg.Media.ApprovalQueue {
 		r.GET("/approval", hasRank(
 			renderFile("approval.html"), db.RANK_MODERATOR))
