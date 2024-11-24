@@ -292,3 +292,12 @@ body {
 	max-width: 64px;
 	max-height: 64px;
 }
+
+.banner {
+	max-width: 400px;
+	max-height: 150px;
+}
+
+.banner-box {
+	padding: 50px;
+}

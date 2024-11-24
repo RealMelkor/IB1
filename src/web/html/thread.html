@@ -1,5 +1,6 @@
 {{$thread := .}}
 {{$board := $thread.Board}}
+{{template "banner"}}
 <h2 class="board-title">/{{$board.Name}}/ - {{$board.LongName}}</h2>
 {{ template "top" $board.Name }}
 <div class="form-container">

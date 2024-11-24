@@ -15,6 +15,12 @@ import (
 	"IB1/config"
 )
 
+func serveMedia(c echo.Context, data []byte, name string) {
+	r := bytes.NewReader(data)
+	http.ServeContent(c.Response().Writer,
+	c.Request(), name, time.Now(), r)
+}
+
 func clientIP(c echo.Context) string {
 	ip := c.Request().Header.Get("X-Real-IP")
 	if ip == "" {
@@ -35,9 +41,7 @@ func fatalError(c echo.Context, err error) {
 func imageError(f echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		if err := f(c); err == nil { return nil }
-		c.Response().Writer.Header().Add("Content-Type", "image/png")
-		c.Response().WriteHeader(http.StatusOK)
-		c.Response().Write(mediaError)
+		serveMedia(c, mediaError, "media")
 		return nil
 	}
 }
@@ -209,8 +213,7 @@ func Init() error {
 	r.GET("/static/:file", func(c echo.Context) error {
 		content, ok := themesContent[c.Param("file")]
 		if !ok { return notFound(c) }
-		c.Response().Writer.Header().Add("Content-Type", "text/css")
-		c.Response().Writer.Write(content)
+		serveMedia(c, content, c.Param("file"))
 		return nil
 	})
 	if config.Cfg.Captcha.Enabled {
@@ -284,6 +287,11 @@ func Init() error {
 	r.POST("/config/restart",
 		handleConfig(restart, "config-error"))
 	r.POST("/config/acme/update", handleConfig(fetchSSL, "acme-error"))
+	r.POST("/config/banner/create",
+		handleConfig(addBanner, "banner-error"))
+	r.POST("/config/banner/delete/:id",
+		handleConfig(deleteBanner, "banner-error"))
+	r.GET("/banner/:id", imageError(banner))
 	r.GET("/.well-known/acme-challenge/:token", proxyAcme)
 
 	if config.Cfg.Media.InDatabase {
@@ -292,10 +300,7 @@ func Init() error {
 				parts := strings.Split(c.Param("hash"), ".")
 				data, _, err := db.GetMedia(parts[0])
 				if err != nil { return err }
-				r := bytes.NewReader(data)
-				http.ServeContent(c.Response().Writer,
-					c.Request(), c.Param("hash"),
-					time.Now(), r)
+				serveMedia(c, data, c.Param("hash"))
 				return nil
 			})))
 		r.GET("/media/thumbnail/:hash", imageError(mediaCheck(
@@ -303,7 +308,8 @@ func Init() error {
 				parts := strings.Split(c.Param("hash"), ".")
 				data, err := db.GetThumbnail(parts[0])
 				if err != nil { return err }
-				return c.Blob(http.StatusOK, "image/png", data)
+				serveMedia(c, data, c.Param("hash"))
+				return nil
 			})))
 	} else if config.Cfg.Media.ApprovalQueue {
 		f := func(c echo.Context) error {

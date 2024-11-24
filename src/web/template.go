@@ -7,6 +7,7 @@ import (
 	"strings"
 	"strconv"
 	"io"
+	"math/rand"
 
 	"github.com/tdewolff/minify/v2"
 	"github.com/tdewolff/minify/v2/css"
@@ -158,6 +159,14 @@ func initTemplate() error {
 			parts := strings.Split(path, ".")
 			if len(parts) < 1 { return "" }
 			return parts[len(parts) - 1]
+		},
+		"banners": func() []uint {
+			v, _ := db.GetAllBanners()
+			return v
+		},
+		"banner": func() uint {
+			v, _ := db.GetAllBanners()
+			return v[rand.Intn(len(v))]
 		},
 	}
 	templates, err = template.New("frontend").Funcs(funcs).

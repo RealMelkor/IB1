@@ -105,6 +105,11 @@ type Session struct {
 	Token		string `gorm:"unique"`
 }
 
+type Banner struct {
+	gorm.Model
+	Data		[]byte
+}
+
 const (
 	TYPE_SQLITE = iota
 	TYPE_MYSQL
@@ -153,7 +158,7 @@ func Init() error {
 
 	db.AutoMigrate(&Board{}, &Thread{}, &Post{}, &Ban{}, &Theme{},
 			&Reference{}, &Account{}, &Session{}, &Config{},
-			&Media{})
+			&Media{}, &Banner{})
 
 	if err := LoadBoards(); err != nil { return err }
 	if err := LoadBanList(); err != nil { return err }

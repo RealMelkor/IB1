@@ -1,4 +1,5 @@
 {{$board := .}}
+{{template "banner"}}
 <h2 class="board-title">/{{$board.Name}}/ - {{$board.LongName}}</h2>
 <p class="board-title">{{$board.Description}}</p>
 {{ template "newthread" . }}
