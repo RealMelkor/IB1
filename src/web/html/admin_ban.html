@@ -1,0 +1,33 @@
+{{define "admin-ban"}}
+<div style="padding: 30px;"></div>
+	<div class="center"><h3>Bans</h3></div>
+	<table>
+	<tr>
+		<th>IP</th>
+		<th>Start</th>
+		<th>End</th>
+		<th></th>
+	</tr>
+{{range .Bans}}
+	<tr>
+<form method="POST" action="/config/ban/cancel/{{.ID}}">
+		<td>{{.String}}</td>
+		<td>{{.From}}</td>
+		<td>{{.To}}</td>
+		<td><input type="submit" value="Cancel"></td>
+		<input type="hidden" name="csrf" value="{{csrf}}">
+</form>
+	</tr>
+{{end}}
+	<tr>
+<form method="POST" action="/config/ban/create">
+		<td><input type="text" name="ip" required></td>
+		<td></td>
+		<td><input type="datetime-local" name="expiration"></td>
+		<td><input type="submit" value="Ban"></td>
+		<input type="hidden" name="csrf" value="{{csrf}}">
+</form>
+	</tr>
+	</table>
+	<p class="error">{{once "ban-error"}}</p>
+{{end}}

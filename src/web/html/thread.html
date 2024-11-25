@@ -29,6 +29,7 @@
 	<input type="file" id="media" name="media"><br>
 	<input type="submit" value="New Reply">
 	<p class="error">{{once "new-post-error"}}</p>
+	<input type="hidden" name="csrf" value="{{csrf}}">
 </form> 
 </div>
 </div>

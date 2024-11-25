@@ -1,0 +1,70 @@
+{{define "admin-main"}}
+<form method="POST" action="/config/update">
+	<table>
+		<tr>
+			<th colspan="2">Configuration</th>
+		</tr>
+		<tr>
+			<td>Default theme</td>
+			<td>
+				<select name="theme">
+					{{range .Themes}}
+					<option {{if eq $.Config.Home.Theme .}}selected="selected"{{end}}value="{{.}}">{{.}}</option>
+					{{end}}
+				</select>
+			</td>
+		</tr>
+		<tr>
+			<td>Website title</td>
+			<td><input type="text" name="title" value="{{.Config.Home.Title}}" required></td>
+		</tr>
+		<tr>
+			<td>Website description</td>
+			<td><input type="text" name="description" value="{{.Config.Home.Description}}" required></td>
+		</tr>
+		<tr>
+			<td>Enable captcha</td>
+			<td><input type="checkbox" name="captcha" {{if .Config.Captcha.Enabled}}checked{{end}}></td>
+		</tr>
+		<tr>
+			<td>Domain</td>
+			<td><input type="text" name="domain" value="{{.Config.Web.Domain}}" required></td>
+		</tr>
+		<tr>
+			<td>Socket address</td>
+			<td><input type="text" name="listener" value="{{.Config.Web.Listener}}" required></td>
+		</tr>
+		<tr>
+			<td>Default name</td>
+			<td><input type="text" name="defaultname" value="{{.Config.Post.DefaultName}}" required></td>
+		</tr>
+		<tr>
+			<td>Ascii-Only Mode</td>
+			<td><input type="checkbox" name="ascii" {{if .Config.Post.AsciiOnly}}checked{{end}}></td>
+		</tr>
+		<tr>
+			<td>Read-Only Mode</td>
+			<td><input type="checkbox" name="readonly" {{if .Config.Post.ReadOnly}}checked{{end}}></td>
+		</tr>
+		<tr>
+			<td>Allow registration</td>
+			<td><input type="checkbox" name="registration" {{if .Config.Accounts.AllowRegistration}}checked{{end}}></td>
+		</tr>
+		<tr>
+			<td>Maximum threads per board</td>
+			<td><input type="text" name="maxthreads" value="{{.Config.Board.MaxThreads}}" required></td>
+		</tr>
+		<tr>
+			<td>Restart process</td>
+			<td><input type="submit" formaction="/config/restart" value="Restart"></td>
+		</tr>
+		<tr>
+			<td colspan="2"><div class="center"><input type="submit" value="Update"></div></td>
+		</tr>
+	</table>
+	<p class="error">{{once "config-error"}}</p>
+	<p class="info">{{once "restart"}}</p>
+	<p class="error">{{once "restart-error"}}</p>
+	<input type="hidden" name="csrf" value="{{csrf}}">
+</form>
+{{end}}

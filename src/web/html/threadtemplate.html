@@ -43,6 +43,7 @@
 	[<a class="action" href="/{{$.Board.Name}}/remove/{{.Number}}/{{csrf}}">Remove</a>]
 {{if .Media}}
 	[<a class="action" href="/{{$.Board.Name}}/remove_media/{{.Number}}/{{csrf}}">Delete Media</a>]
+	[<a class="action" href="/{{$.Board.Name}}/ban_media/{{.Number}}/{{csrf}}">Ban Media</a>]
 {{if isPending .MediaHash}}
 	[<a class="action" href="/{{$.Board.Name}}/approve/{{.Number}}/{{csrf}}">Approve Media</a>]
 {{end}}

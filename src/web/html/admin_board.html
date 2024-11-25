@@ -1,0 +1,37 @@
+{{define "admin-board"}}
+<div style="padding: 30px;"></div>
+<div class="center"><h3>Boards</h3></div>
+<table>
+	<tr>
+		<th>Enabled</th>
+		<th>Board</th>
+		<th>Name</th>
+		<th>Description</th>
+		<th></th>
+		<th></th>
+	</tr>
+	{{range .Boards}}
+	<tr>
+		<form method="POST" action="/config/board/update/{{.ID}}">
+			<td><input type="checkbox" name="enabled" {{if not .Disabled}}checked{{end}}></td>
+			<td><input type="text" name="board" value="{{.Name}}" required></td>
+			<td><input type="text" name="name" value="{{.LongName}}" required></td>
+			<td><input type="text" name="description" value="{{.Description}}" required></td>
+			<td><input type="submit" value="Update"></td>
+			<td><input type="submit" value="Delete" formaction="/config/board/delete/{{.ID}}" {{if not .Disabled}} disabled{{end}}></td>
+			<input type="hidden" name="csrf" value="{{csrf}}">
+		</form>
+	</tr>
+	{{end}}
+	<tr>
+		<form method="POST" action="/config/board/create">
+			<td><input type="checkbox" name="enabled" checked></td>
+			<td><input type="text" name="board" required></td>
+			<td><input type="text" name="name" required></td>
+			<td><input type="text" name="description" required></td>
+			<td><input type="submit" value="Create"></td>
+			<input type="hidden" name="csrf" value="{{csrf}}">
+		</form>
+	</tr>
+</table>
+{{end}}

@@ -237,6 +237,8 @@ func Init() error {
 		hasRank(onPost(hide), db.RANK_MODERATOR))
 	r.GET("/:board/remove_media/:id/:csrf",
 		hasRank(onPost(removeMedia), db.RANK_MODERATOR))
+	r.GET("/:board/ban_media/:id/:csrf",
+		hasRank(onPost(banMedia), db.RANK_MODERATOR))
 	r.GET("/:board/approve/:id/:csrf",
 		hasRank(onPost(approveMediaFromPost), db.RANK_MODERATOR))
 	r.GET("/:board/ban/:ip/:csrf", hasRank(ban, db.RANK_MODERATOR))
@@ -258,6 +260,10 @@ func Init() error {
 	r.POST("/config/media/update",
 		handleConfig(updateMedia, "media-error"))
 	r.POST("/config/media/clear",
+		handleConfig(clearPendingMediaImage, "media-error"))
+	r.POST("/config/media/ban",
+		handleConfig(updateMedia, "media-error"))
+	r.POST("/config/media/ban/cancel",
 		handleConfig(clearPendingMediaImage, "media-error"))
 	r.POST("/config/ssl/update", handleConfig(updateSSL, "ssl-error"))
 	r.POST("/config/board/create",

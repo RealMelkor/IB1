@@ -1,0 +1,32 @@
+{{define "admin-theme"}}
+<div style="padding: 30px;"></div>
+<div class="center"><h3>Themes</h3></div>
+<table>
+	<tr>
+		<th>Enabled</th>
+		<th>Theme</th>
+		<th></th>
+		<th></th>
+	</tr>
+	{{range .UserThemes}}
+	<tr>
+		<form method="POST" action="/config/theme/update/{{.ID}}">
+			<td><input type="checkbox" name="enabled" {{if not .Disabled}}checked{{end}}></td>
+			<td><input type="text" name="name" value="{{.Name}}" required></td>
+			<td><input type="submit" value="Update"></td>
+			<td><input type="submit" value="Delete" formaction="/config/theme/delete/{{.ID}}"></td>
+			<input type="hidden" name="csrf" value="{{csrf}}">
+		</form>
+	</tr>
+	{{end}}
+	<tr>
+		<form method="POST" action="/config/theme/create" enctype="multipart/form-data">
+			<td><input type="checkbox" name="enabled" checked></td>
+			<td><input type="text" name="name" required></td>
+			<td><input type="file" name="theme" required></td>
+			<td><input type="submit" value="Import"></td>
+			<input type="hidden" name="csrf" value="{{csrf}}">
+		</form>
+	</tr>
+</table>
+{{end}}

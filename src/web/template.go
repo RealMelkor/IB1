@@ -207,7 +207,10 @@ func renderDashboard(c echo.Context) error {
 	if err != nil { return err }
 	accounts, err := db.GetAccounts()
 	if err != nil { return err }
-	themes, _ := db.GetThemes()
+	themes, err := db.GetThemes()
+	if err != nil { return err }
+	bannedImages, err := db.GetBannedImages()
+	if err != nil { return err }
 	data := struct {
 		Accounts	[]db.Account
 		Boards		[]db.Board
@@ -215,6 +218,7 @@ func renderDashboard(c echo.Context) error {
 		Theme		string
 		Themes		[]string
 		Bans		[]db.Ban
+		BannedImages	[]db.BannedImage
 		UserThemes	[]db.Theme
 		Header		any
 	}{
@@ -222,11 +226,12 @@ func renderDashboard(c echo.Context) error {
 		Boards: boards,
 		Config: config.Cfg,
 		Bans:	db.BanList,
+		BannedImages: bannedImages,
 		Themes: getThemes(),
 		UserThemes: themes,
 		Header: header(c),
 	}
-	return render("dashboard.html", data, c)
+	return render("admin.html", data, c)
 }
 
 func removeDuplicateInt(intSlice []int) []int {

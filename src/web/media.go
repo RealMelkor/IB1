@@ -6,6 +6,7 @@ import (
 	"io"
 	"time"
 	"fmt"
+	"bytes"
 	"errors"
 	"crypto/rand"
 	"golang.org/x/crypto/blake2b"
@@ -87,6 +88,11 @@ func uploadFile(file *multipart.FileHeader, approved bool) (string, error) {
 	path := config.Cfg.Media.Tmp + "/" + name
 	if err = saveUploadedFile(file, path); err != nil { return "", err }
 	defer os.Remove(path)
+
+	f, err := os.Open(path)
+	if err != nil { return "", err }
+	defer f.Close()
+	if err := isImageBanned(f); err != nil { return "", err }
 
 	// verify extension
 	mime, err := mimetype.DetectFile(path)
@@ -184,4 +190,27 @@ func move(source string, destination string) error {
 	}
 	os.Remove(source)
 	return nil
+}
+
+func mediaReader(hash string) (io.Reader, error) {
+	isPicture := isMedia(hash, db.MEDIA_PICTURE)
+	if !config.Cfg.Media.InDatabase {
+		if !isPicture {
+			return os.Open(config.Cfg.Media.Path +
+					"/thumbnail/" + hash + ".png")
+		}
+		post, err := db.GetPostFromMedia(hash)
+		if err != nil { return nil, err }
+		return os.Open(config.Cfg.Media.Path + "/" + post.Media)
+	}
+	var data []byte
+	var err error
+	if isPicture {
+		data, _, err = db.GetMedia(hash)
+	} else {
+		data, err = db.GetThumbnail(hash)
+	}
+	if err != nil { return nil, err }
+	r := bytes.NewReader(data)
+	return r, nil
 }

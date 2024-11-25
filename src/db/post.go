@@ -122,6 +122,12 @@ func GetPost(threadID uint, number int) (Post, error) {
 	return post, nil
 }
 
+func GetPostFromMedia(hash string) (Post, error) {
+	var post Post
+	err := db.First(&post, "media_hash = ?", hash).Error
+	return post, err
+}
+
 func GetPostFromBoard(board string, number int) (Post, error) {
 	b, ok := Boards[board]
 	if !ok { return Post{}, errors.New("board not found") }

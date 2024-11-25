@@ -9,13 +9,9 @@ func RemoveBanner(id int) error {
 }
 
 func GetAllBanners() ([]uint, error) {
-	var banners []Banner
-	if err := db.Select("id").Find(&banners).Error; err != nil {
-		return nil, err
-	}
-	ids := make([]uint, len(banners))
-	for i, v := range banners { ids[i] = v.ID }
-	return ids, nil
+	var ids []uint
+	err := db.Model(&Banner{}).Pluck("id", &ids).Error
+	return ids, err
 }
 
 func GetBanner(id uint) (Banner, error) {

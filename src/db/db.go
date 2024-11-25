@@ -37,6 +37,12 @@ type Media struct {
 	Type		MediaType
 }
 
+type BannedImage struct {
+	gorm.Model
+	Hash		int64
+	Kind		int
+}
+
 type Board struct {
 	gorm.Model
 	Name		string `gorm:"unique"`
@@ -158,7 +164,7 @@ func Init() error {
 
 	db.AutoMigrate(&Board{}, &Thread{}, &Post{}, &Ban{}, &Theme{},
 			&Reference{}, &Account{}, &Session{}, &Config{},
-			&Media{}, &Banner{})
+			&Media{}, &Banner{}, &BannedImage{})
 
 	if err := LoadBoards(); err != nil { return err }
 	if err := LoadBanList(); err != nil { return err }

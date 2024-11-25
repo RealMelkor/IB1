@@ -1,0 +1,39 @@
+{{define "admin-ssl"}}
+<div style="padding: 30px;"></div>
+<form method="POST" action="/config/ssl/update" enctype="multipart/form-data">
+	<table>
+		<tr>
+			<th colspan="2">SSL</th>
+		</tr>
+		<tr>
+			<td>Enabled</td>
+			<td><input type="checkbox" name="enabled" {{if .Config.SSL.Enabled}}checked{{end}}></td>
+		</tr>
+		<tr>
+			<td>Disable HTTP</td>
+			<td><input type="checkbox" name="disable-http" {{if .Config.SSL.DisableHTTP}}checked{{end}}></td>
+		</tr>
+		<tr>
+			<td>Redirect to HTTPS</td>
+			<td><input type="checkbox" name="redirect" {{if .Config.SSL.RedirectToSSL}}checked{{end}}></td>
+		</tr>
+		<tr>
+			<td>Socket address</td>
+			<td><input type="text" name="address" value="{{.Config.SSL.Listener}}" required></td>
+		</tr>
+		<tr>
+			<td>Certificate</td>
+			<td><input type="file" name="certificate"></td>
+		</tr>
+		<tr>
+			<td>Key</td>
+			<td><input type="file" name="key"></td>
+		</tr>
+		<tr>
+			<td colspan="2"><div class="center"><input type="submit" value="Update"></div></td>
+		</tr>
+	</table>
+	<p class="error">{{once "ssl-error"}}</p>
+	<input type="hidden" name="csrf" value="{{csrf}}">
+</form>
+{{end}}

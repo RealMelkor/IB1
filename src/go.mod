@@ -24,6 +24,7 @@ require (
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
+	github.com/corona10/goimagehash v1.1.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/glebarez/go-sqlite v1.21.2 // indirect
 	github.com/go-jose/go-jose/v4 v4.0.4 // indirect
@@ -36,6 +37,7 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-sqlite3 v1.14.22 // indirect
 	github.com/miekg/dns v1.1.62 // indirect
+	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/tdewolff/parse/v2 v2.7.15 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect

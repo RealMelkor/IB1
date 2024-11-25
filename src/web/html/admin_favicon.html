@@ -1,0 +1,22 @@
+{{define "admin-favicon"}}
+<div style="padding: 30px;"></div>
+<table>
+	<tr>
+		<th colspan="3">Favicon</th>
+	</tr>
+	<tr>
+		<td colspan="3"><div class="center"><img class="icon" src="/static/favicon" alt="favicon"></div></th>
+	</tr>
+	<tr>
+		<form method="POST" action="/config/favicon/update" enctype="multipart/form-data">
+			<td><input type="file" name="favicon" required></td>
+			<td><input type="submit" value="Upload"></td>
+			<input type="hidden" name="csrf" value="{{csrf}}">
+		</form>
+		<form method="POST" action="/config/favicon/clear">
+			<td><input type="submit" value="Reset"></td>
+			<input type="hidden" name="csrf" value="{{csrf}}">
+		</form>
+	</tr>
+</table>
+{{end}}

@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"errors"
 
+	"github.com/corona10/goimagehash"
+
 	"IB1/config"
 )
 
@@ -111,4 +113,40 @@ func IsApproved(hash string) error {
 	if err != nil { return err }
 	if media.Approved { return nil }
 	return errors.New(NoYetApproved)
+}
+
+func IsImageBanned(hash goimagehash.ImageHash) error {
+	rows, err := db.Model(&BannedImage{}).Select("hash, kind").Rows()
+	if err != nil { return err }
+	defer rows.Close()
+	for rows.Next() {
+		var v BannedImage
+		if err := db.ScanRows(rows, &v); err != nil { return err }
+		img := goimagehash.NewImageHash(
+				uint64(v.Hash), goimagehash.Kind(v.Kind))
+		distance, err := hash.Distance(img)
+		if err != nil { return err }
+		if distance < 3 { return errors.New("banned image") }
+	}
+	return nil
+}
+
+func BanImage(hash goimagehash.ImageHash) error {
+	return db.Create(&BannedImage{
+		Hash: int64(hash.GetHash()), Kind: int(hash.GetKind()),
+	}).Error
+}
+
+func GetBannedImages() ([]BannedImage, error) {
+	var v []BannedImage
+	err := db.Find(&v).Error
+	return v, err
+}
+
+func AddBannedImage(hash int64) error {
+	return db.Create(&BannedImage{Hash: hash}).Error
+}
+
+func RemoveBannedImage(hash int64) error {
+	return db.Where("hash = ?", hash).Delete(&BannedImage{}).Error
 }

@@ -95,6 +95,10 @@ func hide(post db.Post) error {
 	return db.Hide(post.ID, post.Disabled)
 }
 
+func banMedia(post db.Post) error {
+	return banImage(post.MediaHash)
+}
+
 func cancel(c echo.Context) error {
 	board := c.Param("board")
 	id, err := strconv.Atoi(c.Param("id"))
