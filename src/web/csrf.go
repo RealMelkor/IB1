@@ -6,13 +6,9 @@ import (
         "github.com/labstack/echo/v4"
 )
 
-var tokens = map[string]string{}
-
 func csrf(f echo.HandlerFunc) echo.HandlerFunc {
 	invalid := errors.New("invalid csrf token")
 	return func(c echo.Context) error {
-		id, err := getID(c)
-		if err != nil { return err }
 		check := false
 		value := ""
 		if c.Request().Method == "POST" {
@@ -27,16 +23,13 @@ func csrf(f echo.HandlerFunc) echo.HandlerFunc {
 			}
 		}
 		if check {
-			token, ok := tokens[id]
-			if !ok { return invalid }
+			token := get(c)("csrf")
 			if token != value { return invalid }
-			tokens[id], err = newToken()
-			if err != nil { return err }
 		}
-		_, ok := tokens[id]
-		if !ok {
-			tokens[id], err = newToken()
+		if check || get(c)("csrf") == nil {
+			token, err := newToken()
 			if err != nil { return err }
+			set(c)("csrf", token)
 		}
 		return f(c)
 	}

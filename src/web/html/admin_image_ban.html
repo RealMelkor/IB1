@@ -14,7 +14,7 @@
 	<td>{{.CreatedAt}}</td>
 	<td><input type="submit" value="Cancel"></td>
 	<input type="hidden" name="hash" value="{{.Hash}}"></td>
-	<input type="hidden" name="csrf" value="{{csrf}}">
+	<input type="hidden" name="csrf" value="{{get "csrf"}}">
 </form>
 </tr>
 {{end}}
@@ -23,7 +23,7 @@
 	<td><input type="text" name="hash" required></td>
 	<td></td>
 	<td><input type="submit" value="Add"></td>
-	<input type="hidden" name="csrf" value="{{csrf}}">
+	<input type="hidden" name="csrf" value="{{get "csrf"}}">
 </form>
 </tr>
 </table>

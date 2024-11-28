@@ -18,6 +18,11 @@
 			<td><input type="text" name="maxsize" value="{{.Config.Media.MaxSize}}" required></td>
 		</tr>
 		<tr>
+			<td>Banned images threshold</td>
+			<td><input type="text" name="threshold" value="{{.Config.Media.ImageThreshold}}" required></td>
+		</tr>
+
+		<tr>
 			<td>Media approval queue</td>
 			<td><input type="checkbox" name="approval" {{if .Config.Media.ApprovalQueue}}checked{{end}}></td>
 		</tr>
@@ -44,6 +49,6 @@
 		</tr>
 	</table>
 	<p class="error">{{once "media-error"}}</p>
-	<input type="hidden" name="csrf" value="{{csrf}}">
+	<input type="hidden" name="csrf" value="{{get "csrf"}}">
 </form>
 {{end}}

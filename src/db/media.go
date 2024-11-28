@@ -126,7 +126,9 @@ func IsImageBanned(hash goimagehash.ImageHash) error {
 				uint64(v.Hash), goimagehash.Kind(v.Kind))
 		distance, err := hash.Distance(img)
 		if err != nil { return err }
-		if distance < 3 { return errors.New("banned image") }
+		if distance < config.Cfg.Media.ImageThreshold {
+			return errors.New("banned image")
+		}
 	}
 	return nil
 }

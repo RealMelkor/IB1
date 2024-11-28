@@ -34,7 +34,7 @@
 			{{if .Account.HasRank "administrator"}}
 			[<a href="/dashboard">Dashboard</a>]
 			{{end}}
-			[<a href="/disconnect/{{csrf}}">Disconnect</a>]
+			[<a href="/disconnect/{{get "csrf"}}">Disconnect</a>]
 			{{else}}
 			[<a href="/login">Login </a>]
 			{{if .Config.Accounts.AllowRegistration}}
@@ -54,7 +54,7 @@
 {{end}}
 			</select>
 			<input type="submit" value="Update">
-			<input type="hidden" name="csrf" value="{{csrf}}">
+			<input type="hidden" name="csrf" value="{{get "csrf"}}">
 		</form>
 	</div>
 	<br>

@@ -25,6 +25,7 @@
 <button>Approve</button>
 <button formaction="/approval/deny" style="float: right">Deny</button>
 <input type="hidden" name="media" value="{{$hash}}">
+<input type="hidden" name="csrf" value="{{get "csrf"}}">
 </form>
 {{else}}
 <p>No media left in the queue</p>
@@ -33,6 +34,7 @@
 <div class="new-thread">
 <form method="POST" action="/approval/accept">
 <button formaction="/approval/accept/all">Approve All</button>
+<input type="hidden" name="csrf" value="{{get "csrf"}}">
 </form>
 </div>
 {{end}}

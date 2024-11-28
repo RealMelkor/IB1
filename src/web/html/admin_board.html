@@ -19,7 +19,7 @@
 			<td><input type="text" name="description" value="{{.Description}}" required></td>
 			<td><input type="submit" value="Update"></td>
 			<td><input type="submit" value="Delete" formaction="/config/board/delete/{{.ID}}" {{if not .Disabled}} disabled{{end}}></td>
-			<input type="hidden" name="csrf" value="{{csrf}}">
+			<input type="hidden" name="csrf" value="{{get "csrf"}}">
 		</form>
 	</tr>
 	{{end}}
@@ -30,7 +30,7 @@
 			<td><input type="text" name="name" required></td>
 			<td><input type="text" name="description" required></td>
 			<td><input type="submit" value="Create"></td>
-			<input type="hidden" name="csrf" value="{{csrf}}">
+			<input type="hidden" name="csrf" value="{{get "csrf"}}">
 		</form>
 	</tr>
 </table>

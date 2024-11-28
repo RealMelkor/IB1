@@ -43,6 +43,7 @@ type Config struct {
 		Key		[]byte
 		PendingMedia	[]byte
 		PendingMime	string
+		ImageThreshold	int
 	}
 	Captcha struct {
 		Enabled		bool
@@ -76,6 +77,7 @@ func LoadDefault() {
 	Cfg.Media.InDatabase = true
 	Cfg.Media.Path = "./media"
 	Cfg.Media.Tmp = "/tmp/ib1"
+	Cfg.Media.ImageThreshold = 16
 	Cfg.Post.DefaultName = "Anonymous"
 	Cfg.Post.AsciiOnly = false
 	Cfg.Board.MaxThreads = 40

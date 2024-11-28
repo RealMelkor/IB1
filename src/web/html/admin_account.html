@@ -24,7 +24,7 @@
 			<td><input type="password" name="password"></td>
 			<td><input type="submit" value="Update"></td>
 			<td><input type="submit" value="Delete" formaction="/config/account/delete/{{.ID}}"{{if isSelf .}} disabled{{end}}></td>
-			<input type="hidden" name="csrf" value="{{csrf}}">
+			<input type="hidden" name="csrf" value="{{get "csrf"}}">
 		</form>
 	</tr>
 	{{end}}
@@ -40,7 +40,7 @@
 			</td>
 			<td><input type="password" name="password" required></td>
 			<td><input type="submit" value="Add"></td>
-			<input type="hidden" name="csrf" value="{{csrf}}">
+			<input type="hidden" name="csrf" value="{{get "csrf"}}">
 		</form>
 	</tr>
 </table>

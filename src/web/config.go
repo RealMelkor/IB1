@@ -155,6 +155,11 @@ func updateMedia(c echo.Context) error {
 	if err != nil { return err }
 	config.Cfg.Media.MaxSize = size
 
+	thresholdStr, _ := getPostForm(c, "threshold")
+	threshold, err := strconv.Atoi(thresholdStr)
+	if err != nil { return err }
+	config.Cfg.Media.ImageThreshold = threshold
+
 	video, _ := getPostForm(c, "video")
 	v = video == "on"
 	if v && !config.Cfg.Media.AllowVideos {

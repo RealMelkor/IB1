@@ -53,13 +53,6 @@ func render(_template string, data any, c echo.Context) error {
 		"set": set(c),
 		"has": has(c),
 		"session": func() string { return getCookie(c, "id") },
-		"csrf": func() string {
-			id := getCookie(c, "id")
-			if id == "" { return "" }
-			v, ok := tokens[id]
-			if !ok { return "" }
-			return v
-		},
 		"isLogged": func() bool { return isLogged(c) },
 		"hasRank": func(rank string) bool {
 			acc, err := loggedAs(c)

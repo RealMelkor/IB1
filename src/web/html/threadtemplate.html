@@ -39,19 +39,19 @@
 	<a class="post-link" href="#{{.Number}}">No.{{.Number}}</a>
 	{{if $moderator}}
 	[<span class="ip">IP: {{.IP}}</span>]
-	[<a class="action" href="/{{$.Board.Name}}/hide/{{.Number}}/{{csrf}}">{{if .Disabled}}Unhide{{else}}Hide{{end}}</a>]
-	[<a class="action" href="/{{$.Board.Name}}/remove/{{.Number}}/{{csrf}}">Remove</a>]
+	[<a class="action" href="/{{$.Board.Name}}/hide/{{.Number}}/{{get "csrf"}}">{{if .Disabled}}Unhide{{else}}Hide{{end}}</a>]
+	[<a class="action" href="/{{$.Board.Name}}/remove/{{.Number}}/{{get "csrf"}}">Remove</a>]
 {{if .Media}}
-	[<a class="action" href="/{{$.Board.Name}}/remove_media/{{.Number}}/{{csrf}}">Delete Media</a>]
-	[<a class="action" href="/{{$.Board.Name}}/ban_media/{{.Number}}/{{csrf}}">Ban Media</a>]
+	[<a class="action" href="/{{$.Board.Name}}/remove_media/{{.Number}}/{{get "csrf"}}">Delete Media</a>]
+	[<a class="action" href="/{{$.Board.Name}}/ban_media/{{.Number}}/{{get "csrf"}}">Ban Media</a>]
 {{if isPending .MediaHash}}
-	[<a class="action" href="/{{$.Board.Name}}/approve/{{.Number}}/{{csrf}}">Approve Media</a>]
+	[<a class="action" href="/{{$.Board.Name}}/approve/{{.Number}}/{{get "csrf"}}">Approve Media</a>]
 {{end}}
 {{end}}
-	[<a class="action" href="/{{$.Board.Name}}/ban/{{.IP}}/{{csrf}}">Ban</a>]
+	[<a class="action" href="/{{$.Board.Name}}/ban/{{.IP}}/{{get "csrf"}}">Ban</a>]
 	{{else}}
 	{{if (or (and (eq .Session session) (not (eq .Session ""))) (and (eq self.ID .OwnerID) (not (eq .OwnerID 0))))}}
-	[<a class="action" href="/{{$.Board.Name}}/cancel/{{.Number}}/{{csrf}}">Remove</a>]
+	[<a class="action" href="/{{$.Board.Name}}/cancel/{{.Number}}/{{get "csrf"}}">Remove</a>]
 	{{end}}
 	{{end}}
 	{{range .ReferredBy}}
