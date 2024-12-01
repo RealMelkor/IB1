@@ -6,6 +6,7 @@ import (
 	"log"
 	"path/filepath"
 	"errors"
+	"strings"
 
 	"github.com/corona10/goimagehash"
 
@@ -151,4 +152,60 @@ func AddBannedImage(hash int64) error {
 
 func RemoveBannedImage(hash int64) error {
 	return db.Where("hash = ?", hash).Delete(&BannedImage{}).Error
+}
+
+func Extract(path string) error {
+	rows, err := db.Table("media").
+		Select("media.hash, media.data, media.thumbnail, posts.media").
+		Joins("inner join posts on media.hash = posts.media_hash").
+		Rows()
+	if err != nil { return err }
+	err = os.MkdirAll(path + "/thumbnail", 0755)
+	if err != nil { return err }
+	defer rows.Close()
+	for rows.Next() {
+		var v struct{
+			Hash		string
+			Data		[]byte
+			Thumbnail	[]byte
+			Media		string
+		}
+
+		if err := db.ScanRows(rows, &v); err != nil { return err }
+		if v.Data == nil || len(v.Data) == 0 { continue }
+
+		f, err := os.Create(path + "/" + v.Media)
+		defer f.Close()
+		if err != nil { return err }
+		_, err = f.Write(v.Data)
+		if err != nil { return err }
+		f.Close()
+
+		f, err = os.Create(path + "/thumbnail/" + v.Hash + ".png")
+		defer f.Close()
+		if err != nil { return err }
+		_, err = f.Write(v.Thumbnail)
+		if err != nil { return err }
+		f.Close()
+	}
+	return nil
+}
+
+func Load(path string) error {
+	dir, err := os.ReadDir(path)
+	if err != nil { return err }
+	for _, v := range dir {
+		if !v.Type().IsRegular() { continue }
+		hash := strings.Split(v.Name(), ".")[0]
+		data, err := os.ReadFile(path + "/" + v.Name())
+		if err != nil { return err }
+		thumbnail, err := os.ReadFile(
+				path + "/thumbnail/" + hash + ".png")
+		if err != nil { return err }
+		db.Model(&Media{}).Where("hash = ?", hash).Updates(
+			map[string]interface{}{
+				"data": data, "thumnbail": thumbnail,
+			})
+	}
+	return nil
 }

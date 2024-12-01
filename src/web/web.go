@@ -207,6 +207,9 @@ func Init() error {
 
 	r.GET("/", renderFile("index.html"))
 	r.GET("/favicon.ico", notFound)
+	r.GET("/robots.txt", func(c echo.Context) error {
+		return c.Blob(http.StatusOK, "text/plain", robots)
+	})
 	r.GET("/static/favicon", func(c echo.Context) error {
 		if config.Cfg.Home.FaviconMime == "" {
 			return c.Blob(http.StatusOK, "image/png", favicon)

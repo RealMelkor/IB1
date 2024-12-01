@@ -117,9 +117,26 @@ func parseArguments() error {
 			fmt.Println("SSL certificate save")
 		}
 		if err := db.UpdateConfig(); err != nil { return err }
+	case "media":
+		err := errors.New(os.Args[0] + " extract|load <path>")
+		if len(os.Args) < 4 { return err }
+		if err := db.Init(); err != nil { return err }
+		switch os.Args[2] {
+			case "extract":
+				if err := db.Extract(os.Args[3]); err != nil {
+					return err
+				}
+			case "load":
+				if err := db.Load(os.Args[3]); err != nil {
+					return err
+				}
+			default: return err
+		}
 	default:
 		fmt.Println(os.Args[0] +
 			" register <name> <trusted|moderator|admin>")
+		fmt.Println(os.Args[0] + " media extract <path>")
+		fmt.Println(os.Args[0] + " media load <path>")
 		fmt.Println(os.Args[0] + " passwd <name>")
 		fmt.Println(os.Args[0] + " domain <domain>")
 		fmt.Println(os.Args[0] + " db <path> [sqlite|sqlite3|mysql]")
