@@ -398,3 +398,47 @@ func proxyAcme(c echo.Context) error {
 	if err != nil { return err }
 	return c.Blob(resp.StatusCode, resp.Header.Get("Content-Type"), data)
 }
+
+func getInt(c echo.Context, param string) (int, error) {
+	str, ok := getPostForm(c, param)
+	if !ok { return 0, errors.New("missing parameter") }
+	v, err := strconv.Atoi(str)
+	if err != nil { return 0, err }
+	if v < 0 { return 0, errors.New("invalid value") }
+	return v, nil
+}
+
+func rateLimits(c echo.Context) error {
+	var err error
+	tmp := config.Cfg.RateLimit
+
+	tmp.Login.MaxAttempts, err = getInt(c, "login-attempts")
+	if err != nil { return err }
+	tmp.Login.Timeout , err = getInt(c, "login-timeout")
+	if err != nil { return err }
+
+	tmp.Account.MaxAttempts, err = getInt(c, "account-attempts")
+	if err != nil { return err }
+	tmp.Account.Timeout , err = getInt(c, "account-timeout")
+	if err != nil { return err }
+
+	tmp.Registration.MaxAttempts, err = getInt(c, "register-attempts")
+	if err != nil { return err }
+	tmp.Registration.Timeout , err = getInt(c, "register-timeout")
+	if err != nil { return err }
+
+	tmp.Post.MaxAttempts, err = getInt(c, "post-attempts")
+	if err != nil { return err }
+	tmp.Post.Timeout , err = getInt(c, "post-timeout")
+	if err != nil { return err }
+
+	tmp.Thread.MaxAttempts, err = getInt(c, "thread-attempts")
+	if err != nil { return err }
+	tmp.Thread.Timeout , err = getInt(c, "thread-timeout")
+	if err != nil { return err }
+
+	config.Cfg.RateLimit = tmp
+	if err := db.UpdateConfig(); err != nil { return err }
+	reloadRatelimits()
+	return nil
+}

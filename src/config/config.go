@@ -7,6 +7,11 @@ import (
 
 var Cfg Config
 
+type RateLimit struct {
+	MaxAttempts	int
+	Timeout		int
+}
+
 type Config struct {
 	Home struct {
 		Title		string
@@ -60,6 +65,13 @@ type Config struct {
 	Accounts struct {
 		AllowRegistration	bool
 	}
+	RateLimit struct {
+		Login		RateLimit
+		Registration	RateLimit
+		Account		RateLimit
+		Thread		RateLimit
+		Post		RateLimit
+	}
 }
 
 func LoadDefault() {
@@ -81,6 +93,16 @@ func LoadDefault() {
 	Cfg.Post.DefaultName = "Anonymous"
 	Cfg.Post.AsciiOnly = false
 	Cfg.Board.MaxThreads = 40
+	Cfg.RateLimit.Login.MaxAttempts = 5
+	Cfg.RateLimit.Login.Timeout = 30
+	Cfg.RateLimit.Registration.MaxAttempts = 5
+	Cfg.RateLimit.Registration.Timeout = 60
+	Cfg.RateLimit.Account.MaxAttempts = 30
+	Cfg.RateLimit.Account.Timeout = 300
+	Cfg.RateLimit.Post.MaxAttempts = 5
+	Cfg.RateLimit.Post.Timeout = 60
+	Cfg.RateLimit.Thread.MaxAttempts = 2
+	Cfg.RateLimit.Thread.Timeout = 120
 }
 
 func LoadConfig(data []byte) error {

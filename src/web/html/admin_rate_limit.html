@@ -1,0 +1,43 @@
+{{define "admin-rate-limit"}}
+<div style="padding: 30px;"></div>
+<div class="center"><h3>Rate-Limits</h3></div>
+<table>
+<form method="POST" action="/config/ratelimit/update">
+	<tr>
+		<th>Type</th>
+		<th>Maximum attempts</th>
+		<th>Timeout</th>
+	</tr>
+	<tr>
+		<td>Login</td>
+		<td><input type="text" name="login-attempts" value="{{.Config.RateLimit.Login.MaxAttempts}}" required></td>
+		<td><input type="text" name="login-timeout" value="{{.Config.RateLimit.Login.Timeout}}" required></td>
+	</tr>
+	<tr>
+		<td>Account</td>
+		<td><input type="text" name="account-attempts" value="{{.Config.RateLimit.Account.MaxAttempts}}" required></td>
+		<td><input type="text" name="account-timeout" value="{{.Config.RateLimit.Account.Timeout}}" required></td>
+	</tr>
+	<tr>
+		<td>Registration</td>
+		<td><input type="text" name="register-attempts" value="{{.Config.RateLimit.Registration.MaxAttempts}}" required></td>
+		<td><input type="text" name="register-timeout" value="{{.Config.RateLimit.Registration.Timeout}}" required></td>
+	</tr>
+	<tr>
+		<td>New post</td>
+		<td><input type="text" name="post-attempts" value="{{.Config.RateLimit.Post.MaxAttempts}}" required></td>
+		<td><input type="text" name="post-timeout" value="{{.Config.RateLimit.Post.Timeout}}" required></td>
+	</tr>
+	<tr>
+		<td>New thread</td>
+		<td><input type="text" name="thread-attempts" value="{{.Config.RateLimit.Thread.MaxAttempts}}" required></td>
+		<td><input type="text" name="thread-timeout" value="{{.Config.RateLimit.Thread.Timeout}}" required></td>
+	</tr>
+	<tr>
+		<td colspan="3"><div class="new-thread"><input type="submit" value="Update"></div></td>
+		<input type="hidden" name="csrf" value="{{get "csrf"}}">
+	</tr>
+</form>
+</table>
+<p class="error">{{once "ratelimit-error"}}</p>
+{{end}}

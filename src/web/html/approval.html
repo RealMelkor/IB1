@@ -2,7 +2,7 @@
 <div class="boards">
 <div class="new-thread">
 {{if $hash}}
-<div class="media-container">
+<div class="media-container new-thread">
   <input type="checkbox" class="zoom-check" id="zoom-check">
     <label for="zoom-check">
     <img class="thumbnail" src="/media/thumbnail/{{thumbnail $hash}}" alt="thumbnail">
@@ -22,8 +22,11 @@
 </div>
 <br>
 <form method="POST" action="/approval/accept">
+<div class="space-around">
 <button>Approve</button>
-<button formaction="/approval/deny" style="float: right">Deny</button>
+<button formaction="/approval/deny">Deny</button>
+<button formaction="/approval/ban">Ban Media</button>
+</div>
 <input type="hidden" name="media" value="{{$hash}}">
 <input type="hidden" name="csrf" value="{{get "csrf"}}">
 </form>

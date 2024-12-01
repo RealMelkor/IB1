@@ -301,3 +301,10 @@ body {
 .banner-box {
 	padding: 50px;
 }
+
+.space-around {
+	display: flex;
+	justify-content: space-between;
+	width: 300px;
+	padding: 10px;
+}

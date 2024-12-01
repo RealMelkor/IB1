@@ -73,6 +73,13 @@ func denyMedia(c echo.Context) error {
 	return db.RemoveMedia(strings.Split(c.FormValue("media"), ".")[0])
 }
 
+func banPendingMedia(c echo.Context) error {
+	hash := strings.Split(c.FormValue("media"), ".")[0]
+	if err := banImage(hash); err != nil { return err }
+	if err := db.RemoveMedia(hash); err != nil { return err }
+	return nil
+}
+
 func err(f echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		if err := f(c); err != nil {
@@ -184,6 +191,7 @@ func pendingMediaImage(c echo.Context) error {
 func Init() error {
 
 	sessions.Init()
+	reloadRatelimits()
 
 	if !config.Cfg.Media.InDatabase {
 		os.MkdirAll(config.Cfg.Media.Path + "/thumbnail", 0700)
@@ -249,6 +257,8 @@ func Init() error {
 			approveMedia, "/approval"), db.RANK_MODERATOR))
 		r.POST("/approval/deny", hasRank(redirect(
 			denyMedia, "/approval"), db.RANK_MODERATOR))
+		r.POST("/approval/ban", hasRank(redirect(
+			banPendingMedia, "/approval"), db.RANK_MODERATOR))
 		r.POST("/approval/accept/all", hasRank(redirect(
 			approveAll, "/approval"), db.RANK_MODERATOR))
 	}
@@ -297,6 +307,8 @@ func Init() error {
 		handleConfig(addBanner, "banner-error"))
 	r.POST("/config/banner/delete/:id",
 		handleConfig(deleteBanner, "banner-error"))
+	r.POST("/config/ratelimit/update",
+		handleConfig(rateLimits, "ratelimit-error"))
 	r.GET("/banner/:id", imageError(banner))
 	r.GET("/.well-known/acme-challenge/:token", proxyAcme)
 

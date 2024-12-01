@@ -23,6 +23,8 @@ func loginAs(c echo.Context) error {
 	password := c.Request().PostFormValue("password")
 	err := verifyCaptcha(c)
 	if err != nil { return err }
+	if err := accountLimit.Try(name); err != nil { return err }
+	if err := loginLimit.Try(clientIP(c)); err != nil { return err }
 	token, err := db.Login(name, password)
 	if err != nil { return errors.New("invalid credentials") }
 	setCookie(c, "token", token)
@@ -40,6 +42,7 @@ func register(c echo.Context) error {
 	if confirm != password { return errors.New("passwords don't match") }
 	err := verifyCaptcha(c)
 	if err != nil { return err }
+	if err := registrationLimit.Try(clientIP(c)); err != nil { return err }
 	err = db.CreateAccount(name, password, db.RANK_USER)
 	if err != nil { return err }
 	token, err := db.Login(name, password)
@@ -150,6 +153,7 @@ func newThread(c echo.Context) error {
 	}
 
 	if err := checkCaptcha(c); err != nil { return err }
+	if err := threadLimit.Try(clientIP(c)); err != nil { return err }
 
 	media := ""
 	file, err := c.FormFile("media")
@@ -191,6 +195,7 @@ func newPost(c echo.Context) error {
 	rank, _ := getPostForm(c, "rank")
 
 	if err := checkCaptcha(c); err != nil { return err }
+	if err := postLimit.Try(clientIP(c)); err != nil { return err }
 
 	media := ""
 	user, err := loggedAs(c)

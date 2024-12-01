@@ -2,6 +2,7 @@ package db
 
 import (
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 	"gorm.io/driver/mysql"
 	"html/template"
 	"errors"
@@ -152,11 +153,14 @@ func Init() error {
 	}
 
 	var err error
+	cfg := gorm.Config{
+		Logger: logger.Default.LogMode(logger.Silent),
+	}
 	if dbType == TYPE_MYSQL {
 		dsn := Path
-		db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
+		db, err = gorm.Open(mysql.Open(dsn), &cfg)
 	} else if dbType == TYPE_SQLITE {
-		db, err = gorm.Open(sqlite_open(Path), &gorm.Config{})
+		db, err = gorm.Open(sqlite_open(Path), &cfg)
 	} else {
 		return errors.New("unknown database")
 	}
