@@ -89,17 +89,25 @@ func uploadFile(file *multipart.FileHeader, approved bool) (string, error) {
 	if err = saveUploadedFile(file, path); err != nil { return "", err }
 	defer os.Remove(path)
 
-	f, err := os.Open(path)
-	if err != nil { return "", err }
-	defer f.Close()
-	if err := isImageBanned(f); err != nil { return "", err }
-
 	// verify extension
 	mime, err := mimetype.DetectFile(path)
 	if err != nil { return "", err }
 	extension := mime.Extension()
 	mediaType, err := validExtension(extension)
 	if err != nil { return "", err }
+
+	// check if media is banned
+	mediaPath := path
+	if mediaType == db.MEDIA_VIDEO || extension == ".gif" {
+		mediaPath = config.Cfg.Media.Tmp + "/frame_" + name + ".png"
+		if err := extractFrame(path, mediaPath); err != nil {
+			return "", err
+		}
+		defer os.Remove(mediaPath)
+	}
+	f, err := os.Open(mediaPath)
+	if err != nil { return "", err }
+	if err := isImageBanned(f); err != nil { return "", err }
 
 	// clean up the metadata
 	out := config.Cfg.Media.Tmp + "/clean_" + name + extension

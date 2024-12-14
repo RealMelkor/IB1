@@ -7,9 +7,13 @@
 <div class="catalog">
 {{range $board.Threads}}
 {{if (or (not (index .Posts 0).Disabled) $.Header.Account.Logged)}}
+{{$border := ""}}
+{{if (and (hasRank "moderator") (isPending (index .Posts 0).MediaHash))}}
+{{$border = "pending-approval"}}
+{{end}}
 <div class="thread{{if (index .Posts 0).Disabled}} thread-hidden{{end}}">
 	<a href="{{.Number}}">
-		<img src="/media/thumbnail/{{(index .Posts 0).Thumbnail}}" alt="{{.Number}}">
+		<img class="{{$border}}" src="/media/thumbnail/{{(index .Posts 0).Thumbnail}}" alt="{{.Number}}">
 	</a>
 	<p class="thread-info">R: {{.Replies}} / I: {{.Images}}</p>
 	<p class="title">{{.Title}}</p>
