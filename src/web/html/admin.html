@@ -1,14 +1,14 @@
-<div class="boards">
-{{template "admin-main" .}}
-{{template "admin-media" .}}
-{{template "admin-ssl" .}}
-{{template "admin-acme" .}}
-{{template "admin-board" .}}
-{{template "admin-theme" .}}
-{{template "admin-banner" .}}
-{{template "admin-favicon" .}}
-{{template "admin-ban" .}}
-{{template "admin-image-ban" .}}
-{{template "admin-account" .}}
-{{template "admin-rate-limit" .}}
+<div class="side-menu">
+<p>Settings</p>
+<ul>
+{{range (arr "main" "media" "ssl" "acme" "board" "theme" "banner" "favicon" "ban" "image-ban" "account" "rate-limit")}}
+{{$v := not (eq . (param "page"))}}
+	<li>{{if $v}}<a href="/dashboard/{{.}}">{{end}}{{capitalize .}}{{if $v}}</a>{{end}}</li>
+{{end}}
+</ul>
 </div>
+<div class="boards">
+{{render (print "admin-" (param "page")) .}}
+</div>
+<p class="info">{{once "restart"}}</p>
+<p class="error">{{once "restart-error"}}</p>

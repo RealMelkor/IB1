@@ -266,52 +266,52 @@ func Init() error {
 			approveAll, "/approval"), db.RANK_MODERATOR))
 	}
 	r.GET("/dashboard", hasRank(renderDashboard, db.RANK_ADMIN))
+	r.GET("/dashboard/:page", hasRank(renderDashboard, db.RANK_ADMIN))
 	r.POST("/config/client/theme", func(c echo.Context) error {
 		return redirect(setTheme, c.QueryParam("origin"))(c)
 	})
-	r.POST("/config/update", handleConfig(updateConfig, "config-error"))
+	r.POST("/config/update", handleConfig(updateConfig, "main"))
 	r.POST("/config/media/update",
-		handleConfig(updateMedia, "media-error"))
+		handleConfig(updateMedia, "media"))
 	r.POST("/config/media/clear",
-		handleConfig(clearPendingMediaImage, "media-error"))
+		handleConfig(clearPendingMediaImage, "media"))
 	r.POST("/config/media/ban",
-		handleConfig(updateMedia, "media-error"))
+		handleConfig(updateMedia, "media"))
 	r.POST("/config/media/ban/cancel",
-		handleConfig(clearPendingMediaImage, "media-error"))
-	r.POST("/config/ssl/update", handleConfig(updateSSL, "ssl-error"))
+		handleConfig(clearPendingMediaImage, "media"))
+	r.POST("/config/ssl/update", handleConfig(updateSSL, "ssl"))
 	r.POST("/config/board/create",
-		handleConfig(createBoard, "board-error"))
+		handleConfig(createBoard, "board"))
 	r.POST("/config/board/update/:board",
-		handleConfig(updateBoard, "board-error"))
+		handleConfig(updateBoard, "board"))
 	r.POST("/config/board/delete/:board",
-		handleConfig(deleteBoard, "board-error"))
+		handleConfig(deleteBoard, "board"))
 	r.POST("/config/theme/create",
-		handleConfig(createTheme, "theme-error"))
+		handleConfig(createTheme, "theme"))
 	r.POST("/config/theme/delete/:id",
-		handleConfig(deleteTheme, "theme-error"))
+		handleConfig(deleteTheme, "theme"))
 	r.POST("/config/theme/update/:id",
-		handleConfig(updateTheme, "theme-error"))
+		handleConfig(updateTheme, "theme"))
 	r.POST("/config/favicon/update",
-		handleConfig(updateFavicon, "favicon-error"))
+		handleConfig(updateFavicon, "favicon"))
 	r.POST("/config/favicon/clear",
-		handleConfig(clearFavicon, "favicon-error"))
-	r.POST("/config/ban/create", handleConfig(addBan, "ban-error"))
-	r.POST("/config/ban/cancel/:id", handleConfig(deleteBan, "ban-error"))
+		handleConfig(clearFavicon, "favicon"))
+	r.POST("/config/ban/create", handleConfig(addBan, "ban"))
+	r.POST("/config/ban/cancel/:id", handleConfig(deleteBan, "ban"))
 	r.POST("/config/account/create",
-		handleConfig(addAccount, "account-error"))
+		handleConfig(addAccount, "account"))
 	r.POST("/config/account/update/:id",
-		handleConfig(updateAccount, "account-error"))
+		handleConfig(updateAccount, "account"))
 	r.POST("/config/account/delete/:id",
-		handleConfig(deleteAccount, "account-error"))
-	r.POST("/config/restart",
-		handleConfig(restart, "config-error"))
-	r.POST("/config/acme/update", handleConfig(fetchSSL, "acme-error"))
+		handleConfig(deleteAccount, "account"))
+	r.POST("/config/restart", handleConfig(restartStandard, "main"))
+	r.POST("/config/acme/update", handleConfig(fetchSSL, "acme"))
 	r.POST("/config/banner/create",
-		handleConfig(addBanner, "banner-error"))
+		handleConfig(addBanner, "banner"))
 	r.POST("/config/banner/delete/:id",
-		handleConfig(deleteBanner, "banner-error"))
+		handleConfig(deleteBanner, "banner"))
 	r.POST("/config/ratelimit/update",
-		handleConfig(rateLimits, "ratelimit-error"))
+		handleConfig(rateLimits, "rate-limit"))
 	r.GET("/banner/:id", imageError(banner))
 	r.GET("/.well-known/acme-challenge/:token", proxyAcme)
 

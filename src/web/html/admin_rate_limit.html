@@ -1,5 +1,4 @@
 {{define "admin-rate-limit"}}
-<div style="padding: 30px;"></div>
 <div class="center"><h3>Rate-Limits</h3></div>
 <table>
 <form method="POST" action="/config/ratelimit/update">
@@ -39,5 +38,5 @@
 	</tr>
 </form>
 </table>
-<p class="error">{{once "ratelimit-error"}}</p>
+<p class="error">{{once "rate-limit-error"}}</p>
 {{end}}

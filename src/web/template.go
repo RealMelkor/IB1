@@ -55,6 +55,10 @@ func render(_template string, data any, c echo.Context) error {
 		"once": once(c),
 		"set": set(c),
 		"has": has(c),
+		"param": func(param string) any { return c.Param(param) },
+		"render": func(template string, v any) error {
+			return templates.Lookup(template).Execute(w, v)
+		},
 		"session": func() string { return getCookie(c, "id") },
 		"isLogged": func() bool { return isLogged(c) },
 		"hasRank": func(rank string) bool {
@@ -108,6 +112,8 @@ func initTemplate() error {
 		"get": func(string) string {return ""},
 		"once": func(string) string {return ""},
 		"has": func(string) bool {return false},
+		"param": func(string) any { return "" },
+		"render": func(string, any) error { return nil },
 		"session": func() string {return ""},
 		"csrf": func() string { return "" },
 		"rank": func(rank string) int {
@@ -163,6 +169,9 @@ func initTemplate() error {
 		"banner": func() uint {
 			v, _ := db.GetAllBanners()
 			return v[rand.Intn(len(v))]
+		},
+		"arr": func(args ...any) []any {
+			return args
 		},
 	}
 	templates, err = template.New("frontend").Funcs(funcs).

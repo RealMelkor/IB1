@@ -49,8 +49,9 @@ func needRank(c echo.Context, rank int) error {
 }
 
 func handleConfig(f echo.HandlerFunc, param string) echo.HandlerFunc {
-	return catchCustom(redirect(hasRank(f, db.RANK_ADMIN), "/dashboard"),
-				param, "/dashboard")
+	dst := "/dashboard/" + param
+	return catchCustom(redirect(hasRank(f, db.RANK_ADMIN), dst),
+			param + "-error", dst)
 }
 
 func canSetConfig(c echo.Context, f echo.HandlerFunc) echo.HandlerFunc {
@@ -115,7 +116,7 @@ func updateConfig(c echo.Context) error {
 	config.Cfg.Board.MaxThreads = uint(threads)
 
 	if err := db.UpdateConfig(); err != nil { return err }
-	if requireRestart { return restart(c) }
+	if requireRestart { return restart(c, "main") }
 	return nil
 }
 
@@ -175,7 +176,7 @@ func updateMedia(c echo.Context) error {
 	}
 
 	if err := db.UpdateConfig(); err != nil { return err }
-	if requireRestart { return restart(c) }
+	if requireRestart { return restart(c, "media") }
 	return nil
 }
 
@@ -215,7 +216,7 @@ func updateSSL(c echo.Context) error {
         if err == nil { config.Cfg.SSL.Key = data }
 
 	if err := db.UpdateConfig(); err != nil { return err }
-	return restart(c)
+	return restart(c, "ssl")
 }
 
 
@@ -347,7 +348,11 @@ func deleteAccount(c echo.Context) error {
 	return db.RemoveAccount(uint(id))
 }
 
-func restart(c echo.Context) error {
+func restartStandard(c echo.Context) error {
+	return restart(c, "main")
+}
+
+func restart(c echo.Context, redirect string) error {
 	go func() {
 		time.Sleep(time.Second)
 		err := syscall.Exec(os.Args[0], os.Args, os.Environ())
@@ -357,7 +362,7 @@ func restart(c echo.Context) error {
 		}
 	}()
 	set(c)("restart", "Restart is in progress")
-	return c.Redirect(http.StatusFound, "/dashboard")
+	return c.Redirect(http.StatusFound, "/dashboard/" + redirect)
 }
 
 func fetchSSL(c echo.Context) error {
@@ -373,7 +378,7 @@ func fetchSSL(c echo.Context) error {
 	config.Cfg.SSL.Certificate = crt
 	config.Cfg.SSL.Key = key
 	if err := db.UpdateConfig(); err != nil { return err }
-	return restart(c)
+	return restart(c, "ssl")
 }
 
 func proxyAcme(c echo.Context) error {
