@@ -2,6 +2,7 @@ package db
 
 import (
 	"errors"
+	"IB1/util"
 )
 
 const (
@@ -52,7 +53,7 @@ func StringToRank(rank string) (int, error) {
 }
 
 func createSession(account Account) (string, error) {
-	token, err := newToken()
+	token, err := util.NewToken()
 	if err != nil { return "", err }
 	err = db.Create(&Session{
 		Account: account,
@@ -62,24 +63,25 @@ func createSession(account Account) (string, error) {
 	return token, err
 }
 
-var sessions = map[string]Account{}
+// cached session tokens
+var sessions = util.SafeMap[Account]{}
 
 func GetAccountFromToken(token string) (Account, error) {
-	account, ok := sessions[token]
+	account, ok := sessions.Get(token)
 	if ok { return account, nil }
 	var session Session
 	err := db.Model(session).Preload("Account").
 		First(&session, "token = ?", token).Error
 	if err == nil {
 		session.Account.Logged = true
-		sessions[token] = session.Account
+		sessions.Set(token, session.Account)
 	}
 	return session.Account, err
 }
 
 func Disconnect(token string) error {
 	err := db.Where("token = ?", token).Delete(&Session{}).Error
-	if err == nil { delete(sessions, token) }
+	if err == nil { sessions.Delete(token) }
 	return err
 }
 
@@ -133,7 +135,7 @@ func UpdateAccount(id int, name string, password string, rank int) error {
 		password, err = hashPassword(password)
 		if err != nil { return err }
 	}
-	sessions = map[string]Account{}
+	sessions.Clear()
 	return acc.Updates(Account{
 		Name: name, Rank: rank, Password: password}).Error
 }
@@ -142,7 +144,7 @@ func RemoveAccount(id uint) error {
 	err := db.Unscoped().Delete(&Account{}, id).Error
 	if err != nil { return err }
 	db.Where("account_id = ?", id).Delete(&Session{})
-	sessions = map[string]Account{}
+	sessions.Clear()
 	return nil
 }
 

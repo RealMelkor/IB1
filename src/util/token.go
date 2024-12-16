@@ -1,4 +1,4 @@
-package web
+package util
 
 import (
 	"crypto/rand"
@@ -7,7 +7,7 @@ import (
 
 const tokenLength = 32
 
-func newToken() (string, error) {
+func NewToken() (string, error) {
 	var random [tokenLength]byte
 	_, err := rand.Read(random[:])
 	if err != nil { return "", err }

@@ -53,7 +53,7 @@ func deleteCookie(c echo.Context, name string) {
 func getID(c echo.Context) (string, error) {
 	v := getCookie(c, "id")
 	if v == "" {
-		token, err := newToken()
+		token, err := util.NewToken()
 		if err != nil { return "", err }
 		setCookie(c, "id", token)
 		v = token

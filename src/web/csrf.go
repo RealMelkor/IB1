@@ -2,6 +2,7 @@ package web
 
 import (
         "errors"
+	"IB1/util"
 
         "github.com/labstack/echo/v4"
 )
@@ -27,7 +28,7 @@ func csrf(f echo.HandlerFunc) echo.HandlerFunc {
 			if token != value { return invalid }
 		}
 		if check || get(c)("csrf") == nil {
-			token, err := newToken()
+			token, err := util.NewToken()
 			if err != nil { return err }
 			set(c)("csrf", token)
 		}

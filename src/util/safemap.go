@@ -22,6 +22,12 @@ func (m *SafeMap[any]) Get(key string) (any, bool) {
         return v, ok
 }
 
+func (m *SafeMap[any]) Delete(key string) {
+        m.mutex.Lock()
+        delete(m.data, key)
+        m.mutex.Unlock()
+}
+
 func (m *SafeMap[any]) Clear() {
         m.mutex.Lock()
         m.data = map[string]any{}
