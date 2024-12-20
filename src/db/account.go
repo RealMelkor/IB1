@@ -32,6 +32,7 @@ func GetAccountFromToken(token string) (Account, error) {
 	err := db.Model(session).Preload("Account").
 		First(&session, "token = ?", token).Error
 	if err == nil {
+		db.First(&session.Account.Rank, session.Account.RankID)
 		session.Account.Logged = true
 		sessions.Set(token, session.Account)
 	}

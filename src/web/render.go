@@ -46,6 +46,7 @@ func boardIndex(c echo.Context) error {
 		if err := db.RefreshThread(&board.Threads[i]); err != nil {
 			return err
 		}
+		board.Threads[i].Board = board
 		if length := len(board.Threads[i].Posts); length > 5 {
 			posts := []db.Post{board.Threads[i].Posts[0]}
 			board.Threads[i].Posts = append(posts,
