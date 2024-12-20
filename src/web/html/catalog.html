@@ -8,7 +8,7 @@
 {{range $board.Threads}}
 {{if (or (not (index .Posts 0).Disabled) $.Header.Account.Logged)}}
 {{$border := ""}}
-{{if (and (hasRank "moderator") (isPending (index .Posts 0).MediaHash))}}
+{{if (and (can "VIEW_PENDING_MEDIA") (isPending (index .Posts 0).MediaHash))}}
 {{$border = "pending-approval"}}
 {{end}}
 <div class="thread{{if (index .Posts 0).Disabled}} thread-hidden{{end}}">

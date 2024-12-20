@@ -17,8 +17,7 @@
 </style>
 <div id="t{{$.Number}}">
 {{range .Posts}}
-{{$moderator := hasRank "moderator"}}
-{{if (or (not .Disabled) $moderator)}}
+{{if (or (not .Disabled) (can "VIEW_HIDDEN"))}}
 <div id="{{.Number}}"></div>
 <div id="p{{.Number}}">
 <div class="post{{if .Disabled}} post-hidden{{end}}">
@@ -32,24 +31,33 @@
 	<span class="name ">{{.Name}}</span>
 {{end}}
 {{if .Rank}}
-{{$rank := .Rank}}
-<span class="{{$rank}}">{{capitalize $rank}}</span>
+<span class="{{.Rank}}">{{capitalize .Rank}}</span>
 {{end}}
 	<abbr title="{{.FormatAge}}">{{.FormatTimestamp}}</abbr>
 	<a class="post-link" href="#{{.Number}}">No.{{.Number}}</a>
-	{{if $moderator}}
+	{{if can "VIEW_IP"}}
 	[<span class="ip">IP: {{.IP}}</span>]
+	{{end}}
+	{{if can "HIDE_POST"}}
 	[<a class="action" href="/{{$.Board.Name}}/hide/{{.Number}}/{{get "csrf"}}">{{if .Disabled}}Unhide{{else}}Hide{{end}}</a>]
+	{{end}}
+	{{if can "REMOVE_POST"}}
 	[<a class="action" href="/{{$.Board.Name}}/remove/{{.Number}}/{{get "csrf"}}">Remove</a>]
+	{{end}}
 {{if .Media}}
+{{if can "REMOVE_MEDIA"}}
 	[<a class="action" href="/{{$.Board.Name}}/remove_media/{{.Number}}/{{get "csrf"}}">Delete Media</a>]
+{{end}}
+{{if can "BAN_MEDIA"}}
 	[<a class="action" href="/{{$.Board.Name}}/ban_media/{{.Number}}/{{get "csrf"}}">Ban Media</a>]
-{{if isPending .MediaHash}}
+{{end}}
+{{if and (isPending .MediaHash) (can "APPROVE_MEDIA")}}
 	[<a class="action" href="/{{$.Board.Name}}/approve/{{.Number}}/{{get "csrf"}}">Approve Media</a>]
 {{end}}
 {{end}}
+{{if can "BAN_IP"}}
 	[<a class="action" href="/{{$.Board.Name}}/ban/{{.IP}}/{{get "csrf"}}">Ban</a>]
-	{{else}}
+{{end}}
 	{{if (or (and (eq .Session session) (not (eq .Session ""))) (and (eq self.ID .OwnerID) (not (eq .OwnerID 0))))}}
 	[<a class="action" href="/{{$.Board.Name}}/cancel/{{.Number}}/{{get "csrf"}}">Remove</a>]
 	{{end}}
@@ -63,11 +71,11 @@
 	<input type="checkbox" class="zoom-check" id="zoom-check-{{.Number}}">
 	<label for="zoom-check-{{.Number}}">
 {{$border := ""}}
-{{if (and (hasRank "moderator") (isPending .MediaHash))}}
+{{if (and (can "VIEW_PENDING_MEDIA") (isPending .MediaHash))}}
 {{$border = "pending-approval"}}
 {{end}}
 		<img class="thumbnail {{$border}}" src="/media/thumbnail/{{.Thumbnail}}" alt="{{.Number}}">
-{{if or (isPicture .Media) (and (isPending .MediaHash) (not (hasRank "moderator")))}}
+{{if or (isPicture .Media) (and (isPending .MediaHash) (not (can "VIEW_PENDING_MEDIA")))}}
                 <img class="media {{$border}}" loading="lazy" src="/media/{{.Media}}" alt="{{.Number}}">
 {{else if (isVideo .Media)}}
                 <div class="media media-video">
@@ -85,7 +93,6 @@
 <p class="content">{{.Content}}</p>
 </div>
 </div>
-{{end}}
 {{end}}
 {{end}}
 </div>

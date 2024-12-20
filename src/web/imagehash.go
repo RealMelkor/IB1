@@ -2,8 +2,10 @@ package web
 
 import (
 	"io"
-	"log"
 	"image"
+	_ "image/jpeg"
+	_ "image/png"
+	_ "image/gif"
 	"strconv"
 	"github.com/corona10/goimagehash"
 	"github.com/labstack/echo/v4"
@@ -16,7 +18,6 @@ func isImageBanned(r io.Reader) error {
 	if err != nil { return err }
 	v, err := goimagehash.AverageHash(img)
 	if err != nil { return err }
-	log.Println(v.ToString())
 	return db.IsImageBanned(*v)
 }
 

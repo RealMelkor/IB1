@@ -17,7 +17,7 @@
 			<td><input type="checkbox" name="signed" style="width:auto;"></td>
 		</tr>
 {{end}}
-{{if hasRank "moderator"}}
+{{if can "SHOW_RANK"}}
 		<tr>
 			<th>Show rank</th>
 			<td><input type="checkbox" name="rank" style="width:auto;"></td>
@@ -27,7 +27,7 @@
 			<th>Subject</th>
 			<td><input type="text" id="title" name="title"></td>
 		</tr>
-{{if and isCaptchaEnabled (not (hasRank "trusted"))}}
+{{if and isCaptchaEnabled (not (can "BYPASS_CAPTCHA"))}}
 		<tr>
 			<th></th>
 			<td><img class="captcha" loading="lazy" src="/captcha" alt="captcha"></td>

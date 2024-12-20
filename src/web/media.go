@@ -11,6 +11,7 @@ import (
 	"crypto/rand"
 	"golang.org/x/crypto/blake2b"
 	"mime/multipart"
+	"strings"
 
 	"github.com/gabriel-vasile/mimetype"
 
@@ -98,7 +99,7 @@ func uploadFile(file *multipart.FileHeader, approved bool) (string, error) {
 
 	// check if media is banned
 	mediaPath := path
-	if mediaType == db.MEDIA_VIDEO || extension == ".gif" {
+	if mediaType == db.MEDIA_VIDEO {
 		mediaPath = config.Cfg.Media.Tmp + "/frame_" + name + ".png"
 		if err := extractFrame(path, mediaPath); err != nil {
 			return "", err
@@ -125,7 +126,7 @@ func uploadFile(file *multipart.FileHeader, approved bool) (string, error) {
 	if config.Cfg.Media.InDatabase { // store media in database
 		tn := config.Cfg.Media.Tmp + "/thumbnail_" + hash + ".png"
 		src := out
-		if mediaType == db.MEDIA_VIDEO || extension == ".gif" {
+		if mediaType == db.MEDIA_VIDEO {
 			src = config.Cfg.Media.Tmp + "/frame_" + hash + ".png"
 			if err := extractFrame(out, src); err != nil {
 				return "", err
@@ -165,11 +166,29 @@ func uploadFile(file *multipart.FileHeader, approved bool) (string, error) {
 	return hash + extension, nil
 }
 
-func extractFrame(in string, out string) error {
+func extractFrameGif(in string, out string) error {
 	c := exec.Command(
-		"ffmpeg", "-i", in, "-vf", "select=eq(n\\,34)",
-		"-vframes", "1", out,
+		"ffmpeg", "-i", in, out,
 	)
+	c.Stderr = os.Stderr
+	c.Stdout = nil
+	c.Run()
+	_, err := os.Stat(out)
+	return err
+}
+
+func extractFrame(in string, out string) error {
+	var c *exec.Cmd
+	if strings.HasSuffix(in, ".gif") {
+		c = exec.Command(
+			"ffmpeg", "-i", in, out,
+		)
+	} else {
+		c = exec.Command(
+			"ffmpeg", "-i", in, "-vf", "select=eq(n\\,34)",
+			"-vframes", "1", out,
+		)
+	}
 	c.Stderr = os.Stderr
 	c.Stdout = nil
 	c.Run()
