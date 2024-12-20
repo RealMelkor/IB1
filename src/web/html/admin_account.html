@@ -13,12 +13,18 @@
 		<form method="POST" action="/config/account/update/{{.ID}}">
 			<td><input type="text" name="name" required value="{{.Name}}"></td>
 			<td>
+{{if .IsSuperuser}}
+				<select disabled>
+					<option>Superuser</option>
+				</select>
+{{else}}
 				<select name="rank">
 					{{$rank := .Rank.Name}}
 					{{range ranks}}
 					<option {{if eq . $rank}}selected{{end}} value="{{.}}">{{capitalize .}}</option>
 					{{end}}
 				</select>
+{{end}}
 			</td>
 			<td><input type="password" name="password"></td>
 			<td><input type="submit" value="Update"></td>

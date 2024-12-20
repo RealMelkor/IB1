@@ -105,7 +105,7 @@ type Account struct {
 	Rank		Rank
 	Logged		bool	`gorm:"-:all"`
 	Theme		string
-	IsSuperuser	bool
+	Superuser	*bool	`gorm:"unique"`
 }
 
 type Session struct {

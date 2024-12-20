@@ -20,10 +20,10 @@ func askPassword() (string, error) {
 }
 
 func firstLaunch() error {
-	if count, err := db.AccountsCount(); err != nil || count != 0 {
+	if exist, err := db.HasSuperuser(); err != nil || exist {
 		return err
 	}
-	fmt.Println("No account detected, creating admin account")
+	fmt.Println("No superuser account detected, creating a new one")
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("Enter Username: ")
 	name, _ := reader.ReadString('\n')
@@ -58,8 +58,8 @@ func parseArguments() error {
 		fmt.Println("domain updated")
 	case "register":
 		if len(os.Args) <= 3 {
-			return errors.New(os.Args[0] + " register <name> " +
-				"<user|trusted|moderator|administrator>")
+			return errors.New(
+				os.Args[0] + " register <name> <rank>")
 		}
 		rank := os.Args[3]
 		password, err := askPassword()

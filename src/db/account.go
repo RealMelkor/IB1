@@ -54,11 +54,13 @@ func CreateAccount(name string, password string,
 		if err != nil { return err }
 		v = rank
 	}
+	superuser := &admin
+	if admin == false { superuser = nil }
 	err = db.Create(&Account{
 		Name: name,
 		Password: hash,
 		Rank: v,
-		IsSuperuser: admin,
+		Superuser: superuser,
 	}).Error
 	return err
 }
@@ -77,6 +79,12 @@ func AccountsCount() (int, error) {
 	result := db.Find(&Account{})
 	if result.Error != nil { return -1, result.Error }
 	return int(result.RowsAffected), nil
+}
+
+func HasSuperuser() (bool, error) {
+	result := db.Find(&Account{}, "superuser = ?", true)
+	if result.Error != nil { return false, result.Error }
+	return result.RowsAffected > 0, nil
 }
 
 func ChangePassword(name string, password string) error {
@@ -119,6 +127,10 @@ func RemoveAccount(id uint) error {
 	return nil
 }
 
+func (account Account) IsSuperuser() bool {
+	if account.Superuser == nil { return false }
+	return *account.Superuser
+}
 
 func (account Account) HasPrivilege(privilege string) error {
 	priv := GetPrivilege(privilege)
@@ -127,7 +139,7 @@ func (account Account) HasPrivilege(privilege string) error {
 }
 
 func (account Account) Can(privilege Privilege) error {
-	if account.IsSuperuser { return nil }
+	if account.IsSuperuser() { return nil }
 	for _, v := range account.Rank.Privileges {
 		if v == privilege { return nil }
 	}
