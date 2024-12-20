@@ -29,7 +29,7 @@ func boardIndex(c echo.Context) error {
 	board, err := db.GetBoard(boardName)
 	if err != nil { return err }
 	account, err := loggedAs(c)
-	if err == nil && account.Rank < db.RANK_MODERATOR {
+	if err == nil && account.Can(db.VIEW_HIDDEN) == nil {
 		board.Threads, err = db.GetVisibleThreads(board)
 		if err != nil { return err }
 	}

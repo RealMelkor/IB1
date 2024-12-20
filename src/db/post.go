@@ -74,7 +74,9 @@ var newPostLock sync.Mutex
 func CreatePost(thread Thread, content template.HTML, name string,
 		media string, ip string, session string, account Account,
 		signed bool, rank bool, custom *gorm.DB) (int, error) {
-	if len(session) != 32 { return -1, errors.New("invalid session") }
+	if len(session) < 32 || len(session) > 64 {
+		return -1, errors.New("invalid session")
+	}
 	if custom == nil { custom = db }
 	if name == "" { name = config.Cfg.Post.DefaultName }
 	if dbType == TYPE_SQLITE {
@@ -89,7 +91,7 @@ func CreatePost(thread Thread, content template.HTML, name string,
 			Update("Posts", thread.Board.Posts + 1).Error
 		if err != nil { return err }
 
-		rankValue := 0
+		rankValue := Rank{}
 		if rank { rankValue = account.Rank }
 
 		ret := tx.Create(&Post{
@@ -98,7 +100,7 @@ func CreatePost(thread Thread, content template.HTML, name string,
 			Number: thread.Board.Posts, Media: media,
 			MediaHash: strings.Split(media, ".")[0],
 			Session: session, OwnerID: account.ID,
-			IP: ip, Signed: signed, Rank: rankValue,
+			IP: ip, Signed: signed, Rank: rankValue.Name,
 		})
 		if ret.Error != nil { return err }
 

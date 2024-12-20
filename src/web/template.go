@@ -61,10 +61,10 @@ func render(_template string, data any, c echo.Context) error {
 		},
 		"session": func() string { return getCookie(c, "id") },
 		"isLogged": func() bool { return isLogged(c) },
-		"hasRank": func(rank string) bool {
+		"can": func(priv string) bool {
 			acc, err := loggedAs(c)
 			if err != nil { return false }
-			return acc.HasRank(rank)
+			return acc.HasPrivilege(priv) == nil
 		},
 		"isSelf": func(acc db.Account) bool {
 			self, err := loggedAs(c)
@@ -108,6 +108,7 @@ func initTemplate() error {
 		},
 		"config": func() config.Config { return config.Cfg },
 		"isLogged": func() bool { return false },
+		"can": func(string) bool { return false },
 		"set": func(string, string) string {return ""},
 		"get": func(string) string {return ""},
 		"once": func(string) string {return ""},
@@ -116,20 +117,9 @@ func initTemplate() error {
 		"render": func(string, any) error { return nil },
 		"session": func() string {return ""},
 		"csrf": func() string { return "" },
-		"rank": func(rank string) int {
-			i, _ := db.StringToRank(rank)
-			return i
-		},
-		"rankToString": func(rank int) string {
-			s, _ := db.RankToString(rank)
-			return s
-		},
 		"hasRank": func(string) bool {return false},
 		"isSelf": func(db.Account) bool {return false},
 		"self": func() db.Account {return db.Account{}} ,
-		"ranks": func() []string {
-			return db.Ranks()
-		},
 		"capitalize": func(s string) string {
 			if s == "" { return "" }
 			return strings.ToUpper(s[0:1]) + s[1:]
@@ -173,6 +163,15 @@ func initTemplate() error {
 		"arr": func(args ...any) []any {
 			return args
 		},
+		"ranks": func() []string {
+			ranks, err := db.GetRanks()
+			if err != nil { return nil }
+			res := []string{}
+			for _, v := range ranks {
+				res = append(res, v.Name)
+			}
+			return res
+		},
 	}
 	templates, err = template.New("frontend").Funcs(funcs).
 				ParseFS(templatesFS, "html/*.html")
@@ -214,6 +213,8 @@ func renderDashboard(c echo.Context) error {
 	if err != nil { return err }
 	themes, err := db.GetThemes()
 	if err != nil { return err }
+	ranks, err := db.GetRanks()
+	if err != nil { return err }
 	bannedImages, err := db.GetBannedImages()
 	if err != nil { return err }
 	data := struct {
@@ -222,9 +223,11 @@ func renderDashboard(c echo.Context) error {
 		Config		config.Config
 		Theme		string
 		Themes		[]string
+		Privileges	[]string
 		Bans		[]db.Ban
 		BannedImages	[]db.BannedImage
 		UserThemes	[]db.Theme
+		Ranks		[]db.Rank
 		Header		any
 	}{
 		Accounts: accounts,
@@ -234,6 +237,8 @@ func renderDashboard(c echo.Context) error {
 		BannedImages: bannedImages,
 		Themes: getThemes(),
 		UserThemes: themes,
+		Ranks: ranks,
+		Privileges: db.GetPrivileges(),
 		Header: header(c),
 	}
 	return render("admin.html", data, c)

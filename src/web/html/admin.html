@@ -1,7 +1,7 @@
 <div class="side-menu">
 <p>Settings</p>
 <ul>
-{{range (arr "main" "media" "ssl" "acme" "board" "theme" "banner" "favicon" "ban" "image-ban" "account" "rate-limit")}}
+{{range (arr "main" "media" "ssl" "acme" "board" "theme" "banner" "favicon" "ban" "image-ban" "account" "rank" "rate-limit")}}
 {{$v := not (eq . (param "page"))}}
 	<li>{{if $v}}<a href="/dashboard/{{.}}">{{end}}{{capitalize .}}{{if $v}}</a>{{end}}</li>
 {{end}}
@@ -12,3 +12,4 @@
 </div>
 <p class="info">{{once "restart"}}</p>
 <p class="error">{{once "restart-error"}}</p>
+<p class="error">{{once (print (param "page") "-error")}}</p>

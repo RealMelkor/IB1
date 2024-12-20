@@ -6,6 +6,7 @@ toolchain go1.22.7
 
 require (
 	github.com/anthonynsimon/bild v0.13.0
+	github.com/corona10/goimagehash v1.1.0
 	github.com/dchest/captcha v1.0.0
 	github.com/gabriel-vasile/mimetype v1.4.2
 	github.com/glebarez/sqlite v1.11.0
@@ -14,8 +15,8 @@ require (
 	github.com/labstack/echo/v4 v4.12.0
 	github.com/tdewolff/minify/v2 v2.20.34
 	github.com/yl2chen/cidranger v1.0.2
-	golang.org/x/crypto v0.27.0
-	golang.org/x/term v0.24.0
+	golang.org/x/crypto v0.30.0
+	golang.org/x/term v0.27.0
 	gorm.io/driver/mysql v1.5.1
 	gorm.io/driver/sqlite v1.5.6
 	gorm.io/gorm v1.25.7
@@ -24,7 +25,6 @@ require (
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
-	github.com/corona10/goimagehash v1.1.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/glebarez/go-sqlite v1.21.2 // indirect
 	github.com/go-jose/go-jose/v4 v4.0.4 // indirect
@@ -43,12 +43,12 @@ require (
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	golang.org/x/image v0.0.0-20190703141733-d6a02ce849c9 // indirect
-	golang.org/x/mod v0.21.0 // indirect
-	golang.org/x/net v0.29.0 // indirect
-	golang.org/x/sync v0.8.0 // indirect
-	golang.org/x/sys v0.25.0 // indirect
-	golang.org/x/text v0.18.0 // indirect
-	golang.org/x/tools v0.25.0 // indirect
+	golang.org/x/mod v0.22.0 // indirect
+	golang.org/x/net v0.32.0 // indirect
+	golang.org/x/sync v0.10.0 // indirect
+	golang.org/x/sys v0.28.0 // indirect
+	golang.org/x/text v0.21.0 // indirect
+	golang.org/x/tools v0.28.0 // indirect
 	modernc.org/libc v1.22.5 // indirect
 	modernc.org/mathutil v1.5.0 // indirect
 	modernc.org/memory v1.5.0 // indirect

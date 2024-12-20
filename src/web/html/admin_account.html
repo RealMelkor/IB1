@@ -14,9 +14,9 @@
 			<td><input type="text" name="name" required value="{{.Name}}"></td>
 			<td>
 				<select name="rank">
-					{{$Rank := .Rank}}
+					{{$rank := .Rank.Name}}
 					{{range ranks}}
-					<option {{if eq (rank .) $Rank}}selected{{end}} value="{{.}}">{{capitalize .}}</option>
+					<option {{if eq . $rank}}selected{{end}} value="{{.}}">{{capitalize .}}</option>
 					{{end}}
 				</select>
 			</td>
@@ -43,5 +43,4 @@
 		</form>
 	</tr>
 </table>
-<p class="error">{{once "account-error"}}</p>
 {{end}}

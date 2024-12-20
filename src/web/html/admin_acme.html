@@ -23,7 +23,6 @@
 			<td colspan="2"><div class="center"><input {{if $no_acme}}disabled{{end}} type="submit" value="Generate"></div></td>
 		</tr>
 	</table>
-	<p class="error">{{once "acme-error"}}</p>
 	<input type="hidden" name="csrf" value="{{get "csrf"}}">
 </form>
 {{end}}

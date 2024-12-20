@@ -35,7 +35,7 @@ func redirect(f echo.HandlerFunc, redirect string) echo.HandlerFunc {
 	}
 }
 
-func needRank(c echo.Context, rank int) error {
+func needPrivilege(c echo.Context, privilege db.Privilege) error {
 	ret := errors.New("insufficient privilege")
 	var account db.Account
 	account.Logged = false
@@ -44,18 +44,18 @@ func needRank(c echo.Context, rank int) error {
 	var err error
 	account, err = db.GetAccountFromToken(token)
 	if err != nil { return err }
-	if account.Rank < rank { return ret }
+	if err := account.Can(privilege); err != nil { return err }
 	return nil
 }
 
 func handleConfig(f echo.HandlerFunc, param string) echo.HandlerFunc {
 	dst := "/dashboard/" + param
-	return catchCustom(redirect(hasRank(f, db.RANK_ADMIN), dst),
+	return catchCustom(redirect(hasPrivilege(f, db.ADMINISTRATION), dst),
 			param + "-error", dst)
 }
 
 func canSetConfig(c echo.Context, f echo.HandlerFunc) echo.HandlerFunc {
-	if err := needRank(c, db.RANK_ADMIN); err != nil {
+	if err := needPrivilege(c, db.ADMINISTRATION); err != nil {
 		return func(c echo.Context) error { return err }
 	}
 	return f
@@ -327,9 +327,8 @@ func deleteBan(c echo.Context) error {
 func addAccount(c echo.Context) error {
 	name := c.Request().PostFormValue("name")
 	password := c.Request().PostFormValue("password")
-	rank, err := db.StringToRank(c.Request().PostFormValue("rank"))
-	if err != nil { return err }
-	return db.CreateAccount(name, password, rank)
+	rank := c.Request().PostFormValue("rank")
+	return db.CreateAccount(name, password, rank, false)
 }
 
 func updateAccount(c echo.Context) error {
@@ -337,8 +336,7 @@ func updateAccount(c echo.Context) error {
 	if err != nil { return errors.New("invalid user") }
 	name := c.Request().PostFormValue("name")
 	password := c.Request().PostFormValue("password")
-	rank, err := db.StringToRank(c.Request().PostFormValue("rank"))
-	if err != nil { return err }
+	rank := c.Request().PostFormValue("rank")
 	return db.UpdateAccount(id, name, password, rank)
 }
 

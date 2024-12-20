@@ -50,7 +50,11 @@ func mediaCheck(f echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		for config.Cfg.Media.ApprovalQueue {
 			user, err := loggedAs(c)
-			if err == nil && user.HasRank("moderator") { break }
+			if err == nil {
+				if user.Can(db.VIEW_PENDING_MEDIA) == nil {
+					break
+				}
+			}
 			err = db.IsApproved(
 				strings.Split(c.Param("hash"), ".")[0])
 			if err == nil { break }
@@ -141,9 +145,9 @@ func isBanned(c echo.Context) error {
 	return db.IsBanned(clientIP(c))
 }
 
-func hasRank(f echo.HandlerFunc, rank int) echo.HandlerFunc {
+func hasPrivilege(f echo.HandlerFunc, privilege db.Privilege) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		if err := needRank(c, rank); err != nil { return err }
+		if err := needPrivilege(c, privilege); err != nil { return err }
 		return f(c)
 	}
 }
@@ -243,30 +247,32 @@ func Init() error {
 	r.GET("/:board/cancel/:id/:csrf",
 		cancel)
 	r.GET("/:board/remove/:id/:csrf",
-		hasRank(onPost(remove), db.RANK_ADMIN))
+		hasPrivilege(onPost(remove), db.REMOVE_POST))
 	r.GET("/:board/hide/:id/:csrf",
-		hasRank(onPost(hide), db.RANK_MODERATOR))
+		hasPrivilege(onPost(hide), db.HIDE_POST))
 	r.GET("/:board/remove_media/:id/:csrf",
-		hasRank(onPost(removeMedia), db.RANK_MODERATOR))
+		hasPrivilege(onPost(removeMedia), db.REMOVE_MEDIA))
 	r.GET("/:board/ban_media/:id/:csrf",
-		hasRank(onPost(banMedia), db.RANK_MODERATOR))
+		hasPrivilege(onPost(banMedia), db.BAN_MEDIA))
 	r.GET("/:board/approve/:id/:csrf",
-		hasRank(onPost(approveMediaFromPost), db.RANK_MODERATOR))
-	r.GET("/:board/ban/:ip/:csrf", hasRank(ban, db.RANK_MODERATOR))
+		hasPrivilege(onPost(approveMediaFromPost), db.APPROVE_MEDIA))
+	r.GET("/:board/ban/:ip/:csrf", hasPrivilege(ban, db.BAN_USER))
 	if config.Cfg.Media.ApprovalQueue {
-		r.GET("/approval", hasRank(
-			renderFile("approval.html"), db.RANK_MODERATOR))
-		r.POST("/approval/accept", hasRank(redirect(
-			approveMedia, "/approval"), db.RANK_MODERATOR))
-		r.POST("/approval/deny", hasRank(redirect(
-			denyMedia, "/approval"), db.RANK_MODERATOR))
-		r.POST("/approval/ban", hasRank(redirect(
-			banPendingMedia, "/approval"), db.RANK_MODERATOR))
-		r.POST("/approval/accept/all", hasRank(redirect(
-			approveAll, "/approval"), db.RANK_MODERATOR))
+		r.GET("/approval", hasPrivilege(
+			renderFile("approval.html"), db.APPROVE_MEDIA))
+		r.POST("/approval/accept", hasPrivilege(redirect(
+			approveMedia, "/approval"), db.APPROVE_MEDIA))
+		r.POST("/approval/deny", hasPrivilege(redirect(
+			denyMedia, "/approval"), db.APPROVE_MEDIA))
+		r.POST("/approval/ban", hasPrivilege(redirect(
+			banPendingMedia, "/approval"), db.APPROVE_MEDIA))
+		r.POST("/approval/accept/all", hasPrivilege(redirect(
+			approveAll, "/approval"), db.APPROVE_MEDIA))
 	}
-	r.GET("/dashboard", hasRank(renderDashboard, db.RANK_ADMIN))
-	r.GET("/dashboard/:page", hasRank(renderDashboard, db.RANK_ADMIN))
+	r.GET("/dashboard",
+		hasPrivilege(renderDashboard, db.ADMINISTRATION))
+	r.GET("/dashboard/:page",
+		hasPrivilege(renderDashboard, db.ADMINISTRATION))
 	r.POST("/config/client/theme", func(c echo.Context) error {
 		return redirect(setTheme, c.QueryParam("origin"))(c)
 	})
@@ -286,12 +292,12 @@ func Init() error {
 		handleConfig(updateBoard, "board"))
 	r.POST("/config/board/delete/:board",
 		handleConfig(deleteBoard, "board"))
-	r.POST("/config/theme/create",
-		handleConfig(createTheme, "theme"))
-	r.POST("/config/theme/delete/:id",
-		handleConfig(deleteTheme, "theme"))
-	r.POST("/config/theme/update/:id",
-		handleConfig(updateTheme, "theme"))
+	r.POST("/config/theme/create", handleConfig(createTheme, "theme"))
+	r.POST("/config/theme/delete/:id", handleConfig(deleteTheme, "theme"))
+	r.POST("/config/theme/update/:id", handleConfig(updateTheme, "theme"))
+	r.POST("/config/rank/create", handleConfig(createRank, "rank"))
+	r.POST("/config/rank/delete/:id", handleConfig(deleteRank, "rank"))
+	r.POST("/config/rank/update/:id", handleConfig(updateRank, "rank"))
 	r.POST("/config/favicon/update",
 		handleConfig(updateFavicon, "favicon"))
 	r.POST("/config/favicon/clear",

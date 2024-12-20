@@ -32,7 +32,7 @@
 	<span class="name ">{{.Name}}</span>
 {{end}}
 {{if .Rank}}
-{{$rank := rankToString .Rank}}
+{{$rank := .Rank}}
 <span class="{{$rank}}">{{capitalize $rank}}</span>
 {{end}}
 	<abbr title="{{.FormatAge}}">{{.FormatTimestamp}}</abbr>

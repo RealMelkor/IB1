@@ -8,6 +8,7 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"IB1/config"
+	"IB1/db"
 )
 
 func captchaNew(c echo.Context) (string, error) {
@@ -34,9 +35,12 @@ func captchaVerify(c echo.Context, answer string) bool {
 
 func checkCaptcha(c echo.Context) error {
 	if !config.Cfg.Captcha.Enabled { return nil }
-	user, err := loggedAs(c)
 	// trusted users don't need captcha
-	if err == nil && user.HasRank("trusted") { return nil }
+	if user, err := loggedAs(c); err == nil {
+		if err := user.Can(db.BYPASS_CAPTCHA); err == nil {
+			return nil
+		}
+	}
 	return verifyCaptcha(c)
 }
 

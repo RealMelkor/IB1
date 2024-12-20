@@ -86,7 +86,7 @@ type Post struct {
 	Owner		Account
 	Session		string `gorm:"size:32"`
 	Signed		bool
-	Rank		int
+	Rank		string
 }
 
 type Reference struct {
@@ -101,9 +101,11 @@ type Account struct {
 	gorm.Model
 	Name		string	`gorm:"unique"`
 	Password	string
-	Rank		int
+	RankID		int
+	Rank		Rank
 	Logged		bool	`gorm:"-:all"`
 	Theme		string
+	IsSuperuser	bool
 }
 
 type Session struct {
@@ -129,6 +131,7 @@ var Type string
 
 func Init() error {
 
+	sessions.Init()
 	Boards = map[string]Board{}
 
 	config.LoadDefault()
@@ -168,7 +171,7 @@ func Init() error {
 
 	db.AutoMigrate(&Board{}, &Thread{}, &Post{}, &Ban{}, &Theme{},
 			&Reference{}, &Account{}, &Session{}, &Config{},
-			&Media{}, &Banner{}, &BannedImage{})
+			&Media{}, &Banner{}, &BannedImage{}, &Rank{}, &Ban{})
 
 	if err := LoadBoards(); err != nil { return err }
 	if err := LoadBanList(); err != nil { return err }

@@ -28,10 +28,10 @@
 			<div style="float: right;">
 			{{if .Logged}}
 			<span>Logged in as {{.Account.Name}}</span>
-			{{if (and .Config.Media.ApprovalQueue (.Account.HasRank "moderator"))}}
+			{{if (and .Config.Media.ApprovalQueue (can "APPROVE_MEDIA"))}}
 			[<a href="/approval">Media approval</a>]
 			{{end}}
-			{{if .Account.HasRank "administrator"}}
+			{{if can "ADMINISTRATION"}}
 			[<a href="/dashboard/main">Dashboard</a>]
 			{{end}}
 			[<a href="/disconnect/{{get "csrf"}}">Disconnect</a>]

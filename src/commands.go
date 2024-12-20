@@ -39,7 +39,7 @@ func firstLaunch() error {
 	if err != nil { return err }
 	if err := db.Init(); err != nil { return err }
 
-	return db.CreateAccount(name, password, db.RANK_ADMIN)
+	return db.CreateAccount(name, password, "", true)
 }
 
 func parseArguments() error {
@@ -61,12 +61,11 @@ func parseArguments() error {
 			return errors.New(os.Args[0] + " register <name> " +
 				"<user|trusted|moderator|administrator>")
 		}
-		rank, err := db.StringToRank(os.Args[3])
-		if err != nil { return err }
+		rank := os.Args[3]
 		password, err := askPassword()
 		if err != nil { return err }
 		if err := db.Init(); err != nil { return err }
-		err = db.CreateAccount(os.Args[2], password, rank)
+		err = db.CreateAccount(os.Args[2], password, rank, false)
 		if err != nil { return err }
 		fmt.Println("new user created")
 	case "db":

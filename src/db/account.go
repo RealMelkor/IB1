@@ -5,51 +5,10 @@ import (
 	"IB1/util"
 )
 
-const (
-	RANK_USER = 100
-	RANK_TRUSTED = 200
-	RANK_MODERATOR = 300
-	RANK_ADMIN = 400
-)
-
-func Ranks() []string {
-	return []string{
-		"user",
-		"trusted",
-		"moderator",
-		"administrator",
-	}
-}
-
-func RankToString(rank int) (string, error) {
-	ranks := Ranks()
-	switch rank {
-	case RANK_USER:
-		return ranks[0], nil
-	case RANK_TRUSTED:
-		return ranks[1], nil
-	case RANK_MODERATOR:
-		return ranks[2], nil
-	case RANK_ADMIN:
-		return ranks[3], nil
-	}
-	return "", errors.New("invalid rank")
-
-}
-
-func StringToRank(rank string) (int, error) {
-	ranks := Ranks()
-	switch rank {
-	case ranks[0]:
-		return RANK_USER, nil
-	case ranks[1]:
-		return RANK_TRUSTED, nil
-	case ranks[2]:
-		return RANK_MODERATOR, nil
-	case ranks[3]:
-		return RANK_ADMIN, nil
-	}
-	return -1, errors.New("invalid rank")
+func GetRank(name string) (Rank, error) {
+	var rank Rank
+	err := db.First(&rank, "name = ?", name).Error
+	return rank, err
 }
 
 func createSession(account Account) (string, error) {
@@ -85,13 +44,21 @@ func Disconnect(token string) error {
 	return err
 }
 
-func CreateAccount(name string, password string, rank int) error {
+func CreateAccount(name string, password string,
+			rank string, admin bool) error {
 	hash, err := hashPassword(password)
 	if err != nil { return err }
+	v := Rank{}
+	if rank != "" {
+		rank, err := GetRank(rank)
+		if err != nil { return err }
+		v = rank
+	}
 	err = db.Create(&Account{
 		Name: name,
 		Password: hash,
-		Rank: rank,
+		Rank: v,
+		IsSuperuser: admin,
 	}).Error
 	return err
 }
@@ -123,13 +90,17 @@ func ChangePassword(name string, password string) error {
 
 func GetAccounts() ([]Account, error) {
 	var accounts []Account
-	if err := db.Find(&accounts).Error; err != nil { return nil, err }
+	if err := db.Preload("Rank").Find(&accounts).Error; err != nil {
+		return nil, err
+	}
 	return accounts, nil
 }
 
-func UpdateAccount(id int, name string, password string, rank int) error {
+func UpdateAccount(id int, name string, password string, rank string) error {
 	acc := db.Model(&Account{}).Where("id = ?", id)
 	if acc.Error != nil { return acc.Error }
+	v, err := GetRank(rank)
+	if err != nil { return err }
 	if password != "" {
 		var err error
 		password, err = hashPassword(password)
@@ -137,7 +108,7 @@ func UpdateAccount(id int, name string, password string, rank int) error {
 	}
 	sessions.Clear()
 	return acc.Updates(Account{
-		Name: name, Rank: rank, Password: password}).Error
+		Name: name, Rank: v, Password: password}).Error
 }
 
 func RemoveAccount(id uint) error {
@@ -148,10 +119,19 @@ func RemoveAccount(id uint) error {
 	return nil
 }
 
-func (account Account) HasRank(rank string) bool {
-	i, err := StringToRank(rank)
-	if err != nil { return false }
-	return account.Rank >= i
+
+func (account Account) HasPrivilege(privilege string) error {
+	priv := GetPrivilege(privilege)
+	if priv == NONE { return errors.New("invalid privilege") }
+	return account.Can(priv)
+}
+
+func (account Account) Can(privilege Privilege) error {
+	if account.IsSuperuser { return nil }
+	for _, v := range account.Rank.Privileges {
+		if v == privilege { return nil }
+	}
+	return errors.New("privilege insufficient")
 }
 
 func (account *Account) SetTheme(name string) error {

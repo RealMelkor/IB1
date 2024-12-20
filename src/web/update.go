@@ -43,7 +43,7 @@ func register(c echo.Context) error {
 	err := verifyCaptcha(c)
 	if err != nil { return err }
 	if err := registrationLimit.Try(clientIP(c)); err != nil { return err }
-	err = db.CreateAccount(name, password, db.RANK_USER)
+	err = db.CreateAccount(name, password, "", false) // TODO: rank from config
 	if err != nil { return err }
 	token, err := db.Login(name, password)
 	if err != nil { return errors.New("invalid credentials") }
@@ -160,7 +160,8 @@ func newThread(c echo.Context) error {
 	if err != nil { return err }
 	user, err := loggedAs(c)
 	if err == nil && signed == "on" { name = user.Name }
-	if media, err = uploadFile(file, user.HasRank("trusted")); err != nil {
+	approved := user.Can(db.BYPASS_MEDIA_APPROVAL) == nil
+	if media, err = uploadFile(file, approved); err != nil {
 		return err
 	}
 
@@ -202,7 +203,8 @@ func newPost(c echo.Context) error {
 	if err == nil && signed == "on" { name = user.Name }
 	file, err := c.FormFile("media")
 	if err == nil { 
-		media, err = uploadFile(file, user.HasRank("trusted"))
+		media, err = uploadFile(file,
+			user.Can(db.BYPASS_MEDIA_APPROVAL) == nil)
 		if err != nil { return err }
 	}
 
