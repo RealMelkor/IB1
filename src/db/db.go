@@ -35,6 +35,7 @@ type Media struct {
 	Data		[]byte
 	Thumbnail	[]byte
 	Approved	bool
+	HideThumbnail	bool
 	Type		MediaType
 }
 

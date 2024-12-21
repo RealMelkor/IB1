@@ -48,19 +48,25 @@ func imageError(f echo.HandlerFunc) echo.HandlerFunc {
 
 func mediaCheck(f echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		for config.Cfg.Media.ApprovalQueue {
-			user, err := loggedAs(c)
-			if err == nil {
-				if user.Can(db.VIEW_PENDING_MEDIA) == nil {
-					break
-				}
-			}
-			err = db.IsApproved(
-				strings.Split(c.Param("hash"), ".")[0])
-			if err == nil { break }
-			if err.Error() != db.NoYetApproved { return err }
-			return pendingMediaImage(c)
+		if !config.Cfg.Media.ApprovalQueue { return f(c) }
+		user, err := loggedAs(c)
+		if err == nil && user.Can(db.VIEW_PENDING_MEDIA) == nil {
+			return f(c)
 		}
+		hash := strings.Split(c.Param("hash"), ".")[0]
+		media, err := db.GetMedia(hash)
+		if err == nil { return err }
+		if media.Approved { return f(c) }
+		return pendingMediaImage(c)
+	}
+}
+
+func thumbnailCheck(f echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		hash := strings.Split(c.Param("hash"), ".")[0]
+		media, err := db.GetMedia(hash)
+		if err != nil { return err }
+		if media.HideThumbnail { return spoilerImage(c) }
 		return f(c)
 	}
 }
@@ -192,6 +198,14 @@ func pendingMediaImage(c echo.Context) error {
 			config.Cfg.Media.PendingMedia)
 }
 
+func spoilerImage(c echo.Context) error {
+	if config.Cfg.Media.SpoilerMime == "" {
+		return c.Blob(http.StatusOK, "image/png", spoiler)
+	}
+	return c.Blob(http.StatusOK, config.Cfg.Media.SpoilerMime,
+			config.Cfg.Media.Spoiler)
+}
+
 func Init() error {
 
 	sessions.Init()
@@ -222,6 +236,7 @@ func Init() error {
 				config.Cfg.Home.Favicon)
 	})
 	r.GET("/static/pending", pendingMediaImage)
+	r.GET("/static/spoiler", spoilerImage)
 	r.GET("/static/common.css", func(c echo.Context) error {
 		return c.Blob(http.StatusOK, "text/css", stylesheet)
 	})
@@ -279,8 +294,10 @@ func Init() error {
 	r.POST("/config/update", handleConfig(updateConfig, "main"))
 	r.POST("/config/media/update",
 		handleConfig(updateMedia, "media"))
-	r.POST("/config/media/clear",
+	r.POST("/config/media/pending/clear",
 		handleConfig(clearPendingMediaImage, "media"))
+	r.POST("/config/media/spoiler/clear",
+		handleConfig(clearSpoilerImage, "media"))
 	r.POST("/config/media/ban",
 		handleConfig(updateMedia, "media"))
 	r.POST("/config/media/ban/cancel",
@@ -325,19 +342,19 @@ func Init() error {
 		r.GET("/media/:hash", imageError(mediaCheck(
 			func(c echo.Context) error {
 				parts := strings.Split(c.Param("hash"), ".")
-				data, _, err := db.GetMedia(parts[0])
+				data, _, err := db.GetMediaData(parts[0])
 				if err != nil { return err }
 				serveMedia(c, data, c.Param("hash"))
 				return nil
 			})))
-		r.GET("/media/thumbnail/:hash", imageError(mediaCheck(
-			func(c echo.Context) error {
+		r.GET("/media/thumbnail/:hash", imageError(
+			thumbnailCheck(mediaCheck(func(c echo.Context) error {
 				parts := strings.Split(c.Param("hash"), ".")
 				data, err := db.GetThumbnail(parts[0])
 				if err != nil { return err }
 				serveMedia(c, data, c.Param("hash"))
 				return nil
-			})))
+			}))))
 	} else if config.Cfg.Media.ApprovalQueue {
 		f := func(c echo.Context) error {
 			path := c.Request().RequestURI
@@ -351,7 +368,8 @@ func Init() error {
 			return nil
 		}
 		r.GET("/media/:hash", imageError(mediaCheck(f)))
-		r.GET("/media/thumbnail/:hash", imageError(mediaCheck(f)))
+		r.GET("/media/thumbnail/:hash",
+			imageError(thumbnailCheck(mediaCheck(f))))
 	} else {
 		r.Static("/media", config.Cfg.Media.Path)
 	}

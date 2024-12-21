@@ -27,6 +27,8 @@
 	<textarea rows="5" cols="30" id="content" name="content"></textarea><br>
 	<label for="media">File:</label><br>
 	<input type="file" id="media" name="media"><br>
+	<label for="spoiler">Spoiler:</label>
+	<input type="checkbox" name="spoiler"><br>
 	<input type="submit" value="New Reply">
 	<p class="error">{{once "new-post-error"}}</p>
 	<input type="hidden" name="csrf" value="{{get "csrf"}}">

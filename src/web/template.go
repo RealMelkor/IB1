@@ -34,6 +34,9 @@ var favicon []byte
 //go:embed static/pending.png
 var pendingMedia []byte
 
+//go:embed static/spoiler.png
+var spoiler []byte
+
 //go:embed static/error.png
 var mediaError []byte
 
@@ -132,8 +135,9 @@ func initTemplate() error {
 			return hash + m.Extension()
 		},
 		"isPending": func(media string) bool {
+			v, err := db.GetMedia(media)
 			return config.Cfg.Media.ApprovalQueue &&
-					db.IsApproved(media) != nil
+					err != nil && !v.Approved
 		},
 		"hasUnapproved": func() bool {
 			return db.HasUnapproved()

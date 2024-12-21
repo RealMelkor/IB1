@@ -43,7 +43,11 @@
 		</tr>
 		<tr>
 			<th>File</th>
-			<td><input type="file" id="media" name="media" required="required"></td>
+			<td>
+				<input style="width: auto;" type="file" id="media" name="media" required="required">
+				<span>Spoiler</span>
+				<input type="checkbox" name="spoiler" style="width:auto;">
+			</td>
 		</tr>
 	</table>
 	<p class="error">{{once "new-thread-error"}}</p>

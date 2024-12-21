@@ -77,7 +77,8 @@ func validExtension(extension string) (db.MediaType, error) {
 	return mediaType, nil
 }
 
-func uploadFile(file *multipart.FileHeader, approved bool) (string, error) {
+func uploadFile(file *multipart.FileHeader,
+		approved bool, spoiler bool) (string, error) {
 
 	if uint64(file.Size) > config.Cfg.Media.MaxSize {
 		return "", errors.New("media is above size limit")
@@ -140,11 +141,12 @@ func uploadFile(file *multipart.FileHeader, approved bool) (string, error) {
 		data, err := os.ReadFile(out)
 		if err != nil { return "", err }
 		err = db.AddMedia(data, tn_data, mediaType,
-			hash, mime.String(), approved)
+			hash, mime.String(), approved, spoiler)
 		if err != nil { return "", err }
 		return hash + extension, nil
 	}
-	err = db.AddMedia(nil, nil, mediaType, hash, mime.String(), approved)
+	err = db.AddMedia(nil, nil, mediaType,
+		hash, mime.String(), approved, spoiler)
 	if err != nil { return "", err }
 	media := config.Cfg.Media.Path + "/" + hash + extension
 	err = move(out, media)
@@ -233,7 +235,7 @@ func mediaReader(hash string) (io.Reader, error) {
 	var data []byte
 	var err error
 	if isPicture {
-		data, _, err = db.GetMedia(hash)
+		data, _, err = db.GetMediaData(hash)
 	} else {
 		data, err = db.GetThumbnail(hash)
 	}

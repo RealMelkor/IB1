@@ -147,6 +147,7 @@ func newThread(c echo.Context) error {
 	title, _ := getPostForm(c, "title")
 	signed, _ := getPostForm(c, "signed")
 	rank, _ := getPostForm(c, "rank")
+	spoiler, _ := getPostForm(c, "spoiler")
 	content, hasContent := getPostForm(c, "content")
 	if !hasContent || content == "" {
 		return errors.New("invalid form")
@@ -161,9 +162,8 @@ func newThread(c echo.Context) error {
 	user, err := loggedAs(c)
 	if err == nil && signed == "on" { name = user.Name }
 	approved := user.Can(db.BYPASS_MEDIA_APPROVAL) == nil
-	if media, err = uploadFile(file, approved); err != nil {
-		return err
-	}
+	media, err = uploadFile(file, approved, spoiler == "on")
+	if err != nil { return err }
 
 	parsed, _ := parseContent(content, 0)
 	number, err := db.CreateThread(board, title, name, media, clientIP(c),
@@ -194,6 +194,7 @@ func newPost(c echo.Context) error {
 	content, _ := getPostForm(c, "content")
 	signed, _ := getPostForm(c, "signed")
 	rank, _ := getPostForm(c, "rank")
+	spoiler, _ := getPostForm(c, "spoiler")
 
 	if err := checkCaptcha(c); err != nil { return err }
 	if err := postLimit.Try(clientIP(c)); err != nil { return err }
@@ -203,8 +204,8 @@ func newPost(c echo.Context) error {
 	if err == nil && signed == "on" { name = user.Name }
 	file, err := c.FormFile("media")
 	if err == nil { 
-		media, err = uploadFile(file,
-			user.Can(db.BYPASS_MEDIA_APPROVAL) == nil)
+		approved := user.Can(db.BYPASS_MEDIA_APPROVAL) == nil
+		media, err = uploadFile(file, approved, spoiler == "on")
 		if err != nil { return err }
 	}
 

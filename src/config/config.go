@@ -48,6 +48,8 @@ type Config struct {
 		Key		[]byte
 		PendingMedia	[]byte
 		PendingMime	string
+		Spoiler		[]byte
+		SpoilerMime	string
 		ImageThreshold	int
 	}
 	Captcha struct {

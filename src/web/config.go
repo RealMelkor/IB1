@@ -175,14 +175,27 @@ func updateMedia(c echo.Context) error {
 		config.Cfg.Media.PendingMime = mime
 	}
 
+	data, mime, err = handleImage(c, "spoiler")
+	if err == nil {
+		config.Cfg.Media.Spoiler = data
+		config.Cfg.Media.SpoilerMime = mime
+	}
+
 	if err := db.UpdateConfig(); err != nil { return err }
 	if requireRestart { return restart(c, "media") }
 	return nil
 }
 
-func clearPendingMediaImage(c echo.Context) error {
+func clearPendingMediaImage(echo.Context) error {
 	config.Cfg.Media.PendingMime = ""
 	config.Cfg.Media.PendingMedia = nil
+	db.UpdateConfig()
+	return nil
+}
+
+func clearSpoilerImage(echo.Context) error {
+	config.Cfg.Media.SpoilerMime = ""
+	config.Cfg.Media.Spoiler = nil
 	db.UpdateConfig()
 	return nil
 }

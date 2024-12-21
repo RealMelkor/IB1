@@ -14,14 +14,14 @@ import (
 )
 
 func AddMedia(data []byte, thumbnail []byte, mediaType MediaType,
-		hash string, mime string, approved bool) error {
+		hash string, mime string, approved bool, spoiler bool) error {
 	var media Media
 	var count int64
 	db.First(&media, "hash = ?", hash).Count(&count)
 	if count > 0 { return nil }
 	return db.Create(&Media{
 		Hash: hash, Mime: mime, Data: data, Thumbnail: thumbnail,
-		Approved: approved, Type: mediaType,
+		Approved: approved, Type: mediaType, HideThumbnail: spoiler,
 	}).Error
 }
 
@@ -32,7 +32,7 @@ func GetThumbnail(hash string) ([]byte, error) {
 	return media.Thumbnail, nil
 }
 
-func GetMedia(hash string) ([]byte, string, error) {
+func GetMediaData(hash string) ([]byte, string, error) {
 	var media Media
 	err := db.Select("data", "mime").First(&media, "hash = ?", hash).Error
 	if err != nil { return nil, "", err }
@@ -108,13 +108,26 @@ func RemoveMedia(hash string) error {
 
 const NoYetApproved = "media is not yet approved"
 
-func IsApproved(hash string) error {
+func GetMedia(hash string) (Media, error) {
 	var media Media
 	err := db.First(&media, "hash = ?", hash).Error
+	return media, err
+}
+
+/*
+func IsApproved(hash string) error {
+	media, err := GetMedia(hash)
 	if err != nil { return err }
 	if media.Approved { return nil }
 	return errors.New(NoYetApproved)
 }
+
+func HiddenThumbnail(hash string) bool {
+	media, err := GetMedia(hash)
+	if err != nil { return false }
+	return media.HideThumbnail
+}
+*/
 
 func IsImageBanned(hash goimagehash.ImageHash) error {
 	rows, err := db.Model(&BannedImage{}).Select("hash, kind").Rows()
