@@ -44,7 +44,11 @@ func needPrivilege(c echo.Context, privilege db.Privilege) error {
 	if token == "" { return ret }
 	var err error
 	account, err = db.GetAccountFromToken(token)
-	if err != nil { return err }
+	if err != nil {
+		v, err := db.AsUnauthenticated(privilege)
+		if err != nil || !v { return ret }
+		return nil
+	}
 	if err := account.Can(privilege); err != nil { return err }
 	return nil
 }
@@ -110,6 +114,8 @@ func updateConfig(c echo.Context) error {
 
 	registration, _ := getPostForm(c, "registration")
 	config.Cfg.Accounts.AllowRegistration = registration == "on"
+
+	config.Cfg.Accounts.DefaultRank, _ = getPostForm(c, "defaultrank")
 
 	threadsStr, _ := getPostForm(c, "maxthreads")
 	threads, err := strconv.ParseUint(threadsStr, 10, 64)

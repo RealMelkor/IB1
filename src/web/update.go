@@ -43,7 +43,8 @@ func register(c echo.Context) error {
 	err := verifyCaptcha(c)
 	if err != nil { return err }
 	if err := registrationLimit.Try(clientIP(c)); err != nil { return err }
-	err = db.CreateAccount(name, password, "", false) // TODO: rank from config
+	err = db.CreateAccount(name, password,
+			config.Cfg.Accounts.DefaultRank, false)
 	if err != nil { return err }
 	token, err := db.Login(name, password)
 	if err != nil { return errors.New("invalid credentials") }

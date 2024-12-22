@@ -51,6 +51,17 @@
 			<td><input type="checkbox" name="registration" {{if .Config.Accounts.AllowRegistration}}checked{{end}}></td>
 		</tr>
 		<tr>
+			<td>Default rank</td>
+			<td>
+				<select name="defaultrank">
+					{{$rank := .Config.Accounts.DefaultRank}}
+					{{range ranks}}
+					<option {{if eq . $rank}}selected{{end}} value="{{.}}">{{capitalize .}}</option>
+					{{end}}
+				</select>
+			</td>
+		</tr>
+		<tr>
 			<td>Maximum threads per board</td>
 			<td><input type="text" name="maxthreads" value="{{.Config.Board.MaxThreads}}" required></td>
 		</tr>

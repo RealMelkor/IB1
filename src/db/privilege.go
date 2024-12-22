@@ -3,6 +3,12 @@ package db
 import (
 	"gorm.io/gorm"
 	"encoding/json"
+	"errors"
+	"sync"
+)
+
+const (
+	UNAUTHENTICATED = "unauthenticated"
 )
 
 type Privilege int
@@ -77,10 +83,39 @@ func GetRanks() ([]Rank, error) {
 
 func (rank Rank) Has(privilege string) bool {
 	priv := privileges[privilege]
+	return rank.Can(priv)
+}
+
+func (rank Rank) Can(priv Privilege) bool {
 	for _, v := range rank.Privileges {
 		if v == priv { return true }
 	}
 	return false
+}
+
+var unauthenticated Rank
+var unauthenticatedMutex = sync.Mutex{}
+var unauthenticatedRefresh = true
+func GetUnauthenticatedRank() (Rank, error) {
+	unauthenticatedMutex.Lock()
+	defer unauthenticatedMutex.Unlock()
+	if unauthenticatedRefresh {
+		v, err := GetRank(UNAUTHENTICATED)
+		if err != nil { return Rank{}, err }
+		unauthenticatedRefresh = false
+		unauthenticated = v
+	}
+	return unauthenticated, nil
+}
+
+func UnauthenticatedCan(privilege string) (bool, error) {
+	return AsUnauthenticated(GetPrivilege(privilege))
+}
+
+func AsUnauthenticated(privilege Privilege) (bool, error) {
+	v, err := GetUnauthenticatedRank()
+	if err != nil { return false, err }
+	return v.Can(privilege), nil
 }
 
 func parsePrivileges(privileges []string) []Privilege {
@@ -100,12 +135,20 @@ func CreateRank(name string, privileges []string) error {
 }
 
 func UpdateRank(id int, name string, privileges []string) error {
+	v, err := GetUnauthenticatedRank()
+	if err != nil { return err }
+	if v.ID == uint(id) { name = UNAUTHENTICATED }
 	sessions.Clear()
 	return db.Where("id = ?", id).Updates(&Rank{
 		Name: name, Privileges: parsePrivileges(privileges)}).Error
 }
 
 func DeleteRankByID(id int) error {
+	v, err := GetUnauthenticatedRank()
+	if err != nil { return err }
+	if v.ID == uint(id) {
+		return errors.New("Cannot delete 'unauthenticated' group")
+	}
 	sessions.Clear()
 	return db.Unscoped().Delete(&Rank{}, id).Error
 }

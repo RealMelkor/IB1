@@ -66,7 +66,10 @@ func render(_template string, data any, c echo.Context) error {
 		"isLogged": func() bool { return isLogged(c) },
 		"can": func(priv string) bool {
 			acc, err := loggedAs(c)
-			if err != nil { return false }
+			if err != nil {
+				v, err := db.UnauthenticatedCan(priv)
+				return err == nil && v
+			}
 			return acc.HasPrivilege(priv) == nil
 		},
 		"isSelf": func(acc db.Account) bool {

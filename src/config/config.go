@@ -66,6 +66,7 @@ type Config struct {
 	}
 	Accounts struct {
 		AllowRegistration	bool
+		DefaultRank		string
 	}
 	RateLimit struct {
 		Login		RateLimit

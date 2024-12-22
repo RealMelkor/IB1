@@ -75,6 +75,12 @@ func Init() error {
 	if err := UpdateConfig(); err != nil { return err }
 	go cleanMediaTask()
 
+	if _, err := GetRank(UNAUTHENTICATED); err != nil {
+		if err := CreateRank(UNAUTHENTICATED, []string{}); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
