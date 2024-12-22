@@ -55,7 +55,7 @@ func mediaCheck(f echo.HandlerFunc) echo.HandlerFunc {
 		}
 		hash := strings.Split(c.Param("hash"), ".")[0]
 		media, err := db.GetMedia(hash)
-		if err == nil { return err }
+		if err != nil { return err }
 		if media.Approved { return f(c) }
 		return pendingMediaImage(c)
 	}

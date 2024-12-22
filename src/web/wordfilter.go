@@ -73,7 +73,6 @@ func filterText(in string) (string, error) {
 	for _, v := range words {
 		for _, filter := range filters {
 			v = filter.Regexp.ReplaceAllString(v, filter.To)
-			//v = strings.Replace(v, filter.From, filter.To, -1)
 		}
 		res += v + " "
 	}

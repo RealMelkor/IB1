@@ -138,21 +138,6 @@ func GetMedia(hash string) (Media, error) {
 	return media, err
 }
 
-/*
-func IsApproved(hash string) error {
-	media, err := GetMedia(hash)
-	if err != nil { return err }
-	if media.Approved { return nil }
-	return errors.New(NoYetApproved)
-}
-
-func HiddenThumbnail(hash string) bool {
-	media, err := GetMedia(hash)
-	if err != nil { return false }
-	return media.HideThumbnail
-}
-*/
-
 func IsImageBanned(hash goimagehash.ImageHash) error {
 	rows, err := db.Model(&BannedImage{}).Select("hash, kind").Rows()
 	if err != nil { return err }
