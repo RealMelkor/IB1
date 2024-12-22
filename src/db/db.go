@@ -4,118 +4,12 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"gorm.io/driver/mysql"
-	"html/template"
 	"errors"
 	"os"
 	"IB1/config"
 )
 
 type Config struct {
-	gorm.Model
-	Data		[]byte
-}
-
-type Theme struct {
-	gorm.Model
-	Content		string
-	Name		string `gorm:"unique"`
-	Disabled	bool
-}
-
-type MediaType uint8
-const (
-	MEDIA_PICTURE MediaType = iota
-	MEDIA_VIDEO
-	MEDIA_AUDIO
-)
-
-type Media struct {
-	Hash		string `gorm:"unique"`
-	Mime		string
-	Data		[]byte
-	Thumbnail	[]byte
-	Approved	bool
-	HideThumbnail	bool
-	Type		MediaType
-}
-
-type BannedImage struct {
-	gorm.Model
-	Hash		int64
-	Kind		int
-}
-
-type Board struct {
-	gorm.Model
-	Name		string `gorm:"unique"`
-	LongName	string
-	Description	string
-	Threads		[]Thread
-	Posts		int
-	Disabled	bool
-}
-var Boards map[string]Board
-
-type Thread struct {
-	gorm.Model
-	Title		string
-	BoardID		int
-	Board		Board
-	Posts		[]Post
-	Alive		bool
-	Number		int
-	Replies		int `gorm:"-:all"`
-	Images		int `gorm:"-:all"`
-}
-
-type Post struct {
-	gorm.Model
-	Content		template.HTML
-	Media		string
-	MediaHash	string
-	From		string
-	Name		string
-	ThreadID	int
-	Thread		Thread
-	BoardID		int
-	Board		Board
-	Number		int
-	Timestamp	int64
-	IP		string
-	Disabled	bool
-	OwnerID		uint
-	Owner		Account
-	Session		string `gorm:"size:32"`
-	Signed		bool
-	Rank		string
-}
-
-type Reference struct {
-	gorm.Model
-	From		int
-	PostID		int
-	ThreadID	int
-	Thread		Thread
-}
-
-type Account struct {
-	gorm.Model
-	Name		string	`gorm:"unique"`
-	Password	string
-	RankID		int
-	Rank		Rank
-	Logged		bool	`gorm:"-:all"`
-	Theme		string
-	Superuser	*bool	`gorm:"unique"`
-}
-
-type Session struct {
-	AccountID	uint
-	Account		Account
-	Token		string `gorm:"unique"`
-}
-
-type Banner struct {
 	gorm.Model
 	Data		[]byte
 }
@@ -172,7 +66,8 @@ func Init() error {
 
 	db.AutoMigrate(&Board{}, &Thread{}, &Post{}, &Ban{}, &Theme{},
 			&Reference{}, &Account{}, &Session{}, &Config{},
-			&Media{}, &Banner{}, &BannedImage{}, &Rank{}, &Ban{})
+			&Media{}, &Banner{}, &BannedImage{}, &Rank{}, &Ban{},
+			&Wordfilter{})
 
 	if err := LoadBoards(); err != nil { return err }
 	if err := LoadBanList(); err != nil { return err }

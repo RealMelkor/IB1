@@ -13,6 +13,36 @@ import (
 	"IB1/config"
 )
 
+type Post struct {
+	gorm.Model
+	Content		template.HTML
+	Media		string
+	MediaHash	string
+	From		string
+	Name		string
+	ThreadID	int
+	Thread		Thread
+	BoardID		int
+	Board		Board
+	Number		int
+	Timestamp	int64
+	IP		string
+	Disabled	bool
+	OwnerID		uint
+	Owner		Account
+	Session		string `gorm:"size:32"`
+	Signed		bool
+	Rank		string
+}
+
+type Reference struct {
+	gorm.Model
+	From		int
+	PostID		int
+	ThreadID	int
+	Thread		Thread
+}
+
 func (post Post) FormatTimestamp() string {
 	tm := time.Unix(post.Timestamp, 0).UTC()
 	return fmt.Sprintf("%02d/%02d/%d (%s) %02d:%02d:%02d UTC",

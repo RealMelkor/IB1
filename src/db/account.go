@@ -1,9 +1,27 @@
 package db
 
 import (
+	"gorm.io/gorm"
 	"errors"
 	"IB1/util"
 )
+
+type Session struct {
+	AccountID	uint
+	Account		Account
+	Token		string `gorm:"unique"`
+}
+
+type Account struct {
+	gorm.Model
+	Name		string	`gorm:"unique"`
+	Password	string
+	RankID		int
+	Rank		Rank
+	Logged		bool	`gorm:"-:all"`
+	Theme		string
+	Superuser	*bool	`gorm:"unique"`
+}
 
 func GetRank(name string) (Rank, error) {
 	var rank Rank

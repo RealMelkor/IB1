@@ -8,6 +8,29 @@ import (
 	"IB1/config"
 )
 
+type Thread struct {
+	gorm.Model
+	Title		string
+	BoardID		int
+	Board		Board
+	Posts		[]Post
+	Alive		bool
+	Number		int
+	Replies		int `gorm:"-:all"`
+	Images		int `gorm:"-:all"`
+}
+
+type Board struct {
+	gorm.Model
+	Name		string `gorm:"unique"`
+	LongName	string
+	Description	string
+	Threads		[]Thread
+	Posts		int
+	Disabled	bool
+}
+var Boards map[string]Board
+
 func GetBoard(name string) (Board, error) {
 	board, ok := Boards[name]
 	if !ok { return board, errors.New("board not found") }

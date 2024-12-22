@@ -1,5 +1,16 @@
 package db
 
+import (
+	"gorm.io/gorm"
+)
+
+type Theme struct {
+	gorm.Model
+	Content		string
+	Name		string `gorm:"unique"`
+	Disabled	bool
+}
+
 func AddTheme(name string, content string, disabled bool) error {
 	return db.Create(&Theme{
 		Name: name, Content: content, Disabled: disabled}).Error

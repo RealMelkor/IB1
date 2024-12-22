@@ -1,5 +1,9 @@
 package db
 
+type Banner struct {
+	Data		[]byte
+}
+
 func AddBanner(data []byte) error {
 	return db.Create(&Banner{Data: data}).Error
 }

@@ -20,6 +20,7 @@ import (
 )
 
 var invalidForm = errors.New("invalid form")
+var invalidID = errors.New("invalid id")
 
 func getPostForm(c echo.Context, param string) (string, bool) {
 	v := c.Request().PostFormValue(param)
@@ -297,7 +298,7 @@ func createTheme(c echo.Context) error {
 
 func updateTheme(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil { return errors.New("invalid theme") }
+	if err != nil { return invalidID }
 	name, hasName := getPostForm(c, "name")
         if !hasName { return invalidForm }
 	enabled, _ := getPostForm(c, "enabled")
@@ -310,7 +311,7 @@ func updateTheme(c echo.Context) error {
 
 func deleteTheme(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil { return errors.New("invalid theme") }
+	if err != nil { return invalidID }
 	err = db.DeleteThemeByID(id)
 	if err != nil { return err }
 	reloadThemes()
@@ -333,7 +334,7 @@ func addBan(c echo.Context) error {
 
 func deleteBan(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil { return errors.New("invalid theme") }
+	if err != nil { return invalidID }
 	return db.RemoveBan(uint(id))
 }
 
@@ -346,7 +347,7 @@ func addAccount(c echo.Context) error {
 
 func updateAccount(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil { return errors.New("invalid user") }
+	if err != nil { return invalidID }
 	name := c.Request().PostFormValue("name")
 	password := c.Request().PostFormValue("password")
 	rank := c.Request().PostFormValue("rank")
@@ -355,7 +356,7 @@ func updateAccount(c echo.Context) error {
 
 func deleteAccount(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil { return errors.New("invalid user") }
+	if err != nil { return invalidID }
 	return db.RemoveAccount(uint(id))
 }
 

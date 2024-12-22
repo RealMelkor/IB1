@@ -309,24 +309,37 @@ func Init() error {
 		handleConfig(updateBoard, "board"))
 	r.POST("/config/board/delete/:board",
 		handleConfig(deleteBoard, "board"))
+
 	r.POST("/config/theme/create", handleConfig(createTheme, "theme"))
 	r.POST("/config/theme/delete/:id", handleConfig(deleteTheme, "theme"))
 	r.POST("/config/theme/update/:id", handleConfig(updateTheme, "theme"))
+
+	r.POST("/config/wordfilter/create",
+		handleConfig(createWordfilter, "wordfilter"))
+	r.POST("/config/wordfilter/delete/:id",
+		handleConfig(deleteWordfilter, "wordfilter"))
+	r.POST("/config/wordfilter/update/:id",
+		handleConfig(updateWordfilter, "wordfilter"))
+
 	r.POST("/config/rank/create", handleConfig(createRank, "rank"))
 	r.POST("/config/rank/delete/:id", handleConfig(deleteRank, "rank"))
 	r.POST("/config/rank/update/:id", handleConfig(updateRank, "rank"))
+
 	r.POST("/config/favicon/update",
 		handleConfig(updateFavicon, "favicon"))
 	r.POST("/config/favicon/clear",
 		handleConfig(clearFavicon, "favicon"))
+
 	r.POST("/config/ban/create", handleConfig(addBan, "ban"))
 	r.POST("/config/ban/cancel/:id", handleConfig(deleteBan, "ban"))
+
 	r.POST("/config/account/create",
 		handleConfig(addAccount, "account"))
 	r.POST("/config/account/update/:id",
 		handleConfig(updateAccount, "account"))
 	r.POST("/config/account/delete/:id",
 		handleConfig(deleteAccount, "account"))
+
 	r.POST("/config/restart", handleConfig(restartStandard, "main"))
 	r.POST("/config/acme/update", handleConfig(fetchSSL, "acme"))
 	r.POST("/config/banner/create",

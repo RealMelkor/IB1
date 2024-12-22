@@ -219,6 +219,8 @@ func renderDashboard(c echo.Context) error {
 	if err != nil { return err }
 	ranks, err := db.GetRanks()
 	if err != nil { return err }
+	wordfilters, err := db.GetWordfilters()
+	if err != nil { return err }
 	bannedImages, err := db.GetBannedImages()
 	if err != nil { return err }
 	data := struct {
@@ -231,6 +233,7 @@ func renderDashboard(c echo.Context) error {
 		Bans		[]db.Ban
 		BannedImages	[]db.BannedImage
 		UserThemes	[]db.Theme
+		Wordfilters	[]db.Wordfilter
 		Ranks		[]db.Rank
 		Header		any
 	}{
@@ -241,6 +244,7 @@ func renderDashboard(c echo.Context) error {
 		BannedImages: bannedImages,
 		Themes: getThemes(),
 		UserThemes: themes,
+		Wordfilters: wordfilters,
 		Ranks: ranks,
 		Privileges: db.GetPrivileges(),
 		Header: header(c),

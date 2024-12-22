@@ -1,0 +1,31 @@
+{{define "admin-wordfilter"}}
+<div class="center"><h3>Wordfilters</h3></div>
+<table>
+	<tr>
+		<th>Enabled</th>
+		<th>From</th>
+		<th>To</th>
+		<th></th>
+	</tr>
+	{{range .Wordfilters}}
+	<tr>
+		<form method="POST" action="/config/wordfilter/update/{{.ID}}">
+			<td><input type="checkbox" name="enabled" {{if not .Disabled}}checked{{end}}></td>
+			<td><input type="text" name="from" value="{{.From}}" required></td>
+			<td><input type="text" name="to" value="{{.To}}"></td>
+			<td><input type="submit" value="Update"><input type="submit" value="Delete" formaction="/config/wordfilter/delete/{{.ID}}"></td>
+			<input type="hidden" name="csrf" value="{{get "csrf"}}">
+		</form>
+	</tr>
+	{{end}}
+	<tr>
+		<form method="POST" action="/config/wordfilter/create">
+			<td><input type="checkbox" name="enabled" checked></td>
+			<td><input type="text" name="from" required></td>
+			<td><input type="text" name="to" required></td>
+			<td><input type="submit" value="Add"></td>
+			<input type="hidden" name="csrf" value="{{get "csrf"}}">
+		</form>
+	</tr>
+</table>
+{{end}}

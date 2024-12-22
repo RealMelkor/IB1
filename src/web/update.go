@@ -209,6 +209,8 @@ func newPost(c echo.Context) error {
 		if err != nil { return err }
 	}
 
+	content, err = filterText(content)
+	if err != nil { return err }
 	parsed, refs := parseContent(content, thread.ID)
 	number, err := db.CreatePost(thread, parsed, name, media, clientIP(c),
 			getCookie(c, "id"), user, signed == "on", rank == "on",

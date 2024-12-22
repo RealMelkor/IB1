@@ -9,9 +9,33 @@ import (
 	"strings"
 
 	"github.com/corona10/goimagehash"
+	"gorm.io/gorm"
 
 	"IB1/config"
 )
+
+type MediaType uint8
+const (
+	MEDIA_PICTURE MediaType = iota
+	MEDIA_VIDEO
+	MEDIA_AUDIO
+)
+
+type Media struct {
+	Hash		string `gorm:"unique"`
+	Mime		string
+	Data		[]byte
+	Thumbnail	[]byte
+	Approved	bool
+	HideThumbnail	bool
+	Type		MediaType
+}
+
+type BannedImage struct {
+	gorm.Model
+	Hash		int64
+	Kind		int
+}
 
 func AddMedia(data []byte, thumbnail []byte, mediaType MediaType,
 		hash string, mime string, approved bool, spoiler bool) error {
