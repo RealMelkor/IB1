@@ -100,10 +100,12 @@ func CreateRank(name string, privileges []string) error {
 }
 
 func UpdateRank(id int, name string, privileges []string) error {
+	sessions.Clear()
 	return db.Where("id = ?", id).Updates(&Rank{
 		Name: name, Privileges: parsePrivileges(privileges)}).Error
 }
 
 func DeleteRankByID(id int) error {
+	sessions.Clear()
 	return db.Unscoped().Delete(&Rank{}, id).Error
 }

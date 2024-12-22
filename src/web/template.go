@@ -137,7 +137,7 @@ func initTemplate() error {
 		"isPending": func(media string) bool {
 			v, err := db.GetMedia(media)
 			return config.Cfg.Media.ApprovalQueue &&
-					err != nil && !v.Approved
+					err == nil && !v.Approved
 		},
 		"hasUnapproved": func() bool {
 			return db.HasUnapproved()

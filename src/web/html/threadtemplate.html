@@ -47,6 +47,10 @@
 {{if .Media}}
 {{if can "REMOVE_MEDIA"}}
 	[<a class="action" href="/{{$.Board.Name}}/remove_media/{{.Number}}/{{get "csrf"}}">Delete Media</a>]
+{{else}}
+	{{if (or (and (eq .Session session) (not (eq .Session ""))) (and (eq self.ID .OwnerID) (not (eq .OwnerID 0))))}}
+	[<a class="action" href="/{{$.Board.Name}}/cancel/{{.Number}}/{{get "csrf"}}">Remove</a>]
+	{{end}}
 {{end}}
 {{if can "BAN_MEDIA"}}
 	[<a class="action" href="/{{$.Board.Name}}/ban_media/{{.Number}}/{{get "csrf"}}">Ban Media</a>]
@@ -58,9 +62,6 @@
 {{if can "BAN_IP"}}
 	[<a class="action" href="/{{$.Board.Name}}/ban/{{.IP}}/{{get "csrf"}}">Ban</a>]
 {{end}}
-	{{if (or (and (eq .Session session) (not (eq .Session ""))) (and (eq self.ID .OwnerID) (not (eq .OwnerID 0))))}}
-	[<a class="action" href="/{{$.Board.Name}}/cancel/{{.Number}}/{{get "csrf"}}">Remove</a>]
-	{{end}}
 	{{end}}
 	{{range .ReferredBy}}
 	<a class="post-ref ref-{{.From}}" href="#{{.From}}">&gt;&gt;{{.From}}</a>
