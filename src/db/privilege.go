@@ -4,7 +4,8 @@ import (
 	"gorm.io/gorm"
 	"encoding/json"
 	"errors"
-	"sync"
+
+	"IB1/util"
 )
 
 const (
@@ -93,19 +94,10 @@ func (rank Rank) Can(priv Privilege) bool {
 	return false
 }
 
-var unauthenticated Rank
-var unauthenticatedMutex = sync.Mutex{}
-var unauthenticatedRefresh = true
-func GetUnauthenticatedRank() (Rank, error) {
-	unauthenticatedMutex.Lock()
-	defer unauthenticatedMutex.Unlock()
-	if unauthenticatedRefresh {
-		v, err := GetRank(UNAUTHENTICATED)
-		if err != nil { return Rank{}, err }
-		unauthenticatedRefresh = false
-		unauthenticated = v
-	}
-	return unauthenticated, nil
+var unauthenticated = util.SafeObj[Rank]{
+	Reload: func() (Rank, error) {
+		return GetRank(UNAUTHENTICATED)
+	},
 }
 
 func UnauthenticatedCan(privilege string) (bool, error) {
@@ -113,7 +105,7 @@ func UnauthenticatedCan(privilege string) (bool, error) {
 }
 
 func AsUnauthenticated(privilege Privilege) (bool, error) {
-	v, err := GetUnauthenticatedRank()
+	v, err := unauthenticated.Get()
 	if err != nil { return false, err }
 	return v.Can(privilege), nil
 }
@@ -135,16 +127,19 @@ func CreateRank(name string, privileges []string) error {
 }
 
 func UpdateRank(id int, name string, privileges []string) error {
-	v, err := GetUnauthenticatedRank()
+	v, err := unauthenticated.Get()
 	if err != nil { return err }
-	if v.ID == uint(id) { name = UNAUTHENTICATED }
+	if v.ID == uint(id) {
+		name = UNAUTHENTICATED
+		unauthenticated.Refresh()
+	}
 	sessions.Clear()
 	return db.Where("id = ?", id).Updates(&Rank{
 		Name: name, Privileges: parsePrivileges(privileges)}).Error
 }
 
 func DeleteRankByID(id int) error {
-	v, err := GetUnauthenticatedRank()
+	v, err := unauthenticated.Get()
 	if err != nil { return err }
 	if v.ID == uint(id) {
 		return errors.New("Cannot delete 'unauthenticated' group")
