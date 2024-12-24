@@ -218,11 +218,11 @@ func renderDashboard(c echo.Context) error {
 	if err != nil { return err }
 	accounts, err := db.GetAccounts()
 	if err != nil { return err }
-	themes, err := db.GetThemes()
+	themes, err := db.Theme{}.GetAll()
 	if err != nil { return err }
 	ranks, err := db.GetRanks()
 	if err != nil { return err }
-	wordfilters, err := db.GetWordfilters()
+	wordfilters, err := db.Wordfilter{}.GetAll()
 	if err != nil { return err }
 	bannedImages, err := db.GetBannedImages()
 	if err != nil { return err }

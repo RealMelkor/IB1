@@ -36,7 +36,7 @@ func getThemes() []string {
 		themesContent[v.Name()] = data
 		themes = append(themes, theme)
 	}
-	dbThemes, err := db.GetThemes()
+	dbThemes, err := db.Theme{}.GetAll()
 	if err == nil {
 		for _, v := range dbThemes {
 			if v.Disabled { continue }

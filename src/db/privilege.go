@@ -50,6 +50,7 @@ const (
 
 type Rank struct {
 	gorm.Model
+	CRUD[Rank]
 	Name		string		`gorm:"unique"`
 	Privileges	[]Privilege	`gorm:"serializer:json"`
 }
@@ -122,8 +123,9 @@ func parsePrivileges(privileges []string) []Privilege {
 }
 
 func CreateRank(name string, privileges []string) error {
-	return db.Create(&Rank{
-		Name: name, Privileges: parsePrivileges(privileges)}).Error
+	return Rank{}.Add(Rank{
+		Name: name, Privileges: parsePrivileges(privileges),
+	})
 }
 
 func UpdateRank(id int, name string, privileges []string) error {
@@ -134,8 +136,9 @@ func UpdateRank(id int, name string, privileges []string) error {
 		unauthenticated.Refresh()
 	}
 	sessions.Clear()
-	return db.Where("id = ?", id).Updates(&Rank{
-		Name: name, Privileges: parsePrivileges(privileges)}).Error
+	return Rank{}.Update(id, Rank{
+		Name: name, Privileges: parsePrivileges(privileges),
+	})
 }
 
 func DeleteRankByID(id int) error {
@@ -145,5 +148,5 @@ func DeleteRankByID(id int) error {
 		return errors.New("Cannot delete 'unauthenticated' group")
 	}
 	sessions.Clear()
-	return db.Unscoped().Delete(&Rank{}, id).Error
+	return Rank{}.RemoveID(id, Rank{})
 }

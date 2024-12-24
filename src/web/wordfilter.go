@@ -21,14 +21,18 @@ func createWordfilter(c echo.Context) error {
 	enabled, _ := getPostForm(c, "enabled")
 	disabled := enabled != "on"
 	wordfilters.Refresh()
-	return db.AddWordfilter(from, to, disabled)
+	return db.Wordfilter{}.Add(db.Wordfilter{
+		From: from,
+		To: to,
+		Disabled: disabled,
+	})
 }
 
 func deleteWordfilter(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil { return invalidID }
 	wordfilters.Refresh()
-	return db.RemoveWordfilter(id)
+	return db.Wordfilter{}.RemoveID(id, db.Wordfilter{})
 }
 
 func updateWordfilter(c echo.Context) error {
@@ -42,7 +46,11 @@ func updateWordfilter(c echo.Context) error {
 	enabled, _ := getPostForm(c, "enabled")
 	disabled := enabled != "on"
 	wordfilters.Refresh()
-	return db.UpdateWordfilter(id, from, to, disabled)
+	return db.Wordfilter{}.Update(id, db.Wordfilter{
+		From: from,
+		To: to,
+		Disabled: disabled,
+	})
 }
 
 var wordfilters = util.SafeObj[[]db.Wordfilter]{
@@ -50,7 +58,7 @@ var wordfilters = util.SafeObj[[]db.Wordfilter]{
 }
 
 func getWordfilters() ([]db.Wordfilter, error) {
-	v, err := db.GetWordfilters()
+	v, err := db.Wordfilter{}.GetAll()
 	if err != nil { return nil, err }
 	filters := []db.Wordfilter{}
 	for _, v := range v {

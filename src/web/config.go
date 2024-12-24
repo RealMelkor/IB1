@@ -296,7 +296,9 @@ func createTheme(c echo.Context) error {
 	if err != nil { return err }
 	data, err = minifyCSS(data)
 	if err != nil { return err }
-	err = db.AddTheme(name, string(data), disabled)
+	err = db.Theme{}.Add(db.Theme{
+		Name: name, Content: string(data), Disabled: disabled,
+	})
 	if err != nil { return err }
 	reloadThemes()
 	return nil
@@ -309,7 +311,9 @@ func updateTheme(c echo.Context) error {
         if !hasName { return invalidForm }
 	enabled, _ := getPostForm(c, "enabled")
 	disabled := enabled != "on"
-	err = db.UpdateThemeByID(id, name, disabled)
+	err = db.Theme{}.Update(id, db.Theme{
+		Name: name, Disabled: disabled,
+	})
 	if err != nil { return err }
 	reloadThemes()
 	return nil
@@ -318,7 +322,7 @@ func updateTheme(c echo.Context) error {
 func deleteTheme(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil { return invalidID }
-	err = db.DeleteThemeByID(id)
+	err = db.Theme{}.RemoveID(id, db.Theme{})
 	if err != nil { return err }
 	reloadThemes()
 	return nil

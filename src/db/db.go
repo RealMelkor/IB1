@@ -108,3 +108,33 @@ func UpdateConfig() error {
 	if err != nil { return err }
 	return db.Create(&cfg).Error
 }
+
+type CRUD[T any] struct {
+	v *T
+}
+
+func (CRUD[T]) Add(v T) error {
+	return db.Create(&v).Error
+}
+
+func (CRUD[T]) Update(id int, v T) error {
+	return db.Where("id = ?", id).Select("*").Updates(&v).Error
+}
+
+func (CRUD[T]) Get(id int, v T) error {
+	return db.Where("id = ?", id).Select("*").First(&v).Error
+}
+
+func (CRUD[T]) GetAll() ([]T, error) {
+	var v []T
+	err := db.Find(&v).Error
+	return v, err
+}
+
+func (CRUD[T]) Remove(v T) error {
+	return db.Unscoped().Delete(&v).Error
+}
+
+func (CRUD[T]) RemoveID(id int, v T) error {
+	return db.Unscoped().Delete(v, id).Error
+}
