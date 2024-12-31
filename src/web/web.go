@@ -299,9 +299,9 @@ func Init() error {
 	r.POST("/config/media/spoiler/clear",
 		handleConfig(clearSpoilerImage, "media"))
 	r.POST("/config/media/ban",
-		handleConfig(updateMedia, "media"))
+		handleConfig(addBannedHash, "media"))
 	r.POST("/config/media/ban/cancel",
-		handleConfig(clearPendingMediaImage, "media"))
+		handleConfig(removeBannedHash, "media"))
 	r.POST("/config/ssl/update", handleConfig(updateSSL, "ssl"))
 	r.POST("/config/board/create",
 		handleConfig(createBoard, "board"))
