@@ -6,6 +6,7 @@
 		<th>Board</th>
 		<th>Name</th>
 		<th>Description</th>
+		<th>Options</th>
 		<th></th>
 		<th></th>
 	</tr>
@@ -16,6 +17,12 @@
 			<td><input type="text" name="board" value="{{.Name}}" required></td>
 			<td><input type="text" name="name" value="{{.LongName}}" required></td>
 			<td><input type="text" name="description" value="{{.Description}}" required></td>
+			<td>
+			<label>Enable country flags</label>
+			<input type="checkbox" name="country-flag" {{if .CountryFlag}}checked{{end}}>
+			<br>
+			</td>
+
 			<td><input type="submit" value="Update"></td>
 			<td><input type="submit" value="Delete" formaction="/config/board/delete/{{.ID}}" {{if not .Disabled}} disabled{{end}}></td>
 			<input type="hidden" name="csrf" value="{{get "csrf"}}">
@@ -28,6 +35,7 @@
 			<td><input type="text" name="board" required></td>
 			<td><input type="text" name="name" required></td>
 			<td><input type="text" name="description" required></td>
+			<td></td>
 			<td><input type="submit" value="Create"></td>
 			<input type="hidden" name="csrf" value="{{get "csrf"}}">
 		</form>

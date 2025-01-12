@@ -6,6 +6,7 @@ import (
 	"hash/fnv"
 	"bytes"
 	"os"
+	"io/fs"
 	"strings"
 	"time"
 	"strconv"
@@ -17,8 +18,7 @@ import (
 
 func serveMedia(c echo.Context, data []byte, name string) {
 	r := bytes.NewReader(data)
-	http.ServeContent(c.Response().Writer,
-	c.Request(), name, time.Now(), r)
+	http.ServeContent(c.Response().Writer, c.Request(), name, time.Now(), r)
 }
 
 func clientIP(c echo.Context) string {
@@ -244,6 +244,13 @@ func Init() error {
 		content, ok := themesContent[c.Param("file")]
 		if !ok { return notFound(c) }
 		serveMedia(c, content, c.Param("file"))
+		return nil
+	})
+	r.GET("/static/flags/:file", func(c echo.Context) error {
+		sub, err := fs.Sub(flags, "static/flags")
+		if err != nil { return err }
+		http.ServeFileFS(c.Response().Writer, c.Request(),
+				sub, c.Param("file"))
 		return nil
 	})
 	if config.Cfg.Captcha.Enabled {

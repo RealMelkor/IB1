@@ -25,6 +25,9 @@ var templatesFS embed.FS
 //go:embed static/*
 var static embed.FS
 
+//go:embed static/flags/*
+var flags embed.FS
+
 //go:embed static/robots.txt
 var robots []byte
 

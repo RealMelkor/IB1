@@ -33,6 +33,7 @@ type Post struct {
 	Session		string `gorm:"size:32"`
 	Signed		bool
 	Rank		string
+	Country		string
 }
 
 type Reference struct {
@@ -124,6 +125,11 @@ func CreatePost(thread Thread, content template.HTML, name string,
 		rankValue := Rank{}
 		if rank { rankValue = account.Rank }
 
+		country := ""
+		if thread.Board.CountryFlag {
+			country = GetCountry(ip)
+		}
+
 		ret := tx.Create(&Post{
 			Board: thread.Board, Thread: thread, Name: name,
 			Content: content, Timestamp: time.Now().Unix(),
@@ -131,6 +137,7 @@ func CreatePost(thread Thread, content template.HTML, name string,
 			MediaHash: strings.Split(media, ".")[0],
 			Session: session, OwnerID: account.ID,
 			IP: ip, Signed: signed, Rank: rankValue.Name,
+			Country: country,
 		})
 		if ret.Error != nil { return err }
 
