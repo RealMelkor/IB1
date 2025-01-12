@@ -29,6 +29,7 @@ type Board struct {
 	Posts		int
 	Disabled	bool
 	CountryFlag	bool
+	PosterID	bool
 }
 var Boards map[string]Board
 

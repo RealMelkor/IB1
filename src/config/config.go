@@ -60,6 +60,7 @@ type Config struct {
 		DefaultName	string
 		AsciiOnly	bool
 		ReadOnly	bool
+		Key		[]byte
 	}
 	Board struct {
 		MaxThreads	uint
@@ -110,10 +111,17 @@ func LoadDefault() {
 
 func LoadConfig(data []byte) error {
 	if err := json.Unmarshal(data, &Cfg); err != nil { return err }
-	if Cfg.Media.Key != nil { return nil }
-	Cfg.Media.Key = make([]byte, 64)
-	_, err := rand.Read(Cfg.Media.Key)
-	return err
+	if Cfg.Media.Key == nil {
+		Cfg.Media.Key = make([]byte, 64)
+		_, err := rand.Read(Cfg.Media.Key)
+		if err != nil { return err }
+	}
+	if Cfg.Post.Key == nil {
+		Cfg.Post.Key = make([]byte, 512)
+		_, err := rand.Read(Cfg.Post.Key)
+		if err != nil { return err }
+	}
+	return nil
 }
 
 func GetRaw() ([]byte, error) {

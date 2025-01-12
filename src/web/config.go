@@ -257,6 +257,7 @@ func updateBoard(c echo.Context) error {
 	enabled, _ := getPostForm(c, "enabled")
 	description, _ := getPostForm(c, "description")
 	countryFlag, _ := getPostForm(c, "country-flag")
+	posterID, _ := getPostForm(c, "poster-id")
 	boards, err := db.GetBoards()
 	if err != nil { return err }
 	for _, v := range boards {
@@ -266,6 +267,7 @@ func updateBoard(c echo.Context) error {
 		v.Description = description
 		v.Disabled = enabled != "on"
 		v.CountryFlag = countryFlag == "on"
+		v.PosterID = posterID == "on"
 		if err := db.UpdateBoard(v); err != nil { return err }
 		return db.LoadBoards()
 	}

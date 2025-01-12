@@ -32,11 +32,19 @@
 {{end}}
 {{if .Country}}
 	<img class="flag" alt="country" src="/static/flags/{{.Country}}.png" title="{{.Country}}">
+{{else}}
+&nbsp;
+{{end}}
+{{if .RandomID}}
+	<span class="poster-id" style="background-color: {{idColor .RandomID}}">{{.RandomID}}</span>
+&nbsp;
 {{end}}
 {{if .Rank}}
 <span class="{{.Rank}}">{{capitalize .Rank}}</span>
+&nbsp;
 {{end}}
 	<abbr title="{{.FormatAge}}">{{.FormatTimestamp}}</abbr>
+&nbsp;
 	<a class="post-link" href="#{{.Number}}">No.{{.Number}}</a>
 	{{if can "VIEW_IP"}}
 	[<span class="ip">IP: {{.IP}}</span>]

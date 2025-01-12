@@ -336,3 +336,9 @@ body {
 	padding-top: 6px;
 	height: 11px;
 }
+
+.poster-id {
+	color: white;
+	border-radius: 2px;
+	padding: 2px;
+}

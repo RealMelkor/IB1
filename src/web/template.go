@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"io"
 	"math/rand"
+	"fmt"
+	"hash/fnv"
 
 	"github.com/tdewolff/minify/v2"
 	"github.com/tdewolff/minify/v2/css"
@@ -181,6 +183,13 @@ func initTemplate() error {
 				res = append(res, v.Name)
 			}
 			return res
+		},
+		"idColor": func(in string) string {
+			h := fnv.New32()
+			sum := h.Sum([]byte(in))
+			sum[sum[3] % 3] |= 0xA0
+			return fmt.Sprintf("#%02X%02X%02X",
+				sum[0], sum[1], sum[2])
 		},
 	}
 	templates, err = template.New("frontend").Funcs(funcs).

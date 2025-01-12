@@ -9,9 +9,20 @@ import (
 	"time"
 	"sync"
 	"errors"
+	"encoding/base64"
+	"golang.org/x/crypto/blake2b"
 
 	"IB1/config"
 )
+
+func RandomID(in string) (string, error) {
+	h, err := blake2b.New256(config.Cfg.Post.Key[0:32])
+	if err != nil { return "", err }
+	h.Write(config.Cfg.Post.Key[32:128])
+	h.Write([]byte(in))
+	h.Write(config.Cfg.Post.Key[128:])
+	return base64.StdEncoding.EncodeToString(h.Sum(nil))[:10], nil
+}
 
 type Post struct {
 	gorm.Model
@@ -34,6 +45,7 @@ type Post struct {
 	Signed		bool
 	Rank		string
 	Country		string
+	RandomID	string
 }
 
 type Reference struct {
@@ -130,6 +142,12 @@ func CreatePost(thread Thread, content template.HTML, name string,
 			country = GetCountry(ip)
 		}
 
+		randomID := ""
+		if thread.Board.PosterID {
+			randomID, err = RandomID(ip)
+			if err != nil { return err }
+		}
+
 		ret := tx.Create(&Post{
 			Board: thread.Board, Thread: thread, Name: name,
 			Content: content, Timestamp: time.Now().Unix(),
@@ -137,7 +155,7 @@ func CreatePost(thread Thread, content template.HTML, name string,
 			MediaHash: strings.Split(media, ".")[0],
 			Session: session, OwnerID: account.ID,
 			IP: ip, Signed: signed, Rank: rankValue.Name,
-			Country: country,
+			Country: country, RandomID: randomID,
 		})
 		if ret.Error != nil { return err }
 
