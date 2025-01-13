@@ -19,6 +19,7 @@ import (
 
 	"IB1/db"
 	"IB1/config"
+	"IB1/util"
 )
 
 //go:embed html/*.html
@@ -190,6 +191,9 @@ func initTemplate() error {
 			sum[sum[3] % 3] |= 0xA0
 			return fmt.Sprintf("#%02X%02X%02X",
 				sum[0], sum[1], sum[2])
+		},
+		"country": func(code string) string {
+			return util.CountryName(code)
 		},
 	}
 	templates, err = template.New("frontend").Funcs(funcs).

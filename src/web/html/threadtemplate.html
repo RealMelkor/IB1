@@ -21,7 +21,7 @@
 <div id="{{.Number}}"></div>
 <div id="p{{.Number}}">
 <div class="post{{if .Disabled}} post-hidden{{end}}">
-<p style="display: flex;">
+<p>
 {{if eq .Number $.Number}}
 	<span class="title">{{$.Title}}</span>
 {{end}}
@@ -31,7 +31,7 @@
 	<span class="name ">{{.Name}}</span>
 {{end}}
 {{if .Country}}
-	<img class="flag" alt="country" src="/static/flags/{{.Country}}.png" title="{{.Country}}">
+	<img class="flag" alt="country" src="/static/flags/{{.Country}}.png" title="{{country .Country}}">
 {{else}}
 &nbsp;
 {{end}}
@@ -74,6 +74,7 @@
 	[<a class="action" href="/{{$.Board.Name}}/ban/{{.IP}}/{{get "csrf"}}">Ban</a>]
 {{end}}
 	{{end}}
+&nbsp;
 	{{range .ReferredBy}}
 	<a class="post-ref ref-{{.From}}" href="#{{.From}}">&gt;&gt;{{.From}}</a>
 	{{end}}
