@@ -299,6 +299,7 @@ func Init() error {
 		return redirect(setTheme, c.QueryParam("origin"))(c)
 	})
 	r.POST("/config/update", handleConfig(updateConfig, "main"))
+	r.POST("/config/geo/update", handleConfig(updateGeoIP, "main"))
 	r.POST("/config/media/update",
 		handleConfig(updateMedia, "media"))
 	r.POST("/config/media/pending/clear",

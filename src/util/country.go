@@ -1,256 +1,259 @@
 package util
 
-func CountryName(countryCode string) string {
-	switch countryCode {
-		case "ad": return "Andorra"
-		case "ae": return "United Arab Emirates"
-		case "af": return "Afghanistan"
-		case "ag": return "Antigua and Barbuda"
-		case "ai": return "Anguilla"
-		case "al": return "Albania"
-		case "am": return "Armenia"
-		case "ao": return "Angola"
-		case "aq": return "Antarctica"
-		case "ar": return "Argentina"
-		case "as": return "American Samoa"
-		case "at": return "Austria"
-		case "au": return "Australia"
-		case "aw": return "Aruba"
-		case "ax": return "Åland Islands"
-		case "az": return "Azerbaijan"
-		case "ba": return "Bosnia and Herzegovina"
-		case "bb": return "Barbados"
-		case "bd": return "Bangladesh"
-		case "be": return "Belgium"
-		case "bf": return "Burkina Faso"
-		case "bg": return "Bulgaria"
-		case "bh": return "Bahrain"
-		case "bi": return "Burundi"
-		case "bj": return "Benin"
-		case "bl": return "Saint Barthélemy"
-		case "bm": return "Bermuda"
-		case "bn": return "Brunei Darussalam"
-		case "bo": return "Bolivia, Plurinational State of"
-		case "bq": return "Bonaire, Sint Eustatius and Saba"
-		case "br": return "Brazil"
-		case "bs": return "Bahamas"
-		case "bt": return "Bhutan"
-		case "bv": return "Bouvet Island"
-		case "bw": return "Botswana"
-		case "by": return "Belarus"
-		case "bz": return "Belize"
-		case "ca": return "Canada"
-		case "cc": return "Cocos (Keeling) Islands"
-		case "cd": return "Congo, Democratic Republic of the"
-		case "cf": return "Central African Republic"
-		case "cg": return "Congo"
-		case "ch": return "Switzerland"
-		case "ci": return "Côte d'Ivoire"
-		case "ck": return "Cook Islands"
-		case "cl": return "Chile"
-		case "cm": return "Cameroon"
-		case "cn": return "China"
-		case "co": return "Colombia"
-		case "cr": return "Costa Rica"
-		case "cu": return "Cuba"
-		case "cv": return "Cabo Verde"
-		case "cw": return "Curaçao"
-		case "cx": return "Christmas Island"
-		case "cy": return "Cyprus"
-		case "cz": return "Czechia"
-		case "de": return "Germany"
-		case "dj": return "Djibouti"
-		case "dk": return "Denmark"
-		case "dm": return "Dominica"
-		case "do": return "Dominican Republic"
-		case "dz": return "Algeria"
-		case "ec": return "Ecuador"
-		case "ee": return "Estonia"
-		case "eg": return "Egypt"
-		case "eh": return "Western Sahara"
-		case "er": return "Eritrea"
-		case "es": return "Spain"
-		case "et": return "Ethiopia"
-		case "fi": return "Finland"
-		case "fj": return "Fiji"
-		case "fk": return "Falkland Islands (Malvinas)"
-		case "fm": return "Micronesia, Federated States of"
-		case "fo": return "Faroe Islands"
-		case "fr": return "France"
-		case "ga": return "Gabon"
-		case "gb": return "United Kingdom of Great Britain and Northern Ireland"
-		case "gd": return "Grenada"
-		case "ge": return "Georgia"
-		case "gf": return "French Guiana"
-		case "gg": return "Guernsey"
-		case "gh": return "Ghana"
-		case "gi": return "Gibraltar"
-		case "gl": return "Greenland"
-		case "gm": return "Gambia"
-		case "gn": return "Guinea"
-		case "gp": return "Guadeloupe"
-		case "gq": return "Equatorial Guinea"
-		case "gr": return "Greece"
-		case "gs": return "South Georgia and the South Sandwich Islands"
-		case "gt": return "Guatemala"
-		case "gu": return "Guam"
-		case "gw": return "Guinea-Bissau"
-		case "gy": return "Guyana"
-		case "hk": return "Hong Kong"
-		case "hm": return "Heard Island and McDonald Islands"
-		case "hn": return "Honduras"
-		case "hr": return "Croatia"
-		case "ht": return "Haiti"
-		case "hu": return "Hungary"
-		case "id": return "Indonesia"
-		case "ie": return "Ireland"
-		case "il": return "Israel"
-		case "im": return "Isle of Man"
-		case "in": return "India"
-		case "io": return "British Indian Ocean Territory"
-		case "iq": return "Iraq"
-		case "ir": return "Iran, Islamic Republic of"
-		case "is": return "Iceland"
-		case "it": return "Italy"
-		case "je": return "Jersey"
-		case "jm": return "Jamaica"
-		case "jo": return "Jordan"
-		case "jp": return "Japan"
-		case "ke": return "Kenya"
-		case "kg": return "Kyrgyzstan"
-		case "kh": return "Cambodia"
-		case "ki": return "Kiribati"
-		case "km": return "Comoros"
-		case "kn": return "Saint Kitts and Nevis"
-		case "kp": return "Korea, Democratic People's Republic of"
-		case "kr": return "Korea, Republic of"
-		case "kw": return "Kuwait"
-		case "ky": return "Cayman Islands"
-		case "kz": return "Kazakhstan"
-		case "la": return "Lao People's Democratic Republic"
-		case "lb": return "Lebanon"
-		case "lc": return "Saint Lucia"
-		case "li": return "Liechtenstein"
-		case "lk": return "Sri Lanka"
-		case "lr": return "Liberia"
-		case "ls": return "Lesotho"
-		case "lt": return "Lithuania"
-		case "lu": return "Luxembourg"
-		case "lv": return "Latvia"
-		case "ly": return "Libya"
-		case "ma": return "Morocco"
-		case "mc": return "Monaco"
-		case "md": return "Moldova, Republic of"
-		case "me": return "Montenegro"
-		case "mf": return "Saint Martin (French part)"
-		case "mg": return "Madagascar"
-		case "mh": return "Marshall Islands"
-		case "mk": return "North Macedonia"
-		case "ml": return "Mali"
-		case "mm": return "Myanmar"
-		case "mn": return "Mongolia"
-		case "mo": return "Macao"
-		case "mp": return "Northern Mariana Islands"
-		case "mq": return "Martinique"
-		case "mr": return "Mauritania"
-		case "ms": return "Montserrat"
-		case "mt": return "Malta"
-		case "mu": return "Mauritius"
-		case "mv": return "Maldives"
-		case "mw": return "Malawi"
-		case "mx": return "Mexico"
-		case "my": return "Malaysia"
-		case "mz": return "Mozambique"
-		case "na": return "Namibia"
-		case "nc": return "New Caledonia"
-		case "ne": return "Niger"
-		case "nf": return "Norfolk Island"
-		case "ng": return "Nigeria"
-		case "ni": return "Nicaragua"
-		case "nl": return "Netherlands, Kingdom of the"
-		case "no": return "Norway"
-		case "np": return "Nepal"
-		case "nr": return "Nauru"
-		case "nu": return "Niue"
-		case "nz": return "New Zealand"
-		case "om": return "Oman"
-		case "pa": return "Panama"
-		case "pe": return "Peru"
-		case "pf": return "French Polynesia"
-		case "pg": return "Papua New Guinea"
-		case "ph": return "Philippines"
-		case "pk": return "Pakistan"
-		case "pl": return "Poland"
-		case "pm": return "Saint Pierre and Miquelon"
-		case "pn": return "Pitcairn"
-		case "pr": return "Puerto Rico"
-		case "ps": return "Palestine, State of"
-		case "pt": return "Portugal"
-		case "pw": return "Palau"
-		case "py": return "Paraguay"
-		case "qa": return "Qatar"
-		case "re": return "Réunion"
-		case "ro": return "Romania"
-		case "rs": return "Serbia"
-		case "ru": return "Russian Federation"
-		case "rw": return "Rwanda"
-		case "sa": return "Saudi Arabia"
-		case "sb": return "Solomon Islands"
-		case "sc": return "Seychelles"
-		case "sd": return "Sudan"
-		case "se": return "Sweden"
-		case "sg": return "Singapore"
-		case "sh": return "Saint Helena, Ascension and Tristan da Cunha"
-		case "si": return "Slovenia"
-		case "sj": return "Svalbard and Jan Mayen"
-		case "sk": return "Slovakia"
-		case "sl": return "Sierra Leone"
-		case "sm": return "San Marino"
-		case "sn": return "Senegal"
-		case "so": return "Somalia"
-		case "sr": return "Suriname"
-		case "ss": return "South Sudan"
-		case "st": return "Sao Tome and Principe"
-		case "sv": return "El Salvador"
-		case "sx": return "Sint Maarten (Dutch part)"
-		case "sy": return "Syrian Arab Republic"
-		case "sz": return "Eswatini"
-		case "tc": return "Turks and Caicos Islands"
-		case "td": return "Chad"
-		case "tf": return "French Southern Territories"
-		case "tg": return "Togo"
-		case "th": return "Thailand"
-		case "tj": return "Tajikistan"
-		case "tk": return "Tokelau"
-		case "tl": return "Timor-Leste"
-		case "tm": return "Turkmenistan"
-		case "tn": return "Tunisia"
-		case "to": return "Tonga"
-		case "tr": return "Türkiye"
-		case "tt": return "Trinidad and Tobago"
-		case "tv": return "Tuvalu"
-		case "tw": return "Taiwan, Province of China"
-		case "tz": return "Tanzania, United Republic of"
-		case "ua": return "Ukraine"
-		case "ug": return "Uganda"
-		case "um": return "United States Minor Outlying Islands"
-		case "us": return "United States of America"
-		case "uy": return "Uruguay"
-		case "uz": return "Uzbekistan"
-		case "va": return "Holy See"
-		case "vc": return "Saint Vincent and the Grenadines"
-		case "ve": return "Venezuela, Bolivarian Republic of"
-		case "vg": return "Virgin Islands (British)"
-		case "vi": return "Virgin Islands (U.S.)"
-		case "vn": return "Viet Nam"
-		case "vu": return "Vanuatu"
-		case "wf": return "Wallis and Futuna"
-		case "ws": return "Samoa"
-		case "ye": return "Yemen"
-		case "yt": return "Mayotte"
-		case "za": return "South Africa"
-		case "zm": return "Zambia"
-		case "zw": return "Zimbabwe"
-	}
-	return "Unknown"
+var countries = map[string]string{
+	"ad": "Andorra",
+	"ae": "United Arab Emirates",
+	"af": "Afghanistan",
+	"ag": "Antigua and Barbuda",
+	"ai": "Anguilla",
+	"al": "Albania",
+	"am": "Armenia",
+	"ao": "Angola",
+	"aq": "Antarctica",
+	"ar": "Argentina",
+	"as": "American Samoa",
+	"at": "Austria",
+	"au": "Australia",
+	"aw": "Aruba",
+	"ax": "Åland Islands",
+	"az": "Azerbaijan",
+	"ba": "Bosnia and Herzegovina",
+	"bb": "Barbados",
+	"bd": "Bangladesh",
+	"be": "Belgium",
+	"bf": "Burkina Faso",
+	"bg": "Bulgaria",
+	"bh": "Bahrain",
+	"bi": "Burundi",
+	"bj": "Benin",
+	"bl": "Saint Barthélemy",
+	"bm": "Bermuda",
+	"bn": "Brunei Darussalam",
+	"bo": "Bolivia",
+	"bq": "Bonaire, Sint Eustatius and Saba",
+	"br": "Brazil",
+	"bs": "Bahamas",
+	"bt": "Bhutan",
+	"bv": "Bouvet Island",
+	"bw": "Botswana",
+	"by": "Belarus",
+	"bz": "Belize",
+	"ca": "Canada",
+	"cc": "Cocos Islands",
+	"cd": "DR Congo",
+	"cf": "Central African Republic",
+	"cg": "Congo",
+	"ch": "Switzerland",
+	"ci": "Côte d'Ivoire",
+	"ck": "Cook Islands",
+	"cl": "Chile",
+	"cm": "Cameroon",
+	"cn": "China",
+	"co": "Colombia",
+	"cr": "Costa Rica",
+	"cu": "Cuba",
+	"cv": "Cabo Verde",
+	"cw": "Curaçao",
+	"cx": "Christmas Island",
+	"cy": "Cyprus",
+	"cz": "Czechia",
+	"de": "Germany",
+	"dj": "Djibouti",
+	"dk": "Denmark",
+	"dm": "Dominica",
+	"do": "Dominican Republic",
+	"dz": "Algeria",
+	"ec": "Ecuador",
+	"ee": "Estonia",
+	"eg": "Egypt",
+	"eh": "Western Sahara",
+	"er": "Eritrea",
+	"es": "Spain",
+	"et": "Ethiopia",
+	"fi": "Finland",
+	"fj": "Fiji",
+	"fk": "Falkland Islands",
+	"fm": "Micronesia",
+	"fo": "Faroe Islands",
+	"fr": "France",
+	"ga": "Gabon",
+	"gb": "United Kingdom",
+	"gd": "Grenada",
+	"ge": "Georgia",
+	"gf": "French Guiana",
+	"gg": "Guernsey",
+	"gh": "Ghana",
+	"gi": "Gibraltar",
+	"gl": "Greenland",
+	"gm": "Gambia",
+	"gn": "Guinea",
+	"gp": "Guadeloupe",
+	"gq": "Equatorial Guinea",
+	"gr": "Greece",
+	"gs": "South Georgia and the South Sandwich Islands",
+	"gt": "Guatemala",
+	"gu": "Guam",
+	"gw": "Guinea-Bissau",
+	"gy": "Guyana",
+	"hk": "Hong Kong",
+	"hm": "Heard Island and McDonald Islands",
+	"hn": "Honduras",
+	"hr": "Croatia",
+	"ht": "Haiti",
+	"hu": "Hungary",
+	"id": "Indonesia",
+	"ie": "Ireland",
+	"il": "Israel",
+	"im": "Isle of Man",
+	"in": "India",
+	"io": "British Indian Ocean Territory",
+	"iq": "Iraq",
+	"ir": "Iran",
+	"is": "Iceland",
+	"it": "Italy",
+	"je": "Jersey",
+	"jm": "Jamaica",
+	"jo": "Jordan",
+	"jp": "Japan",
+	"ke": "Kenya",
+	"kg": "Kyrgyzstan",
+	"kh": "Cambodia",
+	"ki": "Kiribati",
+	"km": "Comoros",
+	"kn": "Saint Kitts and Nevis",
+	"kp": "North Korea",
+	"kr": "South Korea",
+	"kw": "Kuwait",
+	"ky": "Cayman Islands",
+	"kz": "Kazakhstan",
+	"la": "Laos",
+	"lb": "Lebanon",
+	"lc": "Saint Lucia",
+	"li": "Liechtenstein",
+	"lk": "Sri Lanka",
+	"lr": "Liberia",
+	"ls": "Lesotho",
+	"lt": "Lithuania",
+	"lu": "Luxembourg",
+	"lv": "Latvia",
+	"ly": "Libya",
+	"ma": "Morocco",
+	"mc": "Monaco",
+	"md": "Moldova",
+	"me": "Montenegro",
+	"mf": "Saint Martin",
+	"mg": "Madagascar",
+	"mh": "Marshall Islands",
+	"mk": "North Macedonia",
+	"ml": "Mali",
+	"mm": "Myanmar",
+	"mn": "Mongolia",
+	"mo": "Macao",
+	"mp": "Northern Mariana Islands",
+	"mq": "Martinique",
+	"mr": "Mauritania",
+	"ms": "Montserrat",
+	"mt": "Malta",
+	"mu": "Mauritius",
+	"mv": "Maldives",
+	"mw": "Malawi",
+	"mx": "Mexico",
+	"my": "Malaysia",
+	"mz": "Mozambique",
+	"na": "Namibia",
+	"nc": "New Caledonia",
+	"ne": "Niger",
+	"nf": "Norfolk Island",
+	"ng": "Nigeria",
+	"ni": "Nicaragua",
+	"nl": "Netherlands",
+	"no": "Norway",
+	"np": "Nepal",
+	"nr": "Nauru",
+	"nu": "Niue",
+	"nz": "New Zealand",
+	"om": "Oman",
+	"pa": "Panama",
+	"pe": "Peru",
+	"pf": "French Polynesia",
+	"pg": "Papua New Guinea",
+	"ph": "Philippines",
+	"pk": "Pakistan",
+	"pl": "Poland",
+	"pm": "Saint Pierre and Miquelon",
+	"pn": "Pitcairn",
+	"pr": "Puerto Rico",
+	"ps": "Palestine",
+	"pt": "Portugal",
+	"pw": "Palau",
+	"py": "Paraguay",
+	"qa": "Qatar",
+	"re": "Réunion",
+	"ro": "Romania",
+	"rs": "Serbia",
+	"ru": "Russia",
+	"rw": "Rwanda",
+	"sa": "Saudi Arabia",
+	"sb": "Solomon Islands",
+	"sc": "Seychelles",
+	"sd": "Sudan",
+	"se": "Sweden",
+	"sg": "Singapore",
+	"sh": "Saint Helena, Ascension and Tristan da Cunha",
+	"si": "Slovenia",
+	"sj": "Svalbard and Jan Mayen",
+	"sk": "Slovakia",
+	"sl": "Sierra Leone",
+	"sm": "San Marino",
+	"sn": "Senegal",
+	"so": "Somalia",
+	"sr": "Suriname",
+	"ss": "South Sudan",
+	"st": "Sao Tome and Principe",
+	"sv": "El Salvador",
+	"sx": "Sint Maarten",
+	"sy": "Syria",
+	"sz": "Eswatini",
+	"tc": "Turks and Caicos Islands",
+	"td": "Chad",
+	"tf": "French Southern Territories",
+	"tg": "Togo",
+	"th": "Thailand",
+	"tj": "Tajikistan",
+	"tk": "Tokelau",
+	"tl": "Timor-Leste",
+	"tm": "Turkmenistan",
+	"tn": "Tunisia",
+	"to": "Tonga",
+	"tr": "Türkiye",
+	"tt": "Trinidad and Tobago",
+	"tv": "Tuvalu",
+	"tw": "Taiwan",
+	"tz": "Tanzania",
+	"ua": "Ukraine",
+	"ug": "Uganda",
+	"um": "United States Minor Outlying Islands",
+	"us": "United States",
+	"uy": "Uruguay",
+	"uz": "Uzbekistan",
+	"va": "Vatican",
+	"vc": "Saint Vincent and the Grenadines",
+	"ve": "Venezuela",
+	"vg": "Virgin Islands (British)",
+	"vi": "Virgin Islands (U.S.)",
+	"vn": "Vietnam",
+	"vu": "Vanuatu",
+	"wf": "Wallis and Futuna",
+	"ws": "Samoa",
+	"ye": "Yemen",
+	"yt": "Mayotte",
+	"za": "South Africa",
+	"zm": "Zambia",
+	"zw": "Zimbabwe",
+}
+
+func CountryName(code string) string {
+	v, ok := countries[code]
+	if !ok { v = "Unknown" }
+	return v
 }

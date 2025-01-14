@@ -391,6 +391,13 @@ func restart(c echo.Context, redirect string) error {
 	return c.Redirect(http.StatusFound, "/dashboard/" + redirect)
 }
 
+func updateGeoIP(c echo.Context) error {
+	err := db.UpdateZones(db.ZonesURL)
+	if err != nil { return err }
+	set(c)("info", "Zones updated succesfully")
+	return db.LoadCountries()
+}
+
 func fetchSSL(c echo.Context) error {
 	config.Cfg.Acme.Email, _ = getPostForm(c, "email")
 	v, _ := getPostForm(c, "disable-www")
