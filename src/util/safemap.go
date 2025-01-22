@@ -45,3 +45,16 @@ func (m *SafeMap[any]) Init() {
         m.data = map[string]any{}
         m.mutex = sync.Mutex{}
 }
+
+func (m *SafeMap[any]) Iter(f func(string, any)(any,bool)) {
+        m.mutex.Lock()
+	for k, v := range m.data {
+		n, keep := f(k, v)
+		if keep == false {
+			delete(m.data, k)
+		} else {
+			m.data[k] = n
+		}
+	}
+        m.mutex.Unlock()
+}

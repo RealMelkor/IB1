@@ -11,8 +11,33 @@ import (
 	"IB1/util"
 )
 
-type session map[string]any
-var sessions = util.SafeMap[session]{}
+const KeyValueLifespan = time.Hour * 48
+
+type KeyValue struct {
+	Value		any
+	Creation	time.Time
+}
+
+//type session map[string]db.KeyValue
+var sessions = util.SafeMap[db.KeyValues]{}
+
+func clearSession() {
+	for {
+		time.Sleep(KeyValueLifespan)
+		sessions.Iter(func(key string, s db.KeyValues)(db.KeyValues, bool){
+			for k, v := range s {
+				diff := time.Now().Sub(v.Creation)
+				if diff > KeyValueLifespan {
+					delete(s, k)
+				}
+			}
+			return s, len(s) > 0
+		})
+		db.SaveSessions(&sessions)
+	}
+}
+
+
 
 func setCookie(c echo.Context, name string, value string) {
 	cookie := http.Cookie{
@@ -30,7 +55,7 @@ func setCookiePermanent(c echo.Context, name string, value string) {
                 Domain: config.Cfg.Web.Domain,
                 Name: name,
                 Value: value,
-		Expires: time.Now().Add(3650 * 24 * time.Hour),
+		Expires: time.Now().Add(3600 * 24 * time.Hour),
         }
 	c.SetCookie(&cookie)
 }
@@ -59,7 +84,7 @@ func getID(c echo.Context) (string, error) {
 		v = token
 	}
 	_, ok := sessions.Get(v)
-	if !ok { sessions.Set(v, session{}) }
+	if !ok { sessions.Set(v, db.KeyValues{}) }
 	return v, nil
 }
 
@@ -71,7 +96,7 @@ func get(c echo.Context) func(string)any {
 		if !ok { return nil }
 		v, ok := m[param]
 		if !ok { return nil }
-		return v
+		return v.Value
 	}
 }
 
@@ -80,10 +105,12 @@ func set(c echo.Context) func(string, any) any {
 	if err != nil { return func(string, any) any { return "" } }
 	return func(param string, value any) any {
 		_, ok := sessions.Get(id)
-		if !ok { sessions.Set(id, session{}) }
+		if !ok { sessions.Set(id, db.KeyValues{}) }
 		m, ok := sessions.Get(id)
 		if !ok { return nil }
-		m[param] = value
+		m[param] = db.KeyValue{
+			Creation: time.Now(), Value: value, Key: param,
+		}
 		sessions.Set(id, m)
 		return nil
 	}
@@ -98,7 +125,7 @@ func once(c echo.Context) func(string)any {
 		v, ok := m[param]
 		delete(m, param)
 		sessions.Set(id, m)
-		return v
+		return v.Value
 	}
 }
 

@@ -1,6 +1,7 @@
 package web
 
 import (
+	"time"
 	"errors"
 	"net/http"
 
@@ -11,8 +12,23 @@ import (
 	"IB1/db"
 )
 
+var captchaStore captcha.Store
+
+func captchaInit() {
+	captchaStore = captcha.NewMemoryStore(4096, time.Hour)
+	captcha.SetCustomStore(captchaStore)
+}
+
 func captchaNew(c echo.Context) (string, error) {
 	captchaID := captcha.New()
+	digits := captchaStore.Get(captchaID, false)
+	for i := range digits {
+		digits[i] += byte('0')
+	}
+	set(c)("captcha-need", string(digits))
+	for i := range digits {
+		digits[i] -= byte('0')
+	}
 	set(c)("captcha", captchaID)
 	return captchaID, nil
 }
@@ -28,9 +44,9 @@ func captchaImage(c echo.Context) error {
 }
 
 func captchaVerify(c echo.Context, answer string) bool {
-	v := get(c)("captcha")
+	v := get(c)("captcha-need")
 	if v == nil { return false }
-	return captcha.VerifyString(v.(string), answer)
+	return v.(string) == answer
 }
 
 func checkCaptcha(c echo.Context) error {

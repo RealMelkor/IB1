@@ -3,14 +3,7 @@ package db
 import (
 	"gorm.io/gorm"
 	"errors"
-	"IB1/util"
 )
-
-type Session struct {
-	AccountID	uint
-	Account		Account
-	Token		string `gorm:"unique"`
-}
 
 type Account struct {
 	gorm.Model
@@ -28,20 +21,6 @@ func GetRank(name string) (Rank, error) {
 	err := db.First(&rank, "name = ?", name).Error
 	return rank, err
 }
-
-func createSession(account Account) (string, error) {
-	token, err := util.NewToken()
-	if err != nil { return "", err }
-	err = db.Create(&Session{
-		Account: account,
-		AccountID: account.ID,
-		Token: token,
-	}).Error
-	return token, err
-}
-
-// cached session tokens
-var sessions = util.SafeMap[Account]{}
 
 func GetAccountFromToken(token string) (Account, error) {
 	account, ok := sessions.Get(token)

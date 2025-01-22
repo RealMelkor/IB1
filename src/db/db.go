@@ -6,6 +6,7 @@ import (
 	"gorm.io/driver/mysql"
 	"errors"
 	"os"
+	"log"
 	"IB1/config"
 )
 
@@ -67,12 +68,17 @@ func Init() error {
 	db.AutoMigrate(&Board{}, &Thread{}, &Post{}, &Ban{}, &Theme{},
 			&Reference{}, &Account{}, &Session{}, &Config{},
 			&Media{}, &Banner{}, &BannedImage{}, &Rank{}, &Ban{},
-			&Wordfilter{}, &CIDR{})
+			&Wordfilter{}, &CIDR{}, &KeyValue{})
 
 	if err := LoadBoards(); err != nil { return err }
 	if err := LoadBanList(); err != nil { return err }
 	if err := LoadConfig(); err != nil { return err }
-	if err := LoadCountries(); err != nil { return err }
+	//if err := LoadCountries(); err != nil { return err }
+	go func() {
+		if err := LoadCountries(); err != nil {
+			log.Println(err)
+		}
+	}()
 	if err := UpdateConfig(); err != nil { return err }
 	go cleanMediaTask()
 

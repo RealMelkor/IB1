@@ -6,6 +6,8 @@ import (
 	"hash/fnv"
 	"bytes"
 	"os"
+	"os/signal"
+	"syscall"
 	"io/fs"
 	"strings"
 	"time"
@@ -209,7 +211,20 @@ func spoilerImage(c echo.Context) error {
 func Init() error {
 
 	sessions.Init()
+	captchaInit()
 	reloadRatelimits()
+	if err := db.LoadSessions(&sessions); err != nil {
+		return err
+	}
+	go clearSession()
+
+	c := make(chan os.Signal)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-c
+		db.SaveSessions(&sessions)
+		os.Exit(1)
+	}()
 
 	if !config.Cfg.Media.InDatabase {
 		os.MkdirAll(config.Cfg.Media.Path + "/thumbnail", 0700)

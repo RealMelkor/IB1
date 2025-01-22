@@ -45,6 +45,7 @@ func LoadCountries() error {
                 tmp.Insert(cidranger.NewBasicRangerEntry(*cidr))
 		countries[v.Country] = tmp
         }
+	log.Println(count, "CIDRs entries loaded")
 	return nil
 }
 
