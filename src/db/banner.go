@@ -1,6 +1,11 @@
 package db
 
+import (
+	"gorm.io/gorm"
+)
+
 type Banner struct {
+	gorm.Model
 	Data		[]byte
 }
 

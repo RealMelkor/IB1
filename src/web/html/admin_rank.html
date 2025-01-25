@@ -9,7 +9,10 @@
 	{{range .Ranks}}
 	<tr>
 		<form method="POST" action="/config/rank/update/{{.ID}}">
-			<td><input type="text" name="name" value="{{.Name}}" required></td>
+			<td><input type="text" name="name" value="{{.Name}}" {{if eq .Name "unauthenticated"}}disabled{{end}} required></td>
+			{{if eq .Name "unauthenticated"}}
+				<input type="hidden" name="name" value="unauthenticated">
+			{{end}}
 			<td>
 {{$rank := .}}
 {{range $.Privileges}}
@@ -20,7 +23,7 @@
 			</td>
 			<td>
 				<input type="submit" value="Update">
-				<input type="submit" value="Delete" formaction="/config/rank/delete/{{.ID}}">
+				<input type="submit" value="Delete" formaction="/config/rank/delete/{{.ID}}" {{if eq $rank.Name "unauthenticated"}}disabled{{end}}>
 			</td>
 			<input type="hidden" name="csrf" value="{{get "csrf"}}">
 		</form>
