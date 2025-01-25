@@ -73,7 +73,7 @@ body {
 	margin-left: 10px;
 	margin-bottom: 10px;
 	background-color: #d6daf0;
-	min-width: 450px;
+	min-width: 300px;
 	width: auto;
 	display: inline-block;
 }
@@ -84,7 +84,8 @@ body {
 	margin-bottom: 10px;
 }
 
-.post > p {
+.post-top {
+	min-width: 450px;
 	display: flex;
 	max-height: 24px;
 }

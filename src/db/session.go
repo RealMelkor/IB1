@@ -41,7 +41,7 @@ func SaveSessions(sessions *util.SafeMap[KeyValues]) error {
 	sessions.Iter(func(key string, values KeyValues)(KeyValues, bool) {
 		for _, v := range values {
 			v.Token = key
-			if err := db.Create(v); err != nil {
+			if err := db.Create(v).Error; err != nil {
 				log.Println(err)
 			}
 		}

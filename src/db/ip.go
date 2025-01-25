@@ -28,6 +28,7 @@ func LoadCountries() error {
 	db.Model(&CIDR{}).Count(&count)
 	if count == 0 {
 		if err := UpdateZones(ZonesURL); err != nil { return err }
+		db.Model(&CIDR{}).Count(&count)
 	}
 	rows, err := db.Model(&CIDR{}).Rows()
         if err != nil { return err }
