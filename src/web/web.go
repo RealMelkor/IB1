@@ -166,8 +166,12 @@ func privateBoard(f echo.HandlerFunc) echo.HandlerFunc {
 		if name != "" {
 			board, err := db.GetBoard(name)
 			if err != nil { return err }
+			priv := db.USE_PRIVATE
+			if c.Request().Method == "GET" {
+				priv = db.VIEW_PRIVATE
+			}
 			if board.Private {
-				err := needPrivilege(c, db.VIEW_PRIVATE)
+				err := needPrivilege(c, priv)
 				if err != nil { return err }
 			}
 		}
