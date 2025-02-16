@@ -18,6 +18,8 @@
 	<label for="rank">Show rank:</label>
 	<input type="checkbox" name="rank"><br>
 {{end}}
+	<label for="sage">Sage:</label>
+	<input type="checkbox" name="sage"><br>
 {{if and isCaptchaEnabled (not (can "BYPASS_CAPTCHA"))}}
 	<label for="captcha">Captcha:</label><br>
 	<img class="captcha" loading="lazy" src="/captcha" alt="captcha"><br>

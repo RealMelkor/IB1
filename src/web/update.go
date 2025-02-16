@@ -185,6 +185,10 @@ func newPost(c echo.Context) error {
 	board, err := db.GetBoard(boardName)
 	if err != nil { return err }
 
+	if board.ReadOnly && needPrivilege(c, db.BYPASS_READONLY) != nil {
+		return errors.New("the board is in read-only mode")
+	}
+
 	threadNumberStr := c.Param("thread")
 	threadNumber, err := strconv.Atoi(threadNumberStr)
 	if err != nil { return err }
@@ -196,6 +200,7 @@ func newPost(c echo.Context) error {
 	signed, _ := getPostForm(c, "signed")
 	rank, _ := getPostForm(c, "rank")
 	spoiler, _ := getPostForm(c, "spoiler")
+	sage, _ := getPostForm(c, "sage")
 
 	if err := checkCaptcha(c); err != nil { return err }
 	if err := postLimit.Try(clientIP(c)); err != nil { return err }
@@ -215,7 +220,7 @@ func newPost(c echo.Context) error {
 	parsed, refs := parseContent(content, thread.ID)
 	number, err := db.CreatePost(thread, parsed, name, media, clientIP(c),
 			getCookie(c, "id"), user, signed == "on", rank == "on",
-			nil)
+			sage == "on", nil)
 	if err != nil { return err }
 
 	for _, v := range refs {

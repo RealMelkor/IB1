@@ -18,14 +18,19 @@
 			<td><input type="text" name="name" value="{{.LongName}}" required></td>
 			<td><input type="text" name="description" value="{{.Description}}" required></td>
 			<td>
-			<label>Enable country flags</label>
+			<label>Country flags</label>
 			<input type="checkbox" name="country-flag" {{if .CountryFlag}}checked{{end}}>
 			<br>
-			<label>Enable poster ID</label>
+			<label>Poster ID</label>
 			<input type="checkbox" name="poster-id" {{if .PosterID}}checked{{end}}>
 			<br>
+			<label>Read-only</label>
+			<input type="checkbox" name="read-only" {{if .ReadOnly}}checked{{end}}>
+			<br>
+			<label>Private</label>
+			<input type="checkbox" name="private" {{if .Private}}checked{{end}}>
+			<br>
 			</td>
-
 			<td><input type="submit" value="Update"></td>
 			<td><input type="submit" value="Delete" formaction="/config/board/delete/{{.ID}}" {{if not .Disabled}} disabled{{end}}></td>
 			<input type="hidden" name="csrf" value="{{get "csrf"}}">

@@ -28,6 +28,8 @@ type Board struct {
 	Threads		[]Thread
 	Posts		int
 	Disabled	bool
+	ReadOnly	bool
+	Private		bool
 	CountryFlag	bool
 	PosterID	bool
 }
@@ -72,11 +74,11 @@ func LoadBoards() error {
 
 func refreshBoard(board *Board, limit uint) error {
 	board.Threads = []Thread{}
-	hide := ""
 	err := db.Raw(
 		"SELECT b.* FROM posts a " +
 		"INNER JOIN threads b ON a.thread_id = b.id " +
-		"WHERE a.board_id = ? " + hide + "GROUP BY a.thread_id " +
+		"WHERE a.board_id = ? AND (a.sage IS NULL OR a.sage <> 1) " +
+		"GROUP BY a.thread_id " +
 		"ORDER BY MAX(a.timestamp) DESC LIMIT ?;",
 		board.ID, limit).
 		Scan(&board.Threads).Error
@@ -142,7 +144,7 @@ func CreateThread(board Board, title string, name string, media string,
 		if ret.Error != nil { return ret.Error }
 		if err := ret.Find(&thread).Error; err != nil { return err }
 		number, err = CreatePost(*thread, content, name, media, ip,
-				session, account, signed, rank, tx)
+				session, account, signed, rank, false, tx)
 		if err != nil { return err }
 		err = tx.Model(thread).Update("Number", number).Error
 		return err

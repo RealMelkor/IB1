@@ -303,6 +303,7 @@ body {
 .banner {
 	max-width: 400px;
 	max-height: 150px;
+	min-height: 150px;
 }
 
 .banner-box {

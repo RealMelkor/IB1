@@ -258,16 +258,20 @@ func updateBoard(c echo.Context) error {
 	description, _ := getPostForm(c, "description")
 	countryFlag, _ := getPostForm(c, "country-flag")
 	posterID, _ := getPostForm(c, "poster-id")
+	readonly, _ := getPostForm(c, "read-only")
+	private, _ := getPostForm(c, "private")
 	boards, err := db.GetBoards()
 	if err != nil { return err }
 	for _, v := range boards {
-		if strconv.Itoa(int(v.ID)) != c.Param("board") { continue }
+		if strconv.Itoa(int(v.ID)) != c.Param("id") { continue }
 		v.Name = board
 		v.LongName = name
 		v.Description = description
 		v.Disabled = enabled != "on"
 		v.CountryFlag = countryFlag == "on"
 		v.PosterID = posterID == "on"
+		v.ReadOnly = readonly == "on"
+		v.Private = private == "on"
 		if err := db.UpdateBoard(v); err != nil { return err }
 		return db.LoadBoards()
 	}
@@ -276,7 +280,7 @@ func updateBoard(c echo.Context) error {
 
 func deleteBoard(c echo.Context) error {
 	for i, v := range db.Boards {
-		if strconv.Itoa(int(v.ID)) != c.Param("board") { continue }
+		if strconv.Itoa(int(v.ID)) != c.Param("id") { continue }
 		err := db.DeleteBoard(v)
 		if err != nil { return err }
 		delete(db.Boards, i)

@@ -19,10 +19,12 @@
 	<div class="bar">
 			[
 			{{range $i, $e := .Boards}}
+			{{if or (not .Private) (can "VIEW_PRIVATE")}}
 			{{if $i}}
 			/
 			{{end}}
 			<a href="/{{.Name}}">{{.Name}}</a>
+			{{end}}
 			{{end}}
 			]
 			<div style="float: right;">

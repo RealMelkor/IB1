@@ -160,6 +160,21 @@ func hasPrivilege(f echo.HandlerFunc, privilege db.Privilege) echo.HandlerFunc {
 	}
 }
 
+func privateBoard(f echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		name := c.Param("board")
+		if name != "" {
+			board, err := db.GetBoard(name)
+			if err != nil { return err }
+			if board.Private {
+				err := needPrivilege(c, db.VIEW_PRIVATE)
+				if err != nil { return err }
+			}
+		}
+		return f(c)
+	}
+}
+
 func catchCustom(f echo.HandlerFunc, param string,
 			redirect string) echo.HandlerFunc {
 	return func(c echo.Context) error {
@@ -237,6 +252,7 @@ func Init() error {
 	r.Use(logger)
 	r.Use(err)
 	r.Use(csrf)
+	r.Use(privateBoard)
 
 	r.GET("/", renderFile("index.html"))
 	r.GET("/favicon.ico", notFound)
@@ -328,9 +344,9 @@ func Init() error {
 	r.POST("/config/ssl/update", handleConfig(updateSSL, "ssl"))
 	r.POST("/config/board/create",
 		handleConfig(createBoard, "board"))
-	r.POST("/config/board/update/:board",
+	r.POST("/config/board/update/:id",
 		handleConfig(updateBoard, "board"))
-	r.POST("/config/board/delete/:board",
+	r.POST("/config/board/delete/:id",
 		handleConfig(deleteBoard, "board"))
 
 	r.POST("/config/theme/create", handleConfig(createTheme, "theme"))

@@ -43,6 +43,7 @@ type Post struct {
 	Owner		Account
 	Session		string `gorm:"size:32"`
 	Signed		bool
+	Sage		bool
 	Rank		string
 	Country		string
 	RandomID	string
@@ -116,7 +117,8 @@ func (post Post) ReferredBy() []Reference {
 var newPostLock sync.Mutex
 func CreatePost(thread Thread, content template.HTML, name string,
 		media string, ip string, session string, account Account,
-		signed bool, rank bool, custom *gorm.DB) (int, error) {
+		signed bool, rank bool, sage bool,
+		custom *gorm.DB) (int, error) {
 	if len(session) < 32 || len(session) > 64 {
 		return -1, errors.New("invalid session")
 	}
@@ -155,7 +157,7 @@ func CreatePost(thread Thread, content template.HTML, name string,
 			MediaHash: strings.Split(media, ".")[0],
 			Session: session, OwnerID: account.ID,
 			IP: ip, Signed: signed, Rank: rankValue.Name,
-			Country: country, RandomID: randomID,
+			Country: country, RandomID: randomID, Sage: sage,
 		})
 		if ret.Error != nil { return err }
 
