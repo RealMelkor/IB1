@@ -42,10 +42,20 @@ func Disconnect(token string) error {
 	return err
 }
 
+func nameAvailable(name string) error {
+	res := db.Where("UPPER(name) = UPPER(?)", name).Find(&Account{})
+	if res.Error != nil { return res.Error }
+	if res.RowsAffected > 0 {
+		return errors.New("Username already taken")
+	}
+	return nil
+}
+
 func CreateAccount(name string, password string,
 			rank string, admin bool) error {
 	hash, err := hashPassword(password)
 	if err != nil { return err }
+	if err := nameAvailable(name); err != nil { return err }
 	v := Rank{}
 	if rank != "" {
 		rank, err := GetRank(rank)
@@ -65,7 +75,10 @@ func CreateAccount(name string, password string,
 
 func Login(name string, password string) (string, error) {
 	var account Account
-	err := db.First(&account, "name = ?", name).Error
+	res := db.Where("UPPER(name) = UPPER(?)", name).Find(&Account{})
+	if res.Error != nil { return "", res.Error }
+	if res.RowsAffected < 1 { return "", invalidCredential }
+	err := res.First(&account).Error
 	if err != nil { return "", err }
 	err = comparePassword(password, account.Password)
 	if err != nil { return "", err }

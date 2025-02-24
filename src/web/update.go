@@ -26,7 +26,7 @@ func loginAs(c echo.Context) error {
 	if err := accountLimit.Try(name); err != nil { return err }
 	if err := loginLimit.Try(clientIP(c)); err != nil { return err }
 	token, err := db.Login(name, password)
-	if err != nil { return errors.New("invalid credentials") }
+	if err != nil { return err }
 	setCookie(c, "token", token)
 	theme, err := db.GetUserTheme(name)
 	if err != nil { return err }
