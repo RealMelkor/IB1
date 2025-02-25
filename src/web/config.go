@@ -37,19 +37,16 @@ func redirect(f echo.HandlerFunc, redirect string) echo.HandlerFunc {
 }
 
 func needPrivilege(c echo.Context, privilege db.Privilege) error {
-	ret := errors.New("insufficient privilege")
-	var account db.Account
-	account.Logged = false
 	token := getCookie(c, "token")
-	if token == "" { return ret }
-	var err error
-	account, err = db.GetAccountFromToken(token)
-	if err != nil {
-		v, err := db.AsUnauthenticated(privilege)
-		if err != nil || !v { return ret }
-		return nil
+	if token != "" {
+		account, err := db.GetAccountFromToken(token)
+		if err == nil {
+			return account.Can(privilege)
+		}
 	}
-	if err := account.Can(privilege); err != nil { return err }
+	v, err := db.AsUnauthenticated(privilege)
+	if err != nil { return err }
+	if !v { return errors.New("insufficient privilege") }
 	return nil
 }
 

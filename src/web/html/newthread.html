@@ -1,4 +1,5 @@
 {{define "newthread"}}
+{{if (can "CREATE_THREAD")}}
 <div class="separator"></div>
 <div class="new-thread new-form">
 <input id="new-thread-check" type="checkbox"{{if (has "new-thread-error")}} checked{{end}}>
@@ -55,4 +56,5 @@
 	<input type="submit" value="Post">
 </form> 
 </div>
+{{end}}
 {{end}}

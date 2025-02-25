@@ -73,7 +73,6 @@ func Init() error {
 	if err := LoadBoards(); err != nil { return err }
 	if err := LoadBanList(); err != nil { return err }
 	if err := LoadConfig(); err != nil { return err }
-	//if err := LoadCountries(); err != nil { return err }
 	go func() {
 		if err := LoadCountries(); err != nil {
 			log.Println(err)
@@ -83,7 +82,11 @@ func Init() error {
 	go cleanMediaTask()
 
 	if _, err := GetRank(UNAUTHENTICATED); err != nil {
-		if err := CreateRank(UNAUTHENTICATED, []string{}); err != nil {
+		defaults := []string{
+			CREATE_THREAD.String(),
+			CREATE_POST.String(),
+		}
+		if err := CreateRank(UNAUTHENTICATED, defaults); err != nil {
 			return err
 		}
 	}

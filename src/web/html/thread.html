@@ -3,6 +3,7 @@
 {{template "banner"}}
 <h2 class="board-title">/{{$board.Name}}/ - {{$board.LongName}}</h2>
 {{ template "top" $board.Name }}
+{{if can "CREATE_POST"}}
 <div class="form-container">
 <div class="post form new-form">
 <label for="show-form" class="btn">Hide new-reply box</label>
@@ -37,5 +38,6 @@
 </form> 
 </div>
 </div>
+{{end}}
 {{ template "thread-template" $thread }}
 {{ template "bottom" $board.Name }}

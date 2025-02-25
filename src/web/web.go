@@ -293,9 +293,11 @@ func Init() error {
 	}
 	r.GET("/:board", boardIndex)
 	r.GET("/:board/catalog", catalog)
-	r.POST("/:board", catch(readOnly(newThread), "new-thread-error"))
+	r.POST("/:board", catch(readOnly(
+		hasPrivilege(newThread, db.CREATE_THREAD)), "new-thread-error"))
 	r.GET("/:board/:thread", thread)
-	r.POST("/:board/:thread", catch(readOnly(newPost), "new-post-error"))
+	r.POST("/:board/:thread", catch(readOnly(
+		hasPrivilege(newPost, db.CREATE_POST)), "new-post-error"))
 	r.GET("/disconnect/:csrf", disconnect)
 	r.GET("/login", unauth(renderFile("login.html")))
 	r.POST("/login", unauth(catch(loginAs, "login-error")))
