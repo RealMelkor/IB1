@@ -88,6 +88,10 @@ body {
 	display: flex;
 }
 
+.post-bar abbr {
+	white-space: nowrap;
+}
+
 .post-top {
 	min-width: 450px;
 	display: flex;
@@ -353,4 +357,5 @@ body {
 	color: white;
 	border-radius: 2px;
 	padding: 2px;
+	height: fit-content;
 }
