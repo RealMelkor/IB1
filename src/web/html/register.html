@@ -1,5 +1,5 @@
 <h2 class="board-title">Register</h2>
-<div class="new-thread">
+<div class="new-form">
 	<form action="/register" method="POST">
 		<table>
 			<tr>
@@ -27,6 +27,6 @@
 		</table>
 		<p class="error">{{once "register-error"}}</p>
 		<input type="hidden" name="csrf" value="{{get "csrf"}}">
-		<input class="btn" type="submit" value="Login">
+		<input class="btn" type="submit" value="Register">
 	</form>
 </div>
