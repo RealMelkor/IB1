@@ -9,30 +9,59 @@
 <label for="show-form" class="btn">Hide new-reply box</label>
 <input type="checkbox" id="show-form" {{if (not (has "new-post-error"))}} checked{{end}}>
 <form method="post" enctype="multipart/form-data" id="new-reply">
-	<label for="name">Name:</label><br>
-	<input type="text" id="name" name="name"><br>
+	<table>
+		<tr>
+			<th>Name</th>
+			<td><input class="namefield" type="text" id="name" name="name"></td>
+		</tr>
 {{if isLogged}}
-	<label for="signed">Signed:</label>
-	<input type="checkbox" name="signed"><br>
+		<tr>
+			<th>Signed</th>
+			<td><input type="checkbox" name="signed" style="width:auto;"></td>
+		</tr>
 {{end}}
 {{if can "SHOW_RANK"}}
-	<label for="rank">Show rank:</label>
-	<input type="checkbox" name="rank"><br>
+		<tr>
+			<th>Show rank</th>
+			<td><input type="checkbox" name="rank" style="width:auto;"></td>
+		</tr>
 {{end}}
-	<label for="sage">Sage:</label>
-	<input type="checkbox" name="sage"><br>
+		<tr>
+			<th>Sage</th>
+			<td><input type="checkbox" name="sage" style="width:auto;"></td>
+		</tr>
+		<tr>
+			<th>Subject</th>
+			<td><input type="text" id="title" name="title"></td>
+		</tr>
 {{if and isCaptchaEnabled (not (can "BYPASS_CAPTCHA"))}}
-	<label for="captcha">Captcha:</label><br>
-	<img class="captcha" loading="lazy" src="/captcha" alt="captcha"><br>
-	<input type="text" id="captcha" name="captcha" required="required"><br>
+		<tr>
+			<th></th>
+			<td><img class="captcha" loading="lazy" src="/captcha" alt="captcha"></td>
+		</tr>
+		<tr>
+			<th>Captcha</th>
+			<td><input type="text" id="captcha" name="captcha" required="required"></td>
+		</tr>
 {{end}}
-	<label for="content">Comment:</label><br>
-	<textarea rows="5" cols="30" id="content" name="content"></textarea><br>
-	<label for="media">File:</label><br>
-	<input type="file" id="media" name="media"><br>
-	<label for="spoiler">Spoiler:</label>
-	<input type="checkbox" name="spoiler"><br>
-	<input type="submit" value="New Reply">
+		<tr>
+			<th>Comment</th>
+			<td><textarea rows="5" cols="30" id="content" name="content"></textarea></td>
+		</tr>
+		<tr>
+			<th>File</th>
+			<td>
+				<input style="width: auto;" type="file" id="media" name="media">
+				<span>Spoiler</span>
+				<input type="checkbox" name="spoiler" style="width:auto;">
+			</td>
+		</tr>
+		<tr>
+			<td colspan="3">
+				<input type="submit" style="width: 100%" value="New Reply">
+			</td>
+		</tr>
+	</table>
 	<p class="error">{{once "new-post-error"}}</p>
 	<input type="hidden" name="csrf" value="{{get "csrf"}}">
 </form> 

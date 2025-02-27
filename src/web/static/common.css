@@ -139,9 +139,10 @@ body {
 
 .title {
 	font-weight: bold;
+	margin-right: 5px;
 }
 
-.board-title{
+.board-title {
 	text-align: center;
 	color: #af0a0f;
 }
@@ -192,10 +193,15 @@ body {
 	font-weight: bold;
 }
 
-.new-thread {
+.new-form {
 	width: fit-content;
 	margin-left: auto;
 	margin-right: auto;
+}
+
+.new-form:has(input[name=signed]:checked) input[name=name] {
+	opacity: 0.5 !important;
+	pointer-events: none;
 }
 
 #new-thread-check ~ label > span {
@@ -229,21 +235,21 @@ body {
 	display: inline;
 }
 
-.new-thread th {
+.new-form th {
 	font-size: 10pt;
 	border: 1px solid black;
 }
 
-.new-thread td input {
+.new-form td input {
 	width: 300px;
 }
 
-.new-thread > form > input {
+.new-form > form > input {
 	margin-left: 100%;
 	width: 90px;
 }
 
-.new-thread td textarea {
+.new-form td textarea {
 	width: 300px;
 }
 
@@ -283,11 +289,6 @@ body {
 
 :root {
   --pc: #d6bad0; /* preview color */
-}
-
-.new-form:has(input[name=signed]:checked) input[name=name] {
-	opacity: 0.5 !important;
-	pointer-events: none;
 }
 
 .administrator {
