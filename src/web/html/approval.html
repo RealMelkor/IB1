@@ -1,8 +1,8 @@
 {{$hash := pendingMedia}}
 <div class="boards">
-<div class="new-thread">
+<div class="new-form">
 {{if $hash}}
-<div class="media-container new-thread">
+<div class="media-container new-form">
   <input type="checkbox" class="zoom-check" id="zoom-check">
     <label for="zoom-check">
     <img class="thumbnail" src="/media/thumbnail/{{thumbnail $hash}}" alt="thumbnail">
@@ -34,7 +34,7 @@
 <p>No media left in the queue</p>
 {{end}}
 {{if hasUnapproved}}
-<div class="new-thread">
+<div class="new-form">
 <form method="POST" action="/approval/accept">
 <button formaction="/approval/accept/all">Approve All</button>
 <input type="hidden" name="csrf" value="{{get "csrf"}}">

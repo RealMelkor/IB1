@@ -15,6 +15,7 @@ type Thread struct {
 	Board		Board
 	Posts		[]Post
 	Alive		bool
+	Pinned		bool
 	Number		int
 	Replies		int `gorm:"-:all"`
 	Images		int `gorm:"-:all"`
@@ -54,7 +55,7 @@ func GetVisibleThreads(board Board) ([]Thread, error) {
 		"a.id = c.thread_id " +
 		"WHERE a.board_id = ? AND b.disabled = 0 " +
 		"GROUP BY a.id " +
-		"ORDER BY MAX(c.timestamp) DESC LIMIT ?;",
+		"ORDER BY a.pinned DESC, MAX(c.timestamp) DESC LIMIT ?;",
 		board.ID, config.Cfg.Board.MaxThreads,
 	).Order("number").Scan(&threads).Error
 	return threads, err
@@ -79,7 +80,7 @@ func refreshBoard(board *Board, limit uint) error {
 		"INNER JOIN threads b ON a.thread_id = b.id " +
 		"WHERE a.board_id = ? AND (a.sage IS NULL OR a.sage <> 1) " +
 		"GROUP BY a.thread_id " +
-		"ORDER BY MAX(a.timestamp) DESC LIMIT ?;",
+		"ORDER BY b.pinned DESC, MAX(a.timestamp) DESC LIMIT ?;",
 		board.ID, limit).
 		Scan(&board.Threads).Error
 	if err != nil { return err }
@@ -101,6 +102,12 @@ func GetThread(board Board, number int) (Thread, error) {
 	if err := RefreshThread(&thread); err != nil { return Thread{}, err }
 	thread.Board = board
 	return thread, nil
+}
+
+func (thread *Thread) Pin() error {
+	thread.Pinned = !thread.Pinned
+	return db.Model(&Thread{}).Where("id = ?", thread.ID).
+			Update("Pinned", thread.Pinned).Error
 }
 
 func RefreshThread(thread *Thread) error {

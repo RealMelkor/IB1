@@ -281,6 +281,13 @@ func Init() error {
 		serveMedia(c, content, c.Param("file"))
 		return nil
 	})
+	r.GET("/static/:file", func(c echo.Context) error {
+		sub, err := fs.Sub(static, "static")
+		if err != nil { return err }
+		http.ServeFileFS(c.Response().Writer, c.Request(),
+				sub, c.Param("file"))
+		return nil
+	})
 	r.GET("/static/flags/:file", func(c echo.Context) error {
 		sub, err := fs.Sub(flags, "static/flags")
 		if err != nil { return err }
@@ -309,6 +316,8 @@ func Init() error {
 		hasPrivilege(onPost(remove), db.REMOVE_POST))
 	r.GET("/:board/hide/:id/:csrf",
 		hasPrivilege(onPost(hide), db.HIDE_POST))
+	r.GET("/:board/pin/:id/:csrf",
+		hasPrivilege(onPost(pin), db.PIN_THREAD))
 	r.GET("/:board/remove_media/:id/:csrf",
 		hasPrivilege(onPost(removeMedia), db.REMOVE_MEDIA))
 	r.GET("/:board/ban_media/:id/:csrf",

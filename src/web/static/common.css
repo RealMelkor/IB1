@@ -86,9 +86,6 @@ body {
 
 .post-bar {
 	display: flex;
-}
-
-.post-bar abbr {
 	white-space: nowrap;
 }
 
@@ -359,4 +356,11 @@ body {
 	border-radius: 2px;
 	padding: 2px;
 	height: fit-content;
+}
+
+.sticky {
+	margin: 0 !important;
+	padding: 0 !important;
+	width: 16px;
+	height: 16px;
 }

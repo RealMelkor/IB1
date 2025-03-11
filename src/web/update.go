@@ -99,6 +99,12 @@ func hide(post db.Post) error {
 	return db.Hide(post.ID, post.Disabled)
 }
 
+func pin(post db.Post) error {
+	thread, err := db.GetThread(post.Board, post.Thread.Number)
+	if err != nil { return err }
+	return thread.Pin()
+}
+
 func banMedia(post db.Post) error {
 	return banImage(post.MediaHash)
 }

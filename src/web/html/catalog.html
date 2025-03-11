@@ -16,6 +16,9 @@
 		<img class="{{$border}}" src="/media/thumbnail/{{(index .Posts 0).Thumbnail}}" alt="{{.Number}}">
 	</a>
 	<p class="thread-info">R: {{.Replies}} / I: {{.Images}}</p>
+{{if .Pinned}}
+	<img alt="pin" src="/static/sticky.png" title="Pinned thread">
+{{end}}
 	<p class="title">{{.Title}}</p>
 	<p class="content">{{ (index .Posts 0).Content }}</p>
 </div>

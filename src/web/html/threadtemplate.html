@@ -23,12 +23,15 @@
 <div class="post{{if .Disabled}} post-hidden{{end}}">
 <p class="post-bar">
 {{if eq .Number $.Number}}
+{{if $.Pinned}}
+        <img class="sticky" alt="pin" src="/static/sticky.png" title="Pinned thread">
+{{end}}
 	<span class="title">{{$.Title}}</span>
 {{end}}
 {{if .Signed}}
 	<abbr title="Signed"><span class="name ">{{.Name}}</span></abbr>
 {{else}}
-	<span class="name ">{{.Name}}</span>
+	<span class="name">{{.Name}}</span>
 {{end}}
 {{if .Country}}
 	<img class="flag" alt="country" src="/static/flags/{{.Country}}.png" title="{{country .Country}}">
@@ -40,21 +43,24 @@
 &nbsp;
 {{end}}
 {{if .Rank}}
-<span class="{{.Rank}}">{{capitalize .Rank}}</span>
+	<span class="{{.Rank}}">{{capitalize .Rank}}</span>
 &nbsp;
 {{end}}
 	<abbr title="{{.FormatAge}}">{{.FormatTimestamp}}</abbr>
 &nbsp;
 	<a class="post-link" href="#{{.Number}}">No.{{.Number}}</a>
-	{{if can "VIEW_IP"}}
+{{if can "VIEW_IP"}}
 	[<span class="ip">IP: {{.IP}}</span>]
-	{{end}}
-	{{if can "HIDE_POST"}}
+{{end}}
+{{if can "HIDE_POST"}}
 	[<a class="action" href="/{{$.Board.Name}}/hide/{{.Number}}/{{get "csrf"}}">{{if .Disabled}}Unhide{{else}}Hide{{end}}</a>]
-	{{end}}
-	{{if can "REMOVE_POST"}}
+{{end}}
+{{if can "REMOVE_POST"}}
 	[<a class="action" href="/{{$.Board.Name}}/remove/{{.Number}}/{{get "csrf"}}">Remove</a>]
-	{{end}}
+{{end}}
+{{if and (eq .Number $.Number) (can "PIN_THREAD")}}
+	[<a class="action" href="/{{$.Board.Name}}/pin/{{.Number}}/{{get "csrf"}}">{{if $.Pinned}}Unpin{{else}}Pin{{end}}</a>]
+{{end}}
 {{if .Media}}
 {{if can "REMOVE_MEDIA"}}
 	[<a class="action" href="/{{$.Board.Name}}/remove_media/{{.Number}}/{{get "csrf"}}">Delete Media</a>]
@@ -73,11 +79,11 @@
 {{if can "BAN_IP"}}
 	[<a class="action" href="/{{$.Board.Name}}/ban/{{.IP}}/{{get "csrf"}}">Ban</a>]
 {{end}}
-	{{end}}
+{{end}}
 &nbsp;
-	{{range .ReferredBy}}
+{{range .ReferredBy}}
 	<a class="post-ref ref-{{.From}}" href="#{{.From}}">&gt;&gt;{{.From}}</a>
-	{{end}}
+{{end}}
 </p>
 {{if .Media}}
 <div class="media-container">
