@@ -162,7 +162,9 @@ body {
 .catalog {
 	display: flex;
 	flex-wrap: wrap;
-	margin: 20px;
+	justify-content: center;
+	margin-top: 15px;
+	margin-bottom: 15px;
 	max-width: 1920px;
 }
 
@@ -309,7 +311,8 @@ body {
 .banner {
 	max-width: 400px;
 	max-height: 150px;
-	min-height: 150px;
+	width: auto;
+	height: auto;
 }
 
 .banner-box {
@@ -363,4 +366,22 @@ body {
 	padding: 0 !important;
 	width: 16px;
 	height: 16px;
+}
+
+@media screen and (max-width: 500px){
+	.banner {
+		max-width: 300px;
+		height: auto;
+	}
+	.thread {
+		padding: 10px;
+	}
+	.post {
+		width: 100%;
+		margin-left: 0px;
+	}
+	.post-bar {
+		display: inline;
+		white-space: normal
+	}
 }
