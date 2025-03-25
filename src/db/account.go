@@ -115,6 +115,12 @@ func GetAccounts() ([]Account, error) {
 	return accounts, nil
 }
 
+func GetAccount(name string) (Account, error) {
+	var account Account
+	res := db.Where("UPPER(name) = UPPER(?)", name).First(&account)
+	return account, res.Error
+}
+
 func UpdateAccount(id int, name string, password string, rank string) error {
 	acc := db.Model(&Account{}).Where("id = ?", id)
 	if acc.Error != nil { return acc.Error }
@@ -159,6 +165,12 @@ func (account Account) Can(privilege Privilege) error {
 
 func (account *Account) SetTheme(name string) error {
 	return db.Model(account).Updates(Account{Theme: name}).Error
+}
+
+func (account Account) GetBoards() ([]Board, error) {
+	var boards []Board
+	err := db.Where("owner_id = ?", account.ID).Find(&boards).Error
+	return boards, err
 }
 
 func GetUserTheme(name string) (string, error) {

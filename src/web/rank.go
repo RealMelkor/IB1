@@ -37,3 +37,29 @@ func deleteRank(c echo.Context) error {
 	if err != nil { return err }
 	return db.DeleteRankByID(id)
 }
+
+func createMemberRank(c echo.Context) error {
+        name, hasName := getPostForm(c, "name")
+        if !hasName { return invalidForm }
+	return db.MemberRank{}.Add(db.MemberRank{
+                Name: name,
+		Privileges: db.ParseMemberPrivileges(parsePrivileges(c)),
+        })
+}
+
+func updateMemberRank(c echo.Context) error {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil { return err }
+	name, hasName := getPostForm(c, "name")
+        if !hasName { return invalidForm }
+	return db.MemberRank{}.Update(id, db.MemberRank{
+                Name: name,
+		Privileges: db.ParseMemberPrivileges(parsePrivileges(c)),
+        })
+}
+
+func deleteMemberRank(c echo.Context) error {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil { return err }
+	return db.MemberRank{}.RemoveID(id, db.MemberRank{})
+}

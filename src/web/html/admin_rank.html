@@ -16,8 +16,9 @@
 			<td>
 {{$rank := .}}
 {{range $.Privileges}}
-<label>{{.}}</label>
-<input type="checkbox" name="{{.}}" {{if $rank.Has .}}checked{{end}}>
+{{$id := randID}}
+<label for="{{$id}}">{{.}}</label>
+<input id="{{$id}}" type="checkbox" name="{{.}}" {{if $rank.Has .}}checked{{end}}>
 <br>
 {{end}}
 			</td>
@@ -34,8 +35,9 @@
 			<td><input type="text" name="name" required></td>
 			<td>
 {{range .Privileges}}
-<label>{{.}}</label>
-<input type="checkbox" name="{{.}}">
+{{$id := randID}}
+<label for="{{$id}}">{{.}}</label>
+<input id="{{$id}}" type="checkbox" name="{{.}}">
 <br>
 {{end}}
 			</td>
@@ -44,4 +46,53 @@
 		</form>
 	</tr>
 </table>
+
+<div class="center"><h3>Member ranks</h3></div>
+<table>
+	<tr>
+		<th>Rank</th>
+		<th>Privileges</th>
+		<th></th>
+	</tr>
+	{{range .MemberRanks}}
+	<tr>
+		<form method="POST" action="/config/member/rank/update/{{.ID}}">
+			<td><input type="text" name="name" value="{{.Name}}" {{if eq .Name "unauthenticated"}}disabled{{end}} required></td>
+			{{if eq .Name "unauthenticated"}}
+				<input type="hidden" name="name" value="unauthenticated">
+			{{end}}
+			<td>
+{{$rank := .}}
+{{range $.MemberPrivileges}}
+{{$id := randID}}
+<label for="{{$id}}">{{.}}</label>
+<input id="{{$id}}" type="checkbox" name="{{.}}" {{if $rank.Has .}}checked{{end}}>
+<br>
+{{end}}
+			</td>
+			<td>
+				<input type="submit" value="Update">
+				<input type="submit" value="Delete" formaction="/config/member/rank/delete/{{.ID}}" {{if eq $rank.Name "unauthenticated"}}disabled{{end}}>
+			</td>
+			<input type="hidden" name="csrf" value="{{get "csrf"}}">
+		</form>
+	</tr>
+	{{end}}
+	<tr>
+		<form method="POST" action="/config/member/rank/create">
+			<td><input type="text" name="name" required></td>
+			<td>
+{{range .MemberPrivileges}}
+{{$id := randID}}
+<label for="{{$id}}">{{.}}</label>
+<input id="{{$id}}" type="checkbox" name="{{.}}">
+<br>
+{{end}}
+			</td>
+			<td><input type="submit" value="Create"></td>
+			<input type="hidden" name="csrf" value="{{get "csrf"}}">
+		</form>
+	</tr>
+</table>
+
 {{end}}

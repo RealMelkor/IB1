@@ -21,6 +21,7 @@ import (
 
 var invalidForm = errors.New("invalid form")
 var invalidID = errors.New("invalid id")
+var invalidRequest = errors.New("invalid request")
 
 func getPostForm(c echo.Context, param string) (string, bool) {
 	v := c.Request().PostFormValue(param)
@@ -247,6 +248,20 @@ func createBoard(c echo.Context) error {
 	return db.LoadBoards()
 }
 
+func updateOwnedBoard(c echo.Context) error {
+	account, err := loggedAs(c)
+	if err != nil { return err }
+	boards, err := account.GetBoards()
+	if err != nil { return err }
+	c.Request().PostForm.Set("owner", account.Name)
+	for _, v := range boards {
+		if strconv.Itoa(int(v.ID)) == c.Param("id") {
+			return updateBoard(c)
+		}
+	}
+	return invalidID
+}
+
 func updateBoard(c echo.Context) error {
 	board, hasBoard := getPostForm(c, "board")
 	name, hasName := getPostForm(c, "name")
@@ -257,6 +272,7 @@ func updateBoard(c echo.Context) error {
 	posterID, _ := getPostForm(c, "poster-id")
 	readonly, _ := getPostForm(c, "read-only")
 	private, _ := getPostForm(c, "private")
+	owner, _ := getPostForm(c, "owner")
 	boards, err := db.GetBoards()
 	if err != nil { return err }
 	for _, v := range boards {
@@ -269,6 +285,13 @@ func updateBoard(c echo.Context) error {
 		v.PosterID = posterID == "on"
 		v.ReadOnly = readonly == "on"
 		v.Private = private == "on"
+		if owner != "" {
+			account, err := db.GetAccount(owner)
+			if err != nil { return err }
+			v.OwnerID = &account.ID
+		} else {
+			v.OwnerID = nil
+		}
 		if err := db.UpdateBoard(v); err != nil { return err }
 		return db.LoadBoards()
 	}

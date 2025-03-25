@@ -7,9 +7,11 @@ import (
 	"strings"
 	"strconv"
 	"io"
-	"math/rand"
+	"crypto/rand"
+	"math/big"
 	"fmt"
 	"hash/fnv"
+	"encoding/base32"
 
 	"github.com/tdewolff/minify/v2"
 	"github.com/tdewolff/minify/v2/css"
@@ -171,7 +173,8 @@ func initTemplate() error {
 		},
 		"banner": func() uint {
 			v, _ := db.GetAllBanners()
-			return v[rand.Intn(len(v))]
+			i, _ := rand.Int(rand.Reader, big.NewInt(int64(len(v))))
+			return v[i.Int64()]
 		},
 		"arr": func(args ...any) []any {
 			return args
@@ -194,6 +197,12 @@ func initTemplate() error {
 		},
 		"country": func(code string) string {
 			return util.CountryName(code)
+		},
+		"randID": func() string {
+			var buf [8]byte
+			rand.Read(buf[:])
+			return base32.StdEncoding.WithPadding(base32.NoPadding).
+				EncodeToString(buf[:])
 		},
 	}
 	templates, err = template.New("frontend").Funcs(funcs).
@@ -229,6 +238,18 @@ func header(c echo.Context) any {
 	return data
 }
 
+func renderBoards(c echo.Context) error {
+	acc, err := loggedAs(c)
+	if err != nil {
+		return invalidRequest
+	}
+	if v, _ := acc.GetBoards(); len(v) < 1 {
+		return invalidRequest
+	}
+	render("boards.html", nil, c)
+	return nil
+}
+
 func renderDashboard(c echo.Context) error {
 	boards, err := db.GetBoards()
 	if err != nil { return err }
@@ -237,6 +258,8 @@ func renderDashboard(c echo.Context) error {
 	themes, err := db.Theme{}.GetAll()
 	if err != nil { return err }
 	ranks, err := db.GetRanks()
+	if err != nil { return err }
+	memberRanks, err := db.GetMemberRanks()
 	if err != nil { return err }
 	wordfilters, err := db.Wordfilter{}.GetAll()
 	if err != nil { return err }
@@ -249,11 +272,13 @@ func renderDashboard(c echo.Context) error {
 		Theme		string
 		Themes		[]string
 		Privileges	[]string
+		MemberPrivileges[]string
 		Bans		[]db.Ban
 		BannedImages	[]db.BannedImage
 		UserThemes	[]db.Theme
 		Wordfilters	[]db.Wordfilter
 		Ranks		[]db.Rank
+		MemberRanks	[]db.MemberRank
 		Header		any
 	}{
 		Accounts: accounts,
@@ -265,7 +290,9 @@ func renderDashboard(c echo.Context) error {
 		UserThemes: themes,
 		Wordfilters: wordfilters,
 		Ranks: ranks,
+		MemberRanks: memberRanks,
 		Privileges: db.GetPrivileges(),
+		MemberPrivileges: db.GetMemberPrivileges(),
 		Header: header(c),
 	}
 	return render("admin.html", data, c)

@@ -207,6 +207,17 @@ func unauth(f echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
+func auth(f echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		_, err := loggedAs(c)
+		if err != nil {
+			c.Redirect(http.StatusFound, "/")
+			return nil
+		}
+		return f(c)
+	}
+}
+
 func notFound(c echo.Context) error {
 	return c.Blob(http.StatusNotFound, "text/plain", []byte("Not Found"))
 }
@@ -337,6 +348,8 @@ func Init() error {
 		r.POST("/approval/accept/all", hasPrivilege(redirect(
 			approveAll, "/approval"), db.APPROVE_MEDIA))
 	}
+	r.GET("/boards", redirect(renderBoards, "/"))
+	r.POST("/boards/update/:id", redirect(updateOwnedBoard, "/boards"))
 	r.GET("/dashboard",
 		hasPrivilege(renderDashboard, db.ADMINISTRATION))
 	r.GET("/dashboard/:page",
@@ -378,6 +391,13 @@ func Init() error {
 	r.POST("/config/rank/create", handleConfig(createRank, "rank"))
 	r.POST("/config/rank/delete/:id", handleConfig(deleteRank, "rank"))
 	r.POST("/config/rank/update/:id", handleConfig(updateRank, "rank"))
+
+	r.POST("/config/member/rank/create",
+		handleConfig(createMemberRank, "rank"))
+	r.POST("/config/member/rank/delete/:id",
+		handleConfig(deleteMemberRank, "rank"))
+	r.POST("/config/member/rank/update/:id",
+		handleConfig(updateMemberRank, "rank"))
 
 	r.POST("/config/favicon/update",
 		handleConfig(updateFavicon, "favicon"))

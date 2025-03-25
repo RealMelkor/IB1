@@ -33,6 +33,9 @@
 			{{if (and .Config.Media.ApprovalQueue (can "APPROVE_MEDIA"))}}
 			[<a href="/approval">Media approval</a>]
 			{{end}}
+			{{if not (eq (len .Account.GetBoards) 0)}}
+			[<a href="/boards">Boards</a>]
+			{{end}}
 			{{if can "ADMINISTRATION"}}
 			[<a href="/dashboard/main">Dashboard</a>]
 			{{end}}

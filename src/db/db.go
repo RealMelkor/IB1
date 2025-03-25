@@ -67,7 +67,8 @@ func Init() error {
 
 	db.AutoMigrate(&Board{}, &Thread{}, &Post{}, &Ban{}, &Theme{},
 			&Reference{}, &Account{}, &Session{}, &Config{},
-			&Media{}, &Banner{}, &BannedImage{}, &Rank{}, &Ban{},
+			&Media{}, &Banner{}, &BannedImage{}, &Ban{},
+			&Rank{}, &MemberRank{},
 			&Wordfilter{}, &CIDR{}, &KeyValue{})
 
 	if err := LoadBoards(); err != nil { return err }
@@ -89,6 +90,10 @@ func Init() error {
 		if err := CreateRank(UNAUTHENTICATED, defaults); err != nil {
 			return err
 		}
+	}
+
+	for i := range memberPrivileges {
+		memberPrivileges[i] = MemberPrivilege(GetPrivilege(i))
 	}
 
 	return nil

@@ -1,0 +1,35 @@
+<div class="boards">
+<h2>My boards</h2>
+<table>
+{{range self.GetBoards}}
+        <tr>
+		<th>Enabled</th>
+		<th>Board</th>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Options</th>
+		<th></th>
+        </tr>
+	<tr>
+		<form method="POST" action="/boards/update/{{.ID}}">
+                        <td><input type="checkbox" name="enabled" {{if not .Disabled}}checked{{end}}></td>
+                        <td><input type="text" name="board" value="{{.Name}}" required></td>
+                        <td><input type="text" name="name" value="{{.LongName}}" required></td>
+                        <td><input type="text" name="description" value="{{.Description}}" required></td>
+			<td>
+			<label>Country flags</label>
+                        <input type="checkbox" name="country-flag" {{if .CountryFlag}}checked{{end}}>
+                        <br>
+                        <label>Poster ID</label>                                                                                              <input type="checkbox" name="poster-id" {{if .PosterID}}checked{{end}}>
+                        <br>                                                                                                                  <label>Read-only</label>
+                        <input type="checkbox" name="read-only" {{if .ReadOnly}}checked{{end}}>                                               <br>
+                        <label>Private</label>
+                        <input type="checkbox" name="private" {{if .Private}}checked{{end}}>                                                  <br>
+			</td>
+			<td><input type="submit" value="Update"></td>
+			<input type="hidden" name="csrf" value="{{get "csrf"}}">
+		</form>
+	</tr>
+{{end}}
+</table>
+</div>

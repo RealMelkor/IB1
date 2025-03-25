@@ -33,6 +33,8 @@ type Board struct {
 	Private		bool
 	CountryFlag	bool
 	PosterID	bool
+	OwnerID		*uint
+	Owner		Account
 }
 var Boards map[string]Board
 
@@ -87,7 +89,7 @@ func refreshBoard(board *Board, limit uint) error {
 	for i := range board.Threads {
 		board.Threads[i].Board = *board
 	}
-	return nil
+	return db.Model(Account{}).Preload("Owner").Find(board).Error;
 }
 
 func RefreshBoard(board *Board) error {
@@ -161,7 +163,12 @@ func CreateThread(board Board, title string, name string, media string,
 }
 
 func UpdateBoard(board Board) error {
-	return db.Save(&board).Error
+	v := board.OwnerID
+	err := db.Save(&board).Error
+	if err != nil { return err }
+	if v != nil { return nil }
+	return db.Model(&board).Select("owner_id").Updates(
+		map[string]interface{}{"owner_id": nil}).Error
 }
 
 func DeleteBoard(board Board) error {
@@ -170,5 +177,5 @@ func DeleteBoard(board Board) error {
 
 func GetBoards() ([]Board, error) {
 	var boards []Board
-	return boards, db.Find(&boards).Error
+	return boards, db.Preload("Owner").Find(&boards).Error
 }

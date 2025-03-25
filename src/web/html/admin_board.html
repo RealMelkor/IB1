@@ -6,6 +6,7 @@
 		<th>Board</th>
 		<th>Name</th>
 		<th>Description</th>
+		<th>Owner</th>
 		<th>Options</th>
 		<th></th>
 		<th></th>
@@ -17,6 +18,7 @@
 			<td><input type="text" name="board" value="{{.Name}}" required></td>
 			<td><input type="text" name="name" value="{{.LongName}}" required></td>
 			<td><input type="text" name="description" value="{{.Description}}" required></td>
+			<td><input type="text" name="owner" value="{{.Owner.Name}}"></td>
 			<td>
 			<label>Country flags</label>
 			<input type="checkbox" name="country-flag" {{if .CountryFlag}}checked{{end}}>
@@ -43,6 +45,7 @@
 			<td><input type="text" name="board" required></td>
 			<td><input type="text" name="name" required></td>
 			<td><input type="text" name="description" required></td>
+			<td><input type="text" name="owner" disabled></td>
 			<td></td>
 			<td><input type="submit" value="Create"></td>
 			<input type="hidden" name="csrf" value="{{get "csrf"}}">
