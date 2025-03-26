@@ -89,7 +89,7 @@ func refreshBoard(board *Board, limit uint) error {
 	for i := range board.Threads {
 		board.Threads[i].Board = *board
 	}
-	return db.Model(Account{}).Preload("Owner").Find(board).Error;
+	return db.Model(Board{}).Preload("Owner").Find(board).Error;
 }
 
 func RefreshBoard(board *Board) error {

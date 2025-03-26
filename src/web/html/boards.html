@@ -17,14 +17,22 @@
                         <td><input type="text" name="name" value="{{.LongName}}" required></td>
                         <td><input type="text" name="description" value="{{.Description}}" required></td>
 			<td>
-			<label>Country flags</label>
-                        <input type="checkbox" name="country-flag" {{if .CountryFlag}}checked{{end}}>
-                        <br>
-                        <label>Poster ID</label>                                                                                              <input type="checkbox" name="poster-id" {{if .PosterID}}checked{{end}}>
-                        <br>                                                                                                                  <label>Read-only</label>
-                        <input type="checkbox" name="read-only" {{if .ReadOnly}}checked{{end}}>                                               <br>
-                        <label>Private</label>
-                        <input type="checkbox" name="private" {{if .Private}}checked{{end}}>                                                  <br>
+			{{$id := randID}}
+			<label for="{{$id}}">Country flags</label>
+			<input id="{{$id}}" type="checkbox" name="country-flag" {{if .CountryFlag}}checked{{end}}>
+			<br>
+			{{$id := randID}}
+			<label for="{{$id}}">Poster ID</label>
+			<input id="{{$id}}" type="checkbox" name="poster-id" {{if .PosterID}}checked{{end}}>
+			<br>
+			{{$id := randID}}
+			<label for="{{$id}}">Read-only</label>
+			<input id="{{$id}}" type="checkbox" name="read-only" {{if .ReadOnly}}checked{{end}}>
+			<br>
+			{{$id := randID}}
+			<label for="{{$id}}">Private</label>
+			<input id="{{$id}}" type="checkbox" name="private" {{if .Private}}checked{{end}}>
+			<br>
 			</td>
 			<td><input type="submit" value="Update"></td>
 			<input type="hidden" name="csrf" value="{{get "csrf"}}">

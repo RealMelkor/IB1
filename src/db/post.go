@@ -9,7 +9,8 @@ import (
 	"time"
 	"sync"
 	"errors"
-	"encoding/base64"
+	"encoding/base32"
+	"hash/fnv"
 	"golang.org/x/crypto/blake2b"
 
 	"IB1/config"
@@ -21,7 +22,10 @@ func RandomID(in string) (string, error) {
 	h.Write(config.Cfg.Post.Key[32:128])
 	h.Write([]byte(in))
 	h.Write(config.Cfg.Post.Key[128:])
-	return base64.StdEncoding.EncodeToString(h.Sum(nil))[:10], nil
+	f := fnv.New64()
+	f.Write(h.Sum(nil))
+	return base32.StdEncoding.WithPadding(base32.NoPadding).
+			EncodeToString(f.Sum(nil))[:10], nil
 }
 
 type Post struct {
@@ -146,7 +150,7 @@ func CreatePost(thread Thread, content template.HTML, name string,
 
 		randomID := ""
 		if thread.Board.PosterID {
-			randomID, err = RandomID(ip)
+			randomID, err = RandomID(ip + thread.Board.Name)
 			if err != nil { return err }
 		}
 

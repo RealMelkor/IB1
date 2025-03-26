@@ -384,4 +384,17 @@ body {
 		display: inline;
 		white-space: normal
 	}
+	.new-form td textarea {
+		width: auto;
+	}
+	.new-form td input {
+		width: auto;
+	}
+	.new-form > form > input {
+		margin: 0;
+		width: 100%;
+	}
+	.zoom-check:checked ~ label > .media {
+		max-width: 100%;
+	}
 }
