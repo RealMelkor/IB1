@@ -116,8 +116,8 @@ func parseMemberPrivileges(privileges []string) []MemberPrivilege {
 }
 
 func CreateMemberRank(name string, privileges []string) error {
-	return Rank{}.Add(Rank{
-		Name: name, Privileges: parsePrivileges(privileges),
+	return MemberRank{}.Add(MemberRank{
+		Name: name, Privileges: parseMemberPrivileges(privileges),
 	})
 }
 

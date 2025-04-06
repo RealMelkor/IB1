@@ -82,18 +82,54 @@ func Init() error {
 	if err := UpdateConfig(); err != nil { return err }
 	go cleanMediaTask()
 
+	for i := range memberPrivileges {
+		memberPrivileges[i] = MemberPrivilege(GetPrivilege(i))
+	}
+
 	if _, err := GetRank(UNAUTHENTICATED); err != nil {
-		defaults := []string{
+		privs := []string{
 			CREATE_THREAD.String(),
 			CREATE_POST.String(),
 		}
-		if err := CreateRank(UNAUTHENTICATED, defaults); err != nil {
+		if err := CreateRank(UNAUTHENTICATED, privs); err != nil {
 			return err
 		}
-	}
-
-	for i := range memberPrivileges {
-		memberPrivileges[i] = MemberPrivilege(GetPrivilege(i))
+		privs = append(privs, CREATE_BOARD.String())
+		if err := CreateRank("User", privs); err != nil {
+			return err
+		}
+		if err := CreateMemberRank("User", privs); err != nil {
+			return err
+		}
+		privs = append(privs, []string{
+			BYPASS_MEDIA_APPROVAL.String(),
+			HIDE_POST.String(),
+			VIEW_HIDDEN.String(),
+			REMOVE_MEDIA.String(),
+			BAN_IP.String(),
+			VIEW_PENDING_MEDIA.String(),
+			APPROVE_MEDIA.String(),
+		}...)
+		if err := CreateRank("Janitor", privs); err != nil {
+			return err
+		}
+		if err := CreateMemberRank("Janitor", privs); err != nil {
+			return err
+		}
+		privs = append(privs, []string{
+			VIEW_IP.String(),
+			BYPASS_CAPTCHA.String(),
+			PIN_THREAD.String(),
+			SHOW_RANK.String(),
+			REMOVE_POST.String(),
+			BAN_USER.String(),
+		}...)
+		if err := CreateRank("Moderator", privs); err != nil {
+			return err
+		}
+		if err := CreateMemberRank("Moderator", privs); err != nil {
+			return err
+		}
 	}
 
 	return nil

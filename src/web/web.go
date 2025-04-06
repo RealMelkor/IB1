@@ -350,17 +350,17 @@ func Init() error {
 	r.POST("/register", unauth(catch(readOnly(register), "register-error")))
 	r.GET("/:board/cancel/:id/:csrf", cancel)
 	r.GET("/:board/remove/:id/:csrf",
-		hasPrivilege(onPost(remove), db.REMOVE_POST))
+		hasBoardPrivilege(onPost(remove), db.REMOVE_POST.Member()))
 	r.GET("/:board/hide/:id/:csrf",
-		hasPrivilege(onPost(hide), db.HIDE_POST))
+		hasBoardPrivilege(onPost(hide), db.HIDE_POST.Member()))
 	r.GET("/:board/pin/:id/:csrf",
-		hasPrivilege(onPost(pin), db.PIN_THREAD))
-	r.GET("/:board/remove_media/:id/:csrf",
-		hasPrivilege(onPost(removeMedia), db.REMOVE_MEDIA))
+		hasBoardPrivilege(onPost(pin), db.PIN_THREAD.Member()))
+	r.GET("/:board/remove_media/:id/:csrf", hasBoardPrivilege(
+		onPost(removeMedia), db.REMOVE_MEDIA.Member()))
 	r.GET("/:board/ban_media/:id/:csrf",
 		hasPrivilege(onPost(banMedia), db.BAN_MEDIA))
-	r.GET("/:board/approve/:id/:csrf",
-		hasPrivilege(onPost(approveMediaFromPost), db.APPROVE_MEDIA))
+	r.GET("/:board/approve/:id/:csrf", hasBoardPrivilege(
+		onPost(approveMediaFromPost), db.APPROVE_MEDIA.Member()))
 	r.GET("/:board/ban/:ip/:csrf", hasPrivilege(ban, db.BAN_USER))
 	if config.Cfg.Media.ApprovalQueue {
 		r.GET("/approval", hasPrivilege(
