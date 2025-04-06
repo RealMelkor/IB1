@@ -160,21 +160,47 @@ func hasPrivilege(f echo.HandlerFunc, privilege db.Privilege) echo.HandlerFunc {
 	}
 }
 
+func hasBoardPrivilege(f echo.HandlerFunc,
+		privilege db.MemberPrivilege) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		if needPrivilege(c, privilege.Generic()) != nil {
+			user, err := loggedAs(c)
+			if err != nil { return err }
+			board, err := db.GetBoard(c.Param("board"))
+			if err != nil { return err }
+			err = user.CanAsMember(board, privilege)
+			if err != nil { return err }
+		}
+		return f(c)
+	}
+}
+
+func canView(c echo.Context, board db.Board) error {
+	if !board.Private { return nil }
+	acc, err := loggedAs(c)
+	if err == nil {
+		if board.OwnerID != nil && acc.ID == *board.OwnerID {
+			return nil
+		}
+		_, err := board.GetMember(acc)
+		if err == nil { return nil }
+	}
+	priv := db.USE_PRIVATE
+	if c.Request().Method == "GET" {
+		priv = db.VIEW_PRIVATE
+	}
+	err = needPrivilege(c, priv)
+	if err != nil { return err }
+	return nil
+}
+
 func privateBoard(f echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		name := c.Param("board")
-		if name != "" {
-			board, err := db.GetBoard(name)
-			if err != nil { return err }
-			priv := db.USE_PRIVATE
-			if c.Request().Method == "GET" {
-				priv = db.VIEW_PRIVATE
-			}
-			if board.Private {
-				err := needPrivilege(c, priv)
-				if err != nil { return err }
-			}
-		}
+		if name == "" { return f(c) }
+		board, err := db.GetBoard(name)
+		if err != nil { return err }
+		if err := canView(c, board); err != nil { return err }
 		return f(c)
 	}
 }
@@ -311,18 +337,17 @@ func Init() error {
 	}
 	r.GET("/:board", boardIndex)
 	r.GET("/:board/catalog", catalog)
-	r.POST("/:board", catch(readOnly(
-		hasPrivilege(newThread, db.CREATE_THREAD)), "new-thread-error"))
+	r.POST("/:board", catch(readOnly(hasBoardPrivilege(
+		newThread, db.CREATE_THREAD.Member())), "new-thread-error"))
 	r.GET("/:board/:thread", thread)
-	r.POST("/:board/:thread", catch(readOnly(
-		hasPrivilege(newPost, db.CREATE_POST)), "new-post-error"))
+	r.POST("/:board/:thread", catch(readOnly(hasBoardPrivilege(
+		newPost, db.CREATE_POST.Member())), "new-post-error"))
 	r.GET("/disconnect/:csrf", disconnect)
 	r.GET("/login", unauth(renderFile("login.html")))
 	r.POST("/login", unauth(catch(loginAs, "login-error")))
 	r.GET("/register", unauth(renderFile("register.html")))
 	r.POST("/register", unauth(catch(readOnly(register), "register-error")))
-	r.GET("/:board/cancel/:id/:csrf",
-		cancel)
+	r.GET("/:board/cancel/:id/:csrf", cancel)
 	r.GET("/:board/remove/:id/:csrf",
 		hasPrivilege(onPost(remove), db.REMOVE_POST))
 	r.GET("/:board/hide/:id/:csrf",
@@ -349,7 +374,13 @@ func Init() error {
 			approveAll, "/approval"), db.APPROVE_MEDIA))
 	}
 	r.GET("/boards", redirect(renderBoards, "/"))
-	r.POST("/boards/update/:id", redirect(updateOwnedBoard, "/boards"))
+	r.POST("/boards/:id/update",
+		redirect(asOwner(updateOwnedBoard), "/boards"))
+	r.POST("/boards/:id/add", redirect(asOwner(addMember), "/boards"))
+	r.POST("/boards/:id/remove",
+		redirect(asOwner(removeMember), "/boards"))
+	r.POST("/boards/:id/member",
+		redirect(asOwner(updateMember), "/boards"))
 	r.GET("/dashboard",
 		hasPrivilege(renderDashboard, db.ADMINISTRATION))
 	r.GET("/dashboard/:page",

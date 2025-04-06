@@ -8,7 +8,7 @@
 		<th>Description</th>
 	</tr>
 {{range (boards)}}
-{{if or (not .Private) (can "VIEW_PRIVATE")}}
+{{if canView .}}
 	<tr>
 		<td><a href="/{{.Name}}">/{{.Name}}/ - {{.LongName}}</a></td>
 		<td>{{.Description}}</td>

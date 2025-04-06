@@ -27,6 +27,7 @@ type Board struct {
 	LongName	string
 	Description	string
 	Threads		[]Thread
+	Members		[]Membership
 	Posts		int
 	Disabled	bool
 	ReadOnly	bool
@@ -178,4 +179,48 @@ func DeleteBoard(board Board) error {
 func GetBoards() ([]Board, error) {
 	var boards []Board
 	return boards, db.Preload("Owner").Find(&boards).Error
+}
+
+func (board Board) GetMembers() []Membership {
+	var members []Membership
+	db.Model(&Membership{}).Preload("Member").Preload("Rank").
+		Where("board_id = ?", board.ID).Find(&members)
+	return members
+}
+
+func (board Board) GetMember(account Account) (Membership, error) {
+	var member Membership
+	i := db.Model(&Membership{}).Preload("Member").Preload("Rank").
+		Where("board_id = ? AND member_id = ?", board.ID, account.ID).
+		Find(&member).RowsAffected
+	if i < 1 {
+		return Membership{}, errors.New("not a member")
+	}
+	return member, nil
+}
+
+func (board Board) RemoveMember(name string) error {
+	acc, err := GetAccount(name)
+	if err != nil { return err }
+	return db.Where("board_id = ? AND member_id = ?", board.ID, acc.ID).
+		Unscoped().Delete(&Membership{}).Error
+}
+
+func (board Board) AddMember(name string, rank string) error {
+	acc, err := GetAccount(name)
+	if err != nil { return err }
+	memberRank, err := GetMemberRank(rank)
+	if err != nil { return err }
+	return Membership{}.Add(Membership{
+		Board: board, Member: acc, Rank: memberRank})
+}
+
+func (board Board) UpdateMember(name string, rank string) error {
+	acc, err := GetAccount(name)
+	if err != nil { return err }
+	memberRank, err := GetMemberRank(rank)
+	if err != nil { return err }
+	return db.Model(Membership{}).
+		Where("board_id = ? AND member_id = ?", board.ID, acc.ID).
+		Update("rank_id", memberRank.ID).Error
 }

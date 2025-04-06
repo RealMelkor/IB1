@@ -248,20 +248,6 @@ func createBoard(c echo.Context) error {
 	return db.LoadBoards()
 }
 
-func updateOwnedBoard(c echo.Context) error {
-	account, err := loggedAs(c)
-	if err != nil { return err }
-	boards, err := account.GetBoards()
-	if err != nil { return err }
-	c.Request().PostForm.Set("owner", account.Name)
-	for _, v := range boards {
-		if strconv.Itoa(int(v.ID)) == c.Param("id") {
-			return updateBoard(c)
-		}
-	}
-	return invalidID
-}
-
 func updateBoard(c echo.Context) error {
 	board, hasBoard := getPostForm(c, "board")
 	name, hasName := getPostForm(c, "name")
@@ -374,6 +360,47 @@ func deleteBan(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil { return invalidID }
 	return db.RemoveBan(uint(id))
+}
+
+func asOwner(f func(db.Board, echo.Context)error) echo.HandlerFunc {
+	return catchCustom(func(c echo.Context) error {
+		account, err := loggedAs(c)
+		if err != nil { return err }
+		boards, err := account.GetBoards()
+		if err != nil { return err }
+		id, err := strconv.Atoi(c.Param("id"))
+		if err != nil { return err }
+		for _, v := range boards {
+			if v.ID == uint(id) {
+				return f(v, c)
+			}
+		}
+		return invalidID
+	}, "boards-error", "/boards")
+}
+
+func updateOwnedBoard(_ db.Board, c echo.Context) error {
+	acc, err := loggedAs(c)
+	if err != nil { return err }
+	v, _ := getPostForm(c, "owner")
+	if acc.Name != v { return invalidForm }
+	return updateBoard(c)
+}
+
+func addMember(v db.Board, c echo.Context) error {
+	name := c.Request().PostFormValue("name")
+	rank := c.Request().PostFormValue("rank")
+	return v.AddMember(name, rank)
+}
+
+func removeMember(v db.Board, c echo.Context) error {
+	return v.RemoveMember(c.Request().PostFormValue("name"))
+}
+
+func updateMember(v db.Board, c echo.Context) error {
+	name := c.Request().PostFormValue("name")
+	rank := c.Request().PostFormValue("rank")
+	return v.UpdateMember(name, rank)
 }
 
 func addAccount(c echo.Context) error {

@@ -18,9 +18,12 @@
 	<body>
 	<div class="bar">
 			[
-			{{range $i, $e := .Boards}}
-			{{if or (not .Private) (can "VIEW_PRIVATE")}}
-			{{if $i}}
+			{{$start := 1}}
+			{{range .Boards}}
+			{{if canView .}}
+			{{if $start}}
+			{{$start = 0}}
+			{{else}}
 			/
 			{{end}}
 			<a href="/{{.Name}}">{{.Name}}</a>

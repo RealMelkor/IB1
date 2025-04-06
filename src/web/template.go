@@ -80,6 +80,17 @@ func render(_template string, data any, c echo.Context) error {
 			}
 			return acc.HasPrivilege(priv) == nil
 		},
+		"memberCan": func(priv string) bool {
+			acc, err := loggedAs(c)
+			if err != nil {
+				v, err := db.UnauthenticatedCan(priv)
+				return err == nil && v
+			}
+			board, err := db.GetBoard(c.Param("board"))
+			if err != nil { return false }
+			return acc.CanAsMember(board,
+				db.GetMemberPrivilege(priv)) == nil
+		},
 		"isSelf": func(acc db.Account) bool {
 			self, err := loggedAs(c)
 			if err != nil { return false }
@@ -89,6 +100,9 @@ func render(_template string, data any, c echo.Context) error {
 			self, err := loggedAs(c)
 			if err != nil { return db.Account{} }
 			return self
+		},
+		"canView": func(board db.Board) bool {
+			return canView(c, board) == nil
 		},
 	}
 	err := templates.Funcs(funcs).Lookup("header").Execute(w, header(c))
@@ -123,6 +137,7 @@ func initTemplate() error {
 		"config": func() config.Config { return config.Cfg },
 		"isLogged": func() bool { return false },
 		"can": func(string) bool { return false },
+		"memberCan": func(string) bool { return false },
 		"set": func(string, string) string {return ""},
 		"get": func(string) string {return ""},
 		"once": func(string) string {return ""},
@@ -188,6 +203,15 @@ func initTemplate() error {
 			}
 			return res
 		},
+		"memberRanks": func() []string {
+			ranks, err := db.GetMemberRanks()
+			if err != nil { return nil }
+			res := []string{}
+			for _, v := range ranks {
+				res = append(res, v.Name)
+			}
+			return res
+		},
 		"idColor": func(in string) string {
 			h := fnv.New32()
 			sum := h.Sum([]byte(in))
@@ -203,6 +227,9 @@ func initTemplate() error {
 			rand.Read(buf[:])
 			return base32.StdEncoding.WithPadding(base32.NoPadding).
 				EncodeToString(buf[:])
+		},
+		"canView": func(db.Board) bool {
+			return false
 		},
 	}
 	templates, err = template.New("frontend").Funcs(funcs).

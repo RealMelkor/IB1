@@ -68,7 +68,7 @@ func Init() error {
 	db.AutoMigrate(&Board{}, &Thread{}, &Post{}, &Ban{}, &Theme{},
 			&Reference{}, &Account{}, &Session{}, &Config{},
 			&Media{}, &Banner{}, &BannedImage{}, &Ban{},
-			&Rank{}, &MemberRank{},
+			&Rank{}, &MemberRank{}, &Membership{},
 			&Wordfilter{}, &CIDR{}, &KeyValue{})
 
 	if err := LoadBoards(); err != nil { return err }

@@ -5,6 +5,8 @@ import (
 	"errors"
 )
 
+var needPrivilege = errors.New("privilege insufficient")
+
 type Account struct {
 	gorm.Model
 	Name		string	`gorm:"unique"`
@@ -160,7 +162,17 @@ func (account Account) Can(privilege Privilege) error {
 	for _, v := range account.Rank.Privileges {
 		if v == privilege { return nil }
 	}
-	return errors.New("privilege insufficient")
+	return needPrivilege
+}
+
+func (account Account) CanAsMember(board Board,
+			privilege MemberPrivilege) error {
+	if *board.OwnerID == account.ID { return nil }
+	if err := account.Can(Privilege(privilege)); err == nil { return nil }
+	member, err := board.GetMember(account)
+	if err != nil { return err }
+	if !member.Rank.Can(privilege) { return needPrivilege }
+	return nil
 }
 
 func (account *Account) SetTheme(name string) error {

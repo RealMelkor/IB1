@@ -26,6 +26,14 @@ func (p *Privilege) MarshalJSON() ([]byte, error) {
 	return json.Marshal(p.String())
 }
 
+func (p Privilege) Member() MemberPrivilege {
+	v, ok := memberPrivileges[p.String()]
+	if !ok {
+		return MemberPrivilege(NONE)
+	}
+	return v
+}
+
 //go:generate stringer -type=Privilege
 const (
 	NONE = Privilege(iota)

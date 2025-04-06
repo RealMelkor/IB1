@@ -23,6 +23,10 @@ func (p MemberPrivilege) MarshalJSON() ([]byte, error) {
 	return json.Marshal(Privilege(p).String())
 }
 
+func (p MemberPrivilege) Generic() Privilege {
+	return Privilege(p)
+}
+
 var memberPrivileges = map[string]MemberPrivilege{
 	"BAN_USER": 0,
 	"APPROVE_MEDIA": 0,
@@ -51,8 +55,12 @@ type MemberRank struct {
 type Membership struct {
 	gorm.Model
 	CRUD[Membership]
-	Member	Account
-	Board	Board
+	MemberID	int	 `gorm:"uniqueIndex:idx_pair"`
+	Member		Account
+	BoardID		int	 `gorm:"uniqueIndex:idx_pair"`
+	Board		Board
+	RankID		int
+	Rank		MemberRank
 }
 
 func GetMemberPrivilege(privilege string) MemberPrivilege {
@@ -76,6 +84,12 @@ func GetMemberRanks() ([]MemberRank, error) {
 	var ranks []MemberRank
 	err := db.Find(&ranks).Error
 	return ranks, err
+}
+
+func GetMemberRank(name string) (MemberRank, error) {
+	var rank MemberRank
+	err := db.Where("name = ?", name).Find(&rank).Error
+	return rank, err
 }
 
 func (rank MemberRank) Has(privilege string) bool {
@@ -121,7 +135,6 @@ func UpdateMemberRank(id int, name string, privileges []string) error {
 }
 
 func DeleteMemberRankByID(id int) error {
-	sessions.Clear()
 	return MemberRank{}.RemoveID(id, MemberRank{})
 }
 

@@ -11,7 +11,7 @@
 		<th></th>
         </tr>
 	<tr>
-		<form method="POST" action="/boards/update/{{.ID}}">
+		<form method="POST" action="/boards/{{.ID}}/update">
                         <td><input type="checkbox" name="enabled" {{if not .Disabled}}checked{{end}}></td>
                         <td><input type="text" name="board" value="{{.Name}}" required></td>
                         <td><input type="text" name="name" value="{{.LongName}}" required></td>
@@ -35,9 +35,55 @@
 			<br>
 			</td>
 			<td><input type="submit" value="Update"></td>
+			<input type="hidden" name="owner" value="{{self.Name}}">
 			<input type="hidden" name="csrf" value="{{get "csrf"}}">
 		</form>
 	</tr>
+	<tr>
+		<td colspan="6">
+<table style="border: none;">
+        <tr>
+		<th colspan="4">Members</th>
+	</tr>
+	{{$ID := .ID}}
+	{{range .GetMembers}}
+	<tr>
+		<form method="POST" action="/boards/{{$ID}}/member">
+			<td><input type="text" disabled value="{{.Member.Name}}"></td>
+			<td>
+			<select name="rank">
+				{{$rank := .Rank.Name}}
+				{{range memberRanks}}
+				<option {{if eq . $rank}}selected{{end}} value="{{.}}">{{capitalize .}}</option>
+				{{end}}
+			</select>
+			</td>
+			<td><input type="submit" value="Update"></td>
+			<td><input type="submit" value="Remove" formaction="/boards/{{$ID}}/remove"></td>
+			<input type="hidden" name="csrf" value="{{get "csrf"}}">
+			<input type="hidden" name="name" value="{{.Member.Name}}">
+		</form>
+	</tr>
+	{{end}}
+	<tr>
+		<form method="POST" action="/boards/{{.ID}}/add">
+			<td><input type="text" name="name" required></td>
+			<td>
+				<select name="rank">
+					{{range memberRanks}}
+					<option value="{{.}}">{{capitalize .}}</option>
+					{{end}}
+				</select>
+			</td>
+			<td><input type="submit" value="Add"></td>
+			<input type="hidden" name="csrf" value="{{get "csrf"}}">
+		</form>
+	</tr>
+</table>
+
+		</td>
+	</tr>
 {{end}}
 </table>
+<p class="error">{{once "boards-error"}}</p>
 </div>
