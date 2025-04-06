@@ -243,7 +243,9 @@ func createBoard(c echo.Context) error {
 	name, hasName := getPostForm(c, "name")
         if !hasBoard || !hasName { return invalidForm }
 	description, _ := getPostForm(c, "description")
-	err := db.CreateBoard(board, name, description)
+	acc, err := loggedAs(c)
+	if err != nil { return err }
+	err = db.CreateBoard(board, name, description, acc.ID)
 	if err != nil { return err }
 	return db.LoadBoards()
 }
@@ -285,14 +287,15 @@ func updateBoard(c echo.Context) error {
 }
 
 func deleteBoard(c echo.Context) error {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil { return err }
 	for i, v := range db.Boards {
-		if strconv.Itoa(int(v.ID)) != c.Param("id") { continue }
-		err := db.DeleteBoard(v)
-		if err != nil { return err }
+		if v.ID != uint(id) { continue }
 		delete(db.Boards, i)
-		return nil
 	}
-        return errors.New("invalid board")
+	v := db.Board{}
+	v.ID = uint(id)
+	return db.DeleteBoard(v)
 }
 
 func createTheme(c echo.Context) error {

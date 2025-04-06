@@ -177,6 +177,7 @@ func hasBoardPrivilege(f echo.HandlerFunc,
 
 func canView(c echo.Context, board db.Board) error {
 	if !board.Private { return nil }
+	if board.Disabled { return invalidRequest }
 	acc, err := loggedAs(c)
 	if err == nil {
 		if board.OwnerID != nil && acc.ID == *board.OwnerID {
@@ -374,11 +375,17 @@ func Init() error {
 			approveAll, "/approval"), db.APPROVE_MEDIA))
 	}
 	r.GET("/boards", redirect(renderBoards, "/"))
+	r.POST("/boards/create", redirect(
+		hasPrivilege(createBoard, db.CREATE_BOARD), "/boards"))
 	r.POST("/boards/:id/update",
 		redirect(asOwner(updateOwnedBoard), "/boards"))
 	r.POST("/boards/:id/add", redirect(asOwner(addMember), "/boards"))
 	r.POST("/boards/:id/remove",
 		redirect(asOwner(removeMember), "/boards"))
+	r.POST("/boards/:id/delete",
+		redirect(asOwner(func(_ db.Board, c echo.Context)error{
+			return deleteBoard(c)
+		}), "/boards"))
 	r.POST("/boards/:id/member",
 		redirect(asOwner(updateMember), "/boards"))
 	r.GET("/dashboard",

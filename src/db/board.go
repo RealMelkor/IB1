@@ -117,12 +117,15 @@ func RefreshThread(thread *Thread) error {
 	return db.Model(*thread).Preload("Posts").Find(thread).Error;
 }
 
-func CreateBoard(name string, longName string, description string) error {
+func CreateBoard(name string, longName string,
+			description string, ownerID uint) error {
 	var board Board
 	if err := db.First(&board, "Name = ?", name).Error; err != nil {
 		ret := db.Create(&Board{Name: name,
 				Description: description,
-				LongName: longName})
+				LongName: longName,
+				OwnerID: &ownerID,
+			})
 		if ret.Error == nil { return ret.Error }
 		if ret.Find(&board).Error != nil { return ret.Error }
 	}

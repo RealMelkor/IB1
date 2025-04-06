@@ -397,4 +397,7 @@ body {
 	.zoom-check:checked ~ label > .media {
 		max-width: 100%;
 	}
+	.zoom-check:checked ~ label > .media-video video {
+		max-width: 100%;
+	}
 }

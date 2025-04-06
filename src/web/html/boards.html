@@ -9,6 +9,7 @@
                 <th>Description</th>
                 <th>Options</th>
 		<th></th>
+		<th></th>
         </tr>
 	<tr>
 		<form method="POST" action="/boards/{{.ID}}/update">
@@ -35,12 +36,13 @@
 			<br>
 			</td>
 			<td><input type="submit" value="Update"></td>
+			<td><input type="submit" value="Delete" formaction="/boards/{{.ID}}/delete" {{if not .Disabled}} disabled{{end}}></td>
 			<input type="hidden" name="owner" value="{{self.Name}}">
 			<input type="hidden" name="csrf" value="{{get "csrf"}}">
 		</form>
 	</tr>
 	<tr>
-		<td colspan="6">
+		<td colspan="7">
 <table style="border: none;">
         <tr>
 		<th colspan="4">Members</th>
@@ -82,6 +84,20 @@
 </table>
 
 		</td>
+	</tr>
+{{end}}
+{{if can "CREATE_BOARD"}}
+	<tr>
+		<form method="POST" action="/boards/create">
+			<td><input type="checkbox" name="enabled" checked></td>
+			<td><input type="text" name="board" required></td>
+			<td><input type="text" name="name" required></td>
+			<td><input type="text" name="description" required></td>
+			<td></td>
+			<td><input type="submit" value="Create"></td>
+			<td></td>
+			<input type="hidden" name="csrf" value="{{get "csrf"}}">
+		</form>
 	</tr>
 {{end}}
 </table>
