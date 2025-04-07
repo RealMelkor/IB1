@@ -348,6 +348,9 @@ func deleteTheme(c echo.Context) error {
 func addBan(c echo.Context) error {
 	ip, hasIP := getPostForm(c, "ip")
         if !hasIP { return invalidForm }
+	board, _ := getPostForm(c, "board")
+	boardID, err := strconv.Atoi(board)
+	if err != nil { return err }
 	expiry, hasExpiry := getPostForm(c, "expiration")
 	duration := int64(3600)
         if hasExpiry {
@@ -356,7 +359,7 @@ func addBan(c echo.Context) error {
 			duration =  expiration.Unix() - time.Now().Unix()
 		}
 	}
-	return db.BanIP(ip, duration)
+	return db.BanIP(ip, duration, uint(boardID))
 }
 
 func deleteBan(c echo.Context) error {

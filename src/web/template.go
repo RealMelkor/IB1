@@ -149,6 +149,10 @@ func initTemplate() error {
 		"hasRank": func(string) bool {return false},
 		"isSelf": func(db.Account) bool {return false},
 		"self": func() db.Account {return db.Account{}} ,
+		"defer": func(i *uint) uint {
+			if i == nil { return 0 }
+			return *i
+		},
 		"capitalize": func(s string) string {
 			if s == "" { return "" }
 			return strings.ToUpper(s[0:1]) + s[1:]
@@ -292,6 +296,8 @@ func renderDashboard(c echo.Context) error {
 	if err != nil { return err }
 	bannedImages, err := db.GetBannedImages()
 	if err != nil { return err }
+	bans, err := db.GetBanList()
+	if err != nil { return err }
 	data := struct {
 		Accounts	[]db.Account
 		Boards		[]db.Board
@@ -311,7 +317,7 @@ func renderDashboard(c echo.Context) error {
 		Accounts: accounts,
 		Boards: boards,
 		Config: config.Cfg,
-		Bans:	db.BanList,
+		Bans:	bans,
 		BannedImages: bannedImages,
 		Themes: getThemes(),
 		UserThemes: themes,

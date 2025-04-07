@@ -137,7 +137,9 @@ func cancel(c echo.Context) error {
 func ban(c echo.Context) error {
 	board := c.Param("board")
 	ip := c.Param("ip")
-	if err := db.BanIP(ip, 3600); err != nil { return err }
+	v, err := db.GetBoard(board)
+	if err != nil { return err }
+	if err := db.BanIP(ip, 86400, v.ID); err != nil { return err }
 	c.Redirect(http.StatusFound, "/" + board)
 	return nil
 }

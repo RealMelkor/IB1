@@ -150,7 +150,11 @@ func redirectHTTPS(next echo.HandlerFunc) echo.HandlerFunc {
 func isBanned(c echo.Context) error {
 	_, err := loggedAs(c)
 	if err == nil { return nil }
-	return db.IsBanned(clientIP(c))
+	board, err := db.GetBoard(c.Param("board"))
+	if err != nil {
+		return db.IsBanned(clientIP(c), board.ID)
+	}
+	return db.IsBanned(clientIP(c), 0)
 }
 
 func hasPrivilege(f echo.HandlerFunc, privilege db.Privilege) echo.HandlerFunc {
@@ -361,7 +365,8 @@ func Init() error {
 		hasPrivilege(onPost(banMedia), db.BAN_MEDIA))
 	r.GET("/:board/approve/:id/:csrf", hasBoardPrivilege(
 		onPost(approveMediaFromPost), db.APPROVE_MEDIA.Member()))
-	r.GET("/:board/ban/:ip/:csrf", hasPrivilege(ban, db.BAN_USER))
+	r.GET("/:board/ban/:ip/:csrf",
+		hasBoardPrivilege(ban, db.BAN_USER.Member()))
 	if config.Cfg.Media.ApprovalQueue {
 		r.GET("/approval", hasPrivilege(
 			renderFile("approval.html"), db.APPROVE_MEDIA))

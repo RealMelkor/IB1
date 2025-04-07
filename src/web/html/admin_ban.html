@@ -1,3 +1,12 @@
+{{define "board-list"}}
+{{$id := .}}
+<select name="board" {{if not (eq $id -1)}}disabled{{end}}>
+	<option {{if not . }}selected{{end}} value="0">All boards</option>
+{{range self.GetBoards}}
+	<option {{if (eq $id .ID)}}selected{{end}} value="{{.ID}}">{{.Name}}</option>
+{{end}}
+</select>
+{{end}}
 {{define "admin-ban"}}
 <div class="center"><h3>Bans</h3></div>
 <table>
@@ -5,6 +14,7 @@
 	<th>IP</th>
 	<th>Start</th>
 	<th>End</th>
+	<th>Board</th>
 	<th></th>
 </tr>
 {{range .Bans}}
@@ -13,6 +23,7 @@
 	<td>{{.String}}</td>
 	<td>{{.From}}</td>
 	<td>{{.To}}</td>
+	<td>{{template "board-list" (defer .BoardID)}}</td>
 	<td><input type="submit" value="Cancel"></td>
 	<input type="hidden" name="csrf" value="{{get "csrf"}}">
 </form>
@@ -23,6 +34,7 @@
 	<td><input type="text" name="ip" required></td>
 	<td></td>
 	<td><input type="datetime-local" name="expiration"></td>
+	<td>{{template "board-list" -1}}</td>
 	<td><input type="submit" value="Ban"></td>
 	<input type="hidden" name="csrf" value="{{get "csrf"}}">
 </form>
