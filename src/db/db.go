@@ -7,6 +7,7 @@ import (
 	"errors"
 	"os"
 	"log"
+	"time"
 	"IB1/config"
 )
 
@@ -26,6 +27,10 @@ var Path string
 var Type string
 
 func Init() error {
+
+	if db != nil {
+		return nil
+	}
 
 	sessions.Init()
 	Boards = map[string]Board{}
@@ -68,13 +73,20 @@ func Init() error {
 	db.AutoMigrate(&Board{}, &Thread{}, &Post{}, &Ban{}, &Theme{},
 			&Reference{}, &Account{}, &Session{}, &Config{},
 			&Media{}, &Banner{}, &BannedImage{}, &Ban{},
-			&Rank{}, &MemberRank{}, &Membership{},
+			&Rank{}, &MemberRank{}, &Membership{}, &Blacklist{},
 			&Wordfilter{}, &CIDR{}, &KeyValue{})
 
 	if err := LoadBoards(); err != nil { return err }
 	if err := LoadBanList(); err != nil { return err }
 	if err := LoadConfig(); err != nil { return err }
 	go func() {
+		for {
+			exist, err := HasSuperuser()
+			if err != nil || exist {
+				break
+			}
+			time.Sleep(time.Second * 5)
+		}
 		if err := LoadCountries(); err != nil {
 			log.Println(err)
 		}

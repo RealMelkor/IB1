@@ -10,6 +10,7 @@ import (
 	"io"
 	"context"
 	"net"
+	"net/url"
 	"net/http"
 	"math/rand"
 	"IB1/db"
@@ -343,6 +344,26 @@ func deleteTheme(c echo.Context) error {
 	if err != nil { return err }
 	reloadThemes()
 	return nil
+}
+
+func createBlacklist(c echo.Context) error {
+	host, hasHost:= getPostForm(c, "host")
+        if !hasHost { return invalidForm }
+	v, err := url.Parse("https://" + host + "/")
+	if err != nil { return err }
+
+	enabled, _ := getPostForm(c, "enabled")
+	disabled := enabled != "on"
+	return db.Blacklist{}.Add(db.Blacklist{
+		Disabled: disabled,
+		Host: v.Hostname(),
+	})
+}
+
+func deleteBlacklist(c echo.Context) error {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil { return invalidID }
+	return db.Blacklist{}.RemoveID(id, db.Blacklist{})
 }
 
 func addBan(c echo.Context) error {

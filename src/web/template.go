@@ -298,6 +298,8 @@ func renderDashboard(c echo.Context) error {
 	if err != nil { return err }
 	bans, err := db.GetBanList()
 	if err != nil { return err }
+	blacklists, err := db.Blacklist{}.GetAll()
+	if err != nil { return err }
 	data := struct {
 		Accounts	[]db.Account
 		Boards		[]db.Board
@@ -310,6 +312,7 @@ func renderDashboard(c echo.Context) error {
 		BannedImages	[]db.BannedImage
 		UserThemes	[]db.Theme
 		Wordfilters	[]db.Wordfilter
+		Blacklists	[]db.Blacklist
 		Ranks		[]db.Rank
 		MemberRanks	[]db.MemberRank
 		Header		any
@@ -322,6 +325,7 @@ func renderDashboard(c echo.Context) error {
 		Themes: getThemes(),
 		UserThemes: themes,
 		Wordfilters: wordfilters,
+		Blacklists: blacklists,
 		Ranks: ranks,
 		MemberRanks: memberRanks,
 		Privileges: db.GetPrivileges(),

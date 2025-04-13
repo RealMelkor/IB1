@@ -15,6 +15,7 @@ import (
 	"log"
 	
 	"IB1/db"
+	"IB1/dnsbl"
 	"IB1/config"
 )
 
@@ -210,6 +211,17 @@ func privateBoard(f echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
+func isBlacklisted(f echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		if !strings.HasPrefix(c.Request().RequestURI, "/static/") {
+			if err := dnsbl.IsListed(clientIP(c)); err != nil {
+				return err
+			}
+		}
+		return f(c)
+	}
+}
+
 func catchCustom(f echo.HandlerFunc, param string,
 			redirect string) echo.HandlerFunc {
 	return func(c echo.Context) error {
@@ -298,6 +310,7 @@ func Init() error {
 	r.Use(logger)
 	r.Use(err)
 	r.Use(csrf)
+	r.Use(isBlacklisted)
 	r.Use(privateBoard)
 
 	r.GET("/", renderFile("index.html"))
@@ -430,6 +443,11 @@ func Init() error {
 		handleConfig(deleteWordfilter, "wordfilter"))
 	r.POST("/config/wordfilter/update/:id",
 		handleConfig(updateWordfilter, "wordfilter"))
+
+	r.POST("/config/blacklist/create",
+		handleConfig(createBlacklist, "blacklist"))
+	r.POST("/config/blacklist/delete/:id",
+		handleConfig(deleteBlacklist, "blacklist"))
 
 	r.POST("/config/rank/create", handleConfig(createRank, "rank"))
 	r.POST("/config/rank/delete/:id", handleConfig(deleteRank, "rank"))

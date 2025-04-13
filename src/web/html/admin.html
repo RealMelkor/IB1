@@ -1,7 +1,7 @@
 <div class="side-menu">
 <p>Settings</p>
 <ul>
-{{range (arr "main" "media" "ssl" "acme" "board" "theme" "banner" "favicon" "ban" "account" "rank" "rate-limit" "wordfilter")}}
+{{range (arr "main" "media" "ssl" "acme" "board" "theme" "banner" "favicon" "ban" "account" "rank" "rate-limit" "wordfilter" "blacklist")}}
 {{$v := not (eq . (param "page"))}}
 	<li>{{if $v}}<a href="/dashboard/{{.}}">{{end}}{{capitalize .}}{{if $v}}</a>{{end}}</li>
 {{end}}

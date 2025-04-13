@@ -1,0 +1,28 @@
+{{define "admin-blacklist"}}
+<div class="center"><h3>Blacklists (DNSBL)</h3></div>
+<table>
+	<tr>
+		<th>Enabled</th>
+		<th>Host</th>
+		<th></th>
+	</tr>
+	{{range .Blacklists}}
+	<tr>
+		<form method="POST" action="/config/blacklist/update/{{.ID}}">
+			<td><input type="checkbox" name="enabled" {{if not .Disabled}}checked{{end}}></td>
+			<td><input type="text" name="host" value="{{.Host}}" required></td>
+			<td><input type="submit" value="Delete" formaction="/config/blacklist/delete/{{.ID}}"></td>
+			<input type="hidden" name="csrf" value="{{get "csrf"}}">
+		</form>
+	</tr>
+	{{end}}
+	<tr>
+		<form method="POST" action="/config/blacklist/create">
+			<td><input type="checkbox" name="enabled" checked></td>
+			<td><input type="text" name="host" required></td>
+			<td><input type="submit" value="Add"></td>
+			<input type="hidden" name="csrf" value="{{get "csrf"}}">
+		</form>
+	</tr>
+</table>
+{{end}}
