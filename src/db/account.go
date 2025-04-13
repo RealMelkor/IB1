@@ -167,7 +167,7 @@ func (account Account) Can(privilege Privilege) error {
 
 func (account Account) CanAsMember(board Board,
 			privilege MemberPrivilege) error {
-	if *board.OwnerID == account.ID { return nil }
+	if board.OwnerID != nil && *board.OwnerID == account.ID { return nil }
 	if err := account.Can(Privilege(privilege)); err == nil { return nil }
 	member, err := board.GetMember(account)
 	if err != nil { return err }

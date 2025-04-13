@@ -215,6 +215,7 @@ func isBlacklisted(f echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		if !strings.HasPrefix(c.Request().RequestURI, "/static/") {
 			if err := dnsbl.IsListed(clientIP(c)); err != nil {
+				log.Println(err)
 				return err
 			}
 		}
