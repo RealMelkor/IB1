@@ -4,6 +4,8 @@
 	<tr>
 		<th>Enabled</th>
 		<th>Host</th>
+		<th>Allow Read</th>
+		<th></th>
 		<th></th>
 	</tr>
 	{{range .Blacklists}}
@@ -11,6 +13,8 @@
 		<form method="POST" action="/config/blacklist/update/{{.ID}}">
 			<td><input type="checkbox" name="enabled" {{if not .Disabled}}checked{{end}}></td>
 			<td><input type="text" name="host" value="{{.Host}}" required></td>
+			<td><input type="checkbox" name="allow-read" {{if .AllowRead}}checked{{end}}></td>
+			<td><input type="submit" value="Update"></td>
 			<td><input type="submit" value="Delete" formaction="/config/blacklist/delete/{{.ID}}"></td>
 			<input type="hidden" name="csrf" value="{{get "csrf"}}">
 		</form>
@@ -20,7 +24,8 @@
 		<form method="POST" action="/config/blacklist/create">
 			<td><input type="checkbox" name="enabled" checked></td>
 			<td><input type="text" name="host" required></td>
-			<td><input type="submit" value="Add"></td>
+			<td><input type="checkbox" name="allow-read"></td>
+			<td colspan="2"><input type="submit" value="Add"></td>
 			<input type="hidden" name="csrf" value="{{get "csrf"}}">
 		</form>
 	</tr>

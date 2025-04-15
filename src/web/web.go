@@ -211,10 +211,22 @@ func privateBoard(f echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
+func isReadOnly(c echo.Context) bool {
+	if c.Request().Method != "GET" {
+		return false
+	}
+	for _, v := range c.ParamNames() {
+		if v != "csrf" { continue }
+		return false
+	}
+	return true
+}
+
 func isBlacklisted(f echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		if !strings.HasPrefix(c.Request().RequestURI, "/static/") {
-			if err := dnsbl.IsListed(clientIP(c)); err != nil {
+			err := dnsbl.IsListed(clientIP(c), isReadOnly(c))
+			if err != nil {
 				log.Println(err)
 				return err
 			}
@@ -284,6 +296,7 @@ func spoilerImage(c echo.Context) error {
 
 func Init() error {
 
+	dnsbl.Init()
 	sessions.Init()
 	captchaInit()
 	reloadRatelimits()
@@ -449,6 +462,8 @@ func Init() error {
 		handleConfig(createBlacklist, "blacklist"))
 	r.POST("/config/blacklist/delete/:id",
 		handleConfig(deleteBlacklist, "blacklist"))
+	r.POST("/config/blacklist/update/:id",
+		handleConfig(updateBlacklist, "blacklist"))
 
 	r.POST("/config/rank/create", handleConfig(createRank, "rank"))
 	r.POST("/config/rank/delete/:id", handleConfig(deleteRank, "rank"))

@@ -9,5 +9,6 @@ type Blacklist struct {
 	CRUD[Blacklist]
 	ID		uint
 	Disabled	bool
+	AllowRead	bool
 	Host		string `gorm:"unique"`
 }

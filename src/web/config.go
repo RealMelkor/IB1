@@ -16,6 +16,7 @@ import (
 	"IB1/db"
 	"IB1/config"
 	"IB1/acme"
+	"IB1/dnsbl"
 
 	"github.com/labstack/echo/v4"
 )
@@ -354,16 +355,37 @@ func createBlacklist(c echo.Context) error {
 
 	enabled, _ := getPostForm(c, "enabled")
 	disabled := enabled != "on"
+	allowRead, _ := getPostForm(c, "allow-read")
 	return db.Blacklist{}.Add(db.Blacklist{
 		Disabled: disabled,
 		Host: v.Hostname(),
+		AllowRead: allowRead == "on",
 	})
 }
 
 func deleteBlacklist(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil { return invalidID }
-	return db.Blacklist{}.RemoveID(id, db.Blacklist{})
+	err = db.Blacklist{}.RemoveID(id, db.Blacklist{})
+	if err != nil { return err }
+	dnsbl.ClearCache()
+	return nil
+}
+
+func updateBlacklist(c echo.Context) error {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil { return invalidID }
+	host, hasHost := getPostForm(c, "host")
+        if !hasHost { return invalidForm }
+	enabled, _ := getPostForm(c, "enabled")
+	disabled := enabled != "on"
+	allowRead, _ := getPostForm(c, "allow-read")
+	err = db.Blacklist{}.Update(id, db.Blacklist{
+		Host: host, Disabled: disabled, AllowRead: allowRead == "on",
+	})
+	if err != nil { return err }
+	dnsbl.ClearCache()
+	return nil
 }
 
 func addBan(c echo.Context) error {
