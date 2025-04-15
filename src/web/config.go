@@ -356,11 +356,14 @@ func createBlacklist(c echo.Context) error {
 	enabled, _ := getPostForm(c, "enabled")
 	disabled := enabled != "on"
 	allowRead, _ := getPostForm(c, "allow-read")
-	return db.Blacklist{}.Add(db.Blacklist{
+	err = db.Blacklist{}.Add(db.Blacklist{
 		Disabled: disabled,
 		Host: v.Hostname(),
 		AllowRead: allowRead == "on",
 	})
+	if err != nil { return err }
+	dnsbl.ClearCache()
+	return nil
 }
 
 func deleteBlacklist(c echo.Context) error {

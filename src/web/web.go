@@ -121,8 +121,13 @@ func logger(next echo.HandlerFunc) echo.HandlerFunc {
 		t2 := time.Now()
 		r := c.Request()
 		ip := clientIP(c)
+		blacklist := ""
+		if err := isBlacklisted(c); err != nil {
+			blacklist = "(blacklisted)"
+		}
 		log.Println(
-			"[" + id + "][" + ip + "][" + r.Method + "]" + name,
+			"[" + id + "][" + ip + blacklist + "][" +
+			r.Method + "]" + name,
 			r.URL.String(), t2.Sub(t1))
 		return err
 	}
@@ -222,14 +227,18 @@ func isReadOnly(c echo.Context) bool {
 	return true
 }
 
-func isBlacklisted(f echo.HandlerFunc) echo.HandlerFunc {
+func isBlacklisted(c echo.Context) error {
+	if strings.HasPrefix(c.Request().RequestURI, "/static/") {
+		return nil
+	}
+	return dnsbl.IsListed(clientIP(c), isReadOnly(c))
+}
+
+
+func blacklistCheck(f echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		if !strings.HasPrefix(c.Request().RequestURI, "/static/") {
-			err := dnsbl.IsListed(clientIP(c), isReadOnly(c))
-			if err != nil {
-				log.Println(err)
-				return err
-			}
+		if err := isBlacklisted(c); err != nil {
+			return err
 		}
 		return f(c)
 	}
@@ -324,7 +333,7 @@ func Init() error {
 	r.Use(logger)
 	r.Use(err)
 	r.Use(csrf)
-	r.Use(isBlacklisted)
+	r.Use(blacklistCheck)
 	r.Use(privateBoard)
 
 	r.GET("/", renderFile("index.html"))
