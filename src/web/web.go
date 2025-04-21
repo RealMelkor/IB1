@@ -96,7 +96,7 @@ func banPendingMedia(c echo.Context) error {
 func err(f echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		if err := f(c); err != nil {
-			if (len(c.Response().Header()) == 0) {
+			if c.Response().Status == 200 {
 				return badRequest(c, err)
 			}
 			fatalError(c, err)

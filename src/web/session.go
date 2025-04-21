@@ -18,7 +18,6 @@ type KeyValue struct {
 	Creation	time.Time
 }
 
-//type session map[string]db.KeyValue
 var sessions = util.SafeMap[db.KeyValues]{}
 
 func clearSession() {
@@ -36,8 +35,6 @@ func clearSession() {
 		db.SaveSessions(&sessions)
 	}
 }
-
-
 
 func setCookie(c echo.Context, name string, value string) {
 	cookie := http.Cookie{
@@ -78,10 +75,22 @@ func deleteCookie(c echo.Context, name string) {
 func getID(c echo.Context) (string, error) {
 	v := getCookie(c, "id")
 	if v == "" {
-		token, err := util.NewToken()
-		if err != nil { return "", err }
-		setCookie(c, "id", token)
-		v = token
+		raw := c.Response().Header().Get("Set-Cookie")
+		if raw != "" {
+			header := http.Header{}
+			header.Add("Cookie", raw)
+			request := http.Request{Header: header}
+			cookie, err := request.Cookie("id")
+			if err == nil {
+				v = cookie.Value
+			}
+		}
+		if v == "" {
+			token, err := util.NewToken()
+			if err != nil { return "", err }
+			setCookie(c, "id", token)
+			v = token
+		}
 	}
 	_, ok := sessions.Get(v)
 	if !ok { sessions.Set(v, db.KeyValues{}) }
