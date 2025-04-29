@@ -51,6 +51,8 @@ type Config struct {
 		Spoiler		[]byte
 		SpoilerMime	string
 		ImageThreshold	int
+		HotlinkShield	int
+		HotlinkKey	[]byte
 	}
 	Captcha struct {
 		Enabled		bool
@@ -119,6 +121,11 @@ func LoadConfig(data []byte) error {
 	if Cfg.Post.Key == nil {
 		Cfg.Post.Key = make([]byte, 512)
 		_, err := rand.Read(Cfg.Post.Key)
+		if err != nil { return err }
+	}
+	if Cfg.Media.HotlinkKey == nil {
+		Cfg.Media.HotlinkKey = make([]byte, 32)
+		_, err := rand.Read(Cfg.Media.HotlinkKey)
 		if err != nil { return err }
 	}
 	return nil

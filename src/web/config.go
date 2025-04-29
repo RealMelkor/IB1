@@ -176,6 +176,10 @@ func updateMedia(c echo.Context) error {
 	}
 	config.Cfg.Media.AllowVideos = v
 
+	hotlink, _ := getPostForm(c, "hotlink-shield")
+	config.Cfg.Media.HotlinkShield, err = strconv.Atoi(hotlink)
+	if err == nil { return err }
+
 	data, mime, err := handleImage(c, "pending")
 	if err == nil {
 		config.Cfg.Media.PendingMedia = data

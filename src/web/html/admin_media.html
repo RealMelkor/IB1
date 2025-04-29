@@ -34,6 +34,18 @@
 			<td><input type="checkbox" name="indb" {{if .Config.Media.InDatabase}}checked{{end}}></td>
 		</tr>
 		<tr>
+			<td>Hotlink protection</td>
+			<td>
+				<select name="hotlink-shield">
+{{$i := .Config.Media.HotlinkShield}}
+					<option value="0">None</option>
+					<option {{if eq $i 1}}selected{{end}} value="1">Fast</option>
+					<option {{if eq $i 2}}selected{{end}} value="2">Standard</option>
+					<option {{if eq $i 3}}selected{{end}} value="3">High</option>
+				</select>
+			</td>
+		</tr>
+		<tr>
 			<td colspan="2"><div class="center"><img class="icon" src="/static/pending" alt="favicon"></div></th>
 		</tr>
 		<tr>

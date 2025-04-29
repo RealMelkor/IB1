@@ -104,6 +104,10 @@ func render(_template string, data any, c echo.Context) error {
 		"canView": func(board db.Board) bool {
 			return canView(c, board) == nil
 		},
+		"hotlink": func() string {
+			if config.Cfg.Media.HotlinkShield == 0 { return "" }
+			return "?v=" + strconv.Itoa(hotlinkHash(c, 0))
+		},
 	}
 	err := templates.Funcs(funcs).Lookup("header").Execute(w, header(c))
 	if err != nil { return err }
@@ -146,6 +150,7 @@ func initTemplate() error {
 		"render": func(string, any) error { return nil },
 		"session": func() string {return ""},
 		"csrf": func() string { return "" },
+		"hotlink": func() string { return "" },
 		"hasRank": func(string) bool {return false},
 		"isSelf": func(db.Account) bool {return false},
 		"self": func() db.Account {return db.Account{}} ,

@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"hash/fnv"
 	"bytes"
+	"errors"
 	"os"
 	"os/signal"
 	"syscall"
@@ -13,6 +14,8 @@ import (
 	"time"
 	"strconv"
 	"log"
+	"crypto/rand"
+	"encoding/binary"
 	
 	"IB1/db"
 	"IB1/dnsbl"
@@ -234,6 +237,36 @@ func isBlacklisted(c echo.Context) error {
 	return dnsbl.IsListed(clientIP(c), isReadOnly(c))
 }
 
+func hotlinkHash(c echo.Context, offset int) int {
+	id, err := getID(c)
+	if id == "" || err != nil {
+		v := time.Now().UnixMicro()
+		binary.Read(rand.Reader, binary.BigEndian, &v)
+		return int(v)
+	}
+	v := time.Now().Unix() / 600 + int64(offset)
+	if config.Cfg.Media.HotlinkShield == 1 { return int(v) }
+	h := fnv.New32()
+	h.Write(config.Cfg.Media.HotlinkKey)
+	binary.Write(h, binary.BigEndian, v)
+	if config.Cfg.Media.HotlinkShield == 2 { return int(h.Sum32()) }
+	h.Write([]byte(id))
+	return int(h.Sum32())
+}
+
+func hotlinkShield(f echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		skip := config.Cfg.Media.HotlinkShield == 0 || !(
+			strings.HasPrefix(c.Request().RequestURI, "/media/") ||
+			strings.HasPrefix(c.Request().RequestURI, "/banner/"))
+		if skip { return f(c) }
+		v, err := strconv.Atoi(c.QueryParam("v"))
+		if err == nil && (v == hotlinkHash(c, 0) || v == hotlinkHash(c, -1)) {
+			return f(c)
+		}
+		return errors.New("expired")
+	}
+}
 
 func blacklistCheck(f echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
@@ -333,6 +366,7 @@ func Init() error {
 	r.Use(logger)
 	r.Use(err)
 	r.Use(csrf)
+	r.Use(hotlinkShield)
 	r.Use(blacklistCheck)
 	r.Use(privateBoard)
 

@@ -30,6 +30,9 @@ func Init() error {
 
 func IsListedOn(ip string, blacklist string) bool {
 	parts := strings.Split(ip, ".")
+	if len(parts) != 4 {
+		return false
+	}
 	host := parts[3] + "." + parts[2] + "." + parts[1] + "." + parts[0] +
 		"." + blacklist
 	v, ok := cache.Get(host)

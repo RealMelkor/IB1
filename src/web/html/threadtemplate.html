@@ -1,4 +1,5 @@
 {{define "thread-template"}}
+{{$hotlink := hotlink}}
 <style>
 {{range .Posts}}
 {{$id := .Number}}
@@ -93,14 +94,14 @@
 {{if (and (can "VIEW_PENDING_MEDIA") (isPending .MediaHash))}}
 {{$border = "pending-approval"}}
 {{end}}
-		<img class="thumbnail {{$border}}" src="/media/thumbnail/{{.Thumbnail}}" alt="{{.Number}}">
+		<img class="thumbnail {{$border}}" src="/media/thumbnail/{{.Thumbnail}}{{$hotlink}}" alt="{{.Number}}">
 {{if or (isPicture .Media) (and (isPending .MediaHash) (not (can "VIEW_PENDING_MEDIA")))}}
-                <img class="media {{$border}}" loading="lazy" src="/media/{{.Media}}" alt="{{.Number}}">
+                <img class="media {{$border}}" loading="lazy" src="/media/{{.Media}}{{$hotlink}}" alt="{{.Number}}">
 {{else if (isVideo .Media)}}
                 <div class="media media-video">
                         <p>[-]</p>
                         <video class="{{$border}}" controls>
-                        <source src="/media/{{.Media}}" type="video/{{extension .Media}}">
+                        <source src="/media/{{.Media}}{{$hotlink}}" type="video/{{extension .Media}}">
                         Your browser does not support this video format.
                         </video>
                 </div>
