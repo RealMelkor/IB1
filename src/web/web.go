@@ -564,7 +564,7 @@ func Init() error {
 			}))))
 	} else if config.Cfg.Media.ApprovalQueue {
 		f := func(c echo.Context) error {
-			path := c.Request().RequestURI
+			path := c.Request().URL.Path
 			path = strings.TrimPrefix(path, "/media")
 			path = config.Cfg.Media.Path + path
 			f, err := os.Open(path)

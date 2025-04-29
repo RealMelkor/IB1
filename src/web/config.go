@@ -76,7 +76,6 @@ func setDefaultTheme(c echo.Context) error {
 }
 
 func updateConfig(c echo.Context) error {
-	requireRestart := false
 
 	if err := setDefaultTheme(c); err != nil { return err }
 
@@ -90,9 +89,7 @@ func updateConfig(c echo.Context) error {
 
 	listener, ok := getPostForm(c, "listener")
         if !ok { return invalidForm }
-	if !requireRestart {
-		requireRestart = config.Cfg.Web.Listener != listener
-	}
+	requireRestart := config.Cfg.Web.Listener != listener
 	config.Cfg.Web.Listener = listener
 
 	domain, ok := getPostForm(c, "domain")
@@ -128,21 +125,16 @@ func updateConfig(c echo.Context) error {
 }
 
 func updateMedia(c echo.Context) error {
-	requireRestart := false
 
 	indb, _ := getPostForm(c, "indb")
 	v := indb == "on"
-	if v != config.Cfg.Media.InDatabase {
-		config.Cfg.Media.InDatabase = v
-		requireRestart = true
-	}
+	requireRestart := v != config.Cfg.Media.InDatabase
+	config.Cfg.Media.InDatabase = v
 
 	approval, _ := getPostForm(c, "approval")
 	v = approval == "on"
-	if v != config.Cfg.Media.ApprovalQueue {
-		config.Cfg.Media.ApprovalQueue = v
-		requireRestart = true
-	}
+	requireRestart = v != config.Cfg.Media.ApprovalQueue || requireRestart
+	config.Cfg.Media.ApprovalQueue = v
 
 	tmp, ok := getPostForm(c, "tmp")
         if !ok { return invalidForm }
@@ -178,7 +170,7 @@ func updateMedia(c echo.Context) error {
 
 	hotlink, _ := getPostForm(c, "hotlink-shield")
 	config.Cfg.Media.HotlinkShield, err = strconv.Atoi(hotlink)
-	if err == nil { return err }
+	if err != nil { return err }
 
 	data, mime, err := handleImage(c, "pending")
 	if err == nil {

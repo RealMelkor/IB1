@@ -4,8 +4,9 @@
 		<th colspan="2">Banners</th>
 	</tr>
 {{range banners}}
+{{$hotlink := hotlink}}
 	<tr>
-		<td><img class="banner" src="/banner/{{.}}" alt="banner-{{.}}"></td>
+		<td><img class="banner" src="/banner/{{.}}{{$hotlink}}" alt="banner-{{.}}"></td>
 		<form method="POST" action="/config/banner/delete/{{.}}">
 			<td><input type="submit" value="Delete"></td>
 			<input type="hidden" name="csrf" value="{{get "csrf"}}">
