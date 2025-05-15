@@ -5,15 +5,15 @@
 <div class="media-container new-form">
   <input type="checkbox" class="zoom-check" id="zoom-check">
     <label for="zoom-check">
-    <img class="thumbnail" src="/media/thumbnail/{{thumbnail $hash}}" alt="thumbnail">
+    <img class="thumbnail" src="/media/thumbnail/{{thumbnail $hash}}{{hotlink}}" alt="thumbnail">
 {{if isPicture $hash}}
-                <img class="media" loading="lazy" src="/media/{{$hash}}" alt="{{.Number}}">
+                <img class="media" loading="lazy" src="/media/{{$hash}}{{hotlink}}" alt="{{.Number}}">
 {{end}}
 {{if isVideo $hash}}
                 <div class="media media-video">
                         <p>[-]</p>
                         <video controls>
-                        <source src="/media/{{$hash}}" type="video/{{extension $hash}}">
+                        <source src="/media/{{$hash}}{{hotlink}}" type="video/{{extension $hash}}">
                         Your browser does not support this video format.
                         </video>
                 </div>

@@ -23,6 +23,7 @@ type Config struct {
 	}
 	Web struct {
 		Domain		string
+		BaseURL		string
 		Listener	string
 	}
 	Acme struct {
@@ -48,6 +49,7 @@ type Config struct {
 		Key		[]byte
 		PendingMedia	[]byte
 		PendingMime	string
+		NotificationURL	string
 		Spoiler		[]byte
 		SpoilerMime	string
 		ImageThreshold	int

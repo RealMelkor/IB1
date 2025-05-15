@@ -31,6 +31,10 @@
 			<td><input type="text" name="domain" value="{{.Config.Web.Domain}}" required></td>
 		</tr>
 		<tr>
+			<td>Base URL</td>
+			<td><input type="text" name="base-url" value="{{if .Config.Web.BaseURL}}{{.Config.Web.BaseURL}}{{else}}http://{{.Config.Web.Domain}}{{end}}" required></td>
+		</tr>
+		<tr>
 			<td>Socket address</td>
 			<td><input type="text" name="listener" value="{{.Config.Web.Listener}}" required></td>
 		</tr>

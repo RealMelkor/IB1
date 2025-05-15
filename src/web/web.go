@@ -77,8 +77,25 @@ func thumbnailCheck(f echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
+func secretCheck(f echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		hash := strings.Split(c.Param("hash"), ".")[0]
+		err := db.CanBypassApproval(hash, c.Param("secret"))
+		if err != nil { return err }
+		return f(c)
+	}
+}
+
 func approveMedia(c echo.Context) error {
-	return db.Approve(strings.Split(c.FormValue("media"), ".")[0])
+	hash := ""
+	if c.Request().Method == "GET" {
+		hash = c.Param("hash")
+		err := db.ApprovalBypass{}.Delete(c.Param("secret"))
+		if err != nil { return err }
+	} else {
+		hash = c.FormValue("media")
+	}
+	return db.Approve(strings.Split(hash, ".")[0])
 }
 
 func approveAll(c echo.Context) error {
@@ -86,7 +103,14 @@ func approveAll(c echo.Context) error {
 }
 
 func denyMedia(c echo.Context) error {
-	return db.RemoveMedia(strings.Split(c.FormValue("media"), ".")[0])
+	hash := ""
+	if c.Request().Method == "GET" {
+		hash = c.Param("hash")
+		db.ApprovalBypass{}.Delete(c.Param("secret"))
+	} else {
+		hash = c.FormValue("media")
+	}
+	return db.RemoveMedia(strings.Split(hash, ".")[0])
 }
 
 func banPendingMedia(c echo.Context) error {
@@ -256,7 +280,13 @@ func hotlinkHash(c echo.Context, offset int) int {
 
 func hotlinkShield(f echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		skip := config.Cfg.Media.HotlinkShield == 0 || !(
+		skip := false
+		for _, v := range c.ParamNames() {
+			if v != "secret" { continue }
+			skip = true
+			break
+		}
+		skip = skip || config.Cfg.Media.HotlinkShield == 0 || !(
 			strings.HasPrefix(c.Request().RequestURI, "/media/") ||
 			strings.HasPrefix(c.Request().RequestURI, "/banner/"))
 		if skip { return f(c) }
@@ -318,6 +348,13 @@ func auth(f echo.HandlerFunc) echo.HandlerFunc {
 
 func notFound(c echo.Context) error {
 	return c.Blob(http.StatusNotFound, "text/plain", []byte("Not Found"))
+}
+
+func text(f echo.HandlerFunc, text string) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		if err := f(c); err != nil { return err }
+		return c.Blob(http.StatusOK, "text/plain", []byte(text))
+	}
 }
 
 func pendingMediaImage(c echo.Context) error {
@@ -448,6 +485,10 @@ func Init() error {
 			banPendingMedia, "/approval"), db.APPROVE_MEDIA))
 		r.POST("/approval/accept/all", hasPrivilege(redirect(
 			approveAll, "/approval"), db.APPROVE_MEDIA))
+		r.GET("/approval/accept/:secret/:hash",
+			secretCheck(text(approveMedia, "approved")))
+		r.GET("/approval/deny/:secret/:hash",
+			secretCheck(text(denyMedia, "denied")))
 	}
 	r.GET("/boards", redirect(renderBoards, "/"))
 	r.POST("/boards/create", redirect(
@@ -554,18 +595,25 @@ func Init() error {
 				serveMedia(c, data, c.Param("hash"))
 				return nil
 			})))
+		f := func(c echo.Context) error {
+			parts := strings.Split(c.Param("hash"), ".")
+			data, err := db.GetThumbnail(parts[0])
+			if err != nil { return err }
+			serveMedia(c, data, c.Param("hash"))
+			return nil
+		}
 		r.GET("/media/thumbnail/:hash", imageError(
-			thumbnailCheck(mediaCheck(func(c echo.Context) error {
-				parts := strings.Split(c.Param("hash"), ".")
-				data, err := db.GetThumbnail(parts[0])
-				if err != nil { return err }
-				serveMedia(c, data, c.Param("hash"))
-				return nil
-			}))))
+			thumbnailCheck(mediaCheck(f))))
+		r.GET("/media/thumbnail/:secret/:hash",
+			imageError(secretCheck(f)))
 	} else if config.Cfg.Media.ApprovalQueue {
 		f := func(c echo.Context) error {
 			path := c.Request().URL.Path
 			path = strings.TrimPrefix(path, "/media")
+			secret := c.Param("secret")
+			if secret != "" {
+				path = strings.Replace(path, secret + "/", "", 1)
+			}
 			path = config.Cfg.Media.Path + path
 			f, err := os.Open(path)
 			if err != nil { return err }
@@ -577,6 +625,8 @@ func Init() error {
 		r.GET("/media/:hash", imageError(mediaCheck(f)))
 		r.GET("/media/thumbnail/:hash",
 			imageError(thumbnailCheck(mediaCheck(f))))
+		r.GET("/media/thumbnail/:secret/:hash",
+			imageError(secretCheck(f)))
 	} else {
 		r.Static("/media", config.Cfg.Media.Path)
 	}

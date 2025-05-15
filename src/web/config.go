@@ -96,6 +96,10 @@ func updateConfig(c echo.Context) error {
         if !ok { return invalidForm }
 	config.Cfg.Web.Domain = domain
 
+	baseURL, ok := getPostForm(c, "base-url")
+        if !ok { return invalidForm }
+	config.Cfg.Web.BaseURL = baseURL
+
 	defaultname, ok := getPostForm(c, "defaultname")
         if !ok { return invalidForm }
 	config.Cfg.Post.DefaultName = defaultname
@@ -159,6 +163,14 @@ func updateMedia(c echo.Context) error {
 	threshold, err := strconv.Atoi(thresholdStr)
 	if err != nil { return err }
 	config.Cfg.Media.ImageThreshold = threshold
+
+	ntfyURL, _ := getPostForm(c, "ntfy")
+	if ntfyURL != "" {
+		u, err := url.ParseRequestURI(ntfyURL)
+		if err != nil { return err }
+		ntfyURL = u.String()
+	}
+	config.Cfg.Media.NotificationURL = ntfyURL
 
 	video, _ := getPostForm(c, "video")
 	v = video == "on"

@@ -26,6 +26,11 @@
 			<td><input type="checkbox" name="approval" {{if .Config.Media.ApprovalQueue}}checked{{end}}></td>
 		</tr>
 		<tr>
+			<td>Pending approval notification URL</td>
+			<td><input type="text" name="ntfy" value="{{.Config.Media.NotificationURL}}" required></td>
+		</tr>
+
+		<tr>
 			<td>Enable video support</td>
 			<td><input type="checkbox" name="video" {{if .Config.Media.AllowVideos}}checked{{end}}></td>
 		</tr>

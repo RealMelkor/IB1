@@ -140,13 +140,19 @@ func uploadFile(file *multipart.FileHeader,
 		if err != nil { return "", err }
 		data, err := os.ReadFile(out)
 		if err != nil { return "", err }
-		err = db.AddMedia(data, tn_data, mediaType,
+		toApprove, err := db.AddMedia(data, tn_data, mediaType,
 			hash, mime.String(), approved, spoiler)
 		if err != nil { return "", err }
-		return hash + extension, nil
+		if toApprove {
+			err = notify(hash)
+		}
+		return hash + extension, err
 	}
-	err = db.AddMedia(nil, nil, mediaType,
+	toApprove, err := db.AddMedia(nil, nil, mediaType,
 		hash, mime.String(), approved, spoiler)
+	if toApprove && err == nil {
+		err = notify(hash)
+	}
 	if err != nil { return "", err }
 	media := config.Cfg.Media.Path + "/" + hash + extension
 	err = move(out, media)

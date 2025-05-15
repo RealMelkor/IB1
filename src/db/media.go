@@ -37,16 +37,38 @@ type BannedImage struct {
 	Kind		int
 }
 
-func AddMedia(data []byte, thumbnail []byte, mediaType MediaType,
-		hash string, mime string, approved bool, spoiler bool) error {
+type ApprovalBypass struct {
+	gorm.Model
+	CRUD[ApprovalBypass]
+	Secret		string
+	Hash		string
+}
+
+func (ApprovalBypass) Delete(secret string) error {
+	return db.Where("secret = ?", secret).Delete(&ApprovalBypass{}).Error
+}
+
+func CanBypassApproval(hash string, secret string) error {
+	var count int64
+	err := db.Model(&ApprovalBypass{}).
+		Where("hash = ? AND secret = ?", hash, secret).
+		Count(&count).Error
+	if err != nil { return err }
+	if count == 0 { return needPrivilege }
+	return nil
+}
+
+func AddMedia(data []byte, thumbnail []byte, mediaType MediaType, hash string,
+		mime string, approved bool, spoiler bool) (bool, error) {
 	var media Media
 	var count int64
 	db.First(&media, "hash = ?", hash).Count(&count)
-	if count > 0 { return nil }
-	return db.Create(&Media{
+	if count > 0 { return false, nil }
+	err := db.Create(&Media{
 		Hash: hash, Mime: mime, Data: data, Thumbnail: thumbnail,
 		Approved: approved, Type: mediaType, HideThumbnail: spoiler,
 	}).Error
+	return err == nil && !approved, err
 }
 
 func GetThumbnail(hash string) ([]byte, error) {

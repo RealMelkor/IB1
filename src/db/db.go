@@ -74,7 +74,7 @@ func Init() error {
 			&Reference{}, &Account{}, &Session{}, &Config{},
 			&Media{}, &Banner{}, &BannedImage{}, &Ban{},
 			&Rank{}, &MemberRank{}, &Membership{}, &Blacklist{},
-			&Wordfilter{}, &CIDR{}, &KeyValue{})
+			&Wordfilter{}, &CIDR{}, &KeyValue{}, &ApprovalBypass{})
 
 	if err := LoadBoards(); err != nil { return err }
 	if err := LoadBanList(); err != nil { return err }
