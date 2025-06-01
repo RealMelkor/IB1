@@ -114,7 +114,7 @@ func LoadDefault() {
 }
 
 func LoadConfig(data []byte) error {
-	if err := json.Unmarshal(data, &Cfg); err != nil { return err }
+	err := json.Unmarshal(data, &Cfg)
 	if Cfg.Media.Key == nil {
 		Cfg.Media.Key = make([]byte, 64)
 		_, err := rand.Read(Cfg.Media.Key)
@@ -130,7 +130,7 @@ func LoadConfig(data []byte) error {
 		_, err := rand.Read(Cfg.Media.HotlinkKey)
 		if err != nil { return err }
 	}
-	return nil
+	return err
 }
 
 func GetRaw() ([]byte, error) {

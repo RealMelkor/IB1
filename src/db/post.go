@@ -213,6 +213,9 @@ func Hide(id uint, reverse bool) error {
 func Remove(board string, id int) error {
 	post, err := GetPostFromBoard(board, id)
 	if err != nil { return err }
+	err = db.Unscoped().Where("thread_id = ? AND `from` = ?",
+		post.ThreadID, post.Number).Delete(&Reference{}).Error
+	if err != nil { return err }
 	if post.Thread.Number != post.Number {
 		return db.Unscoped().Delete(&Post{}, post.ID).Error
 	}

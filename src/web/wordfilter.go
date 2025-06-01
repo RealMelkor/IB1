@@ -2,7 +2,6 @@ package web
 
 import (
 	"strconv"
-	"strings"
 	"regexp"
 
 	"IB1/db"
@@ -73,14 +72,8 @@ func getWordfilters() ([]db.Wordfilter, error) {
 func filterText(in string) (string, error) {
 	filters, err := wordfilters.Get()
 	if err != nil { return "", err }
-	if len(filters) == 0 { return in, nil }
-	words := strings.Split(in, " ")
-	res := ""
-	for _, v := range words {
-		for _, filter := range filters {
-			v = filter.Regexp.ReplaceAllString(v, filter.To)
-		}
-		res += v + " "
+	for _, filter := range filters {
+		in = filter.Regexp.ReplaceAllString(in, filter.To)
 	}
-	return res, nil
+	return in, nil
 }
