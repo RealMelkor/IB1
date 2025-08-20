@@ -173,7 +173,6 @@ func UpdateConfig() error {
 }
 
 type CRUD[T any] struct {
-	v *T
 }
 
 func (CRUD[T]) Add(v T) error {

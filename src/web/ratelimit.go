@@ -20,7 +20,7 @@ type rateLimit struct {
 func (p *rateLimit) Try(key string) error {
 	if p.maximum == 0 { return nil }
 	p.mutex.Lock()
-	if int(time.Now().Sub(p.lastReset).Seconds()) > p.resetTime {
+	if int(time.Since(p.lastReset).Seconds()) > p.resetTime {
 		p.tries.Clear()
 		p.lastReset = time.Now()
 	}

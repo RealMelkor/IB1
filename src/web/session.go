@@ -25,7 +25,7 @@ func clearSession() {
 		time.Sleep(KeyValueLifespan)
 		sessions.Iter(func(key string, s db.KeyValues)(db.KeyValues, bool){
 			for k, v := range s {
-				diff := time.Now().Sub(v.Creation)
+				diff := time.Since(v.Creation)
 				if diff > KeyValueLifespan {
 					delete(s, k)
 				}
@@ -132,7 +132,9 @@ func once(c echo.Context) func(string)any {
 		m, ok := sessions.Get(id)
 		if !ok { return nil }
 		v, ok := m[param]
-		delete(m, param)
+		if ok {
+			delete(m, param)
+		}
 		sessions.Set(id, m)
 		return v.Value
 	}

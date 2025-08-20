@@ -14,7 +14,7 @@ import (
 func readOnly(f echo.HandlerFunc) echo.HandlerFunc {
 	if !config.Cfg.Post.ReadOnly { return f }
 	return func(echo.Context) error {
-		return errors.New("The website is currently read-only")
+		return errors.New("the website is currently read-only")
 	}
 }
 

@@ -277,10 +277,10 @@ func header(c echo.Context) any {
 func renderBoards(c echo.Context) error {
 	acc, err := loggedAs(c)
 	if err != nil {
-		return invalidRequest
+		return errInvalidRequest
 	}
 	if v, _ := acc.GetBoards(); len(v) < 1 {
-		return invalidRequest
+		return errInvalidRequest
 	}
 	render("boards.html", nil, c)
 	return nil
@@ -387,7 +387,7 @@ func addLinks(content string, thread uint) (string, []int) {
 
 func addGreentext(content string) string {
 	const br = "<br>"
-	strings.ReplaceAll(content, "\r", "")
+	content = strings.ReplaceAll(content, "\r", "")
 	length := len(content)
 	next := 0
 	for i := 0; i >= 0 && i < length; i = next {

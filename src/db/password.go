@@ -10,7 +10,7 @@ import (
 	"golang.org/x/crypto/argon2"
 )
 
-var invalidCredential = errors.New("invalid credentials")
+var errInvalidCredential = errors.New("invalid credentials")
 
 func comparePassword(password, hash string) (error) {
 
@@ -47,7 +47,7 @@ func comparePassword(password, hash string) (error) {
 	)
 
 	if subtle.ConstantTimeCompare(decodedHash, comparisonHash) != 1 {
-		return invalidCredential
+		return errInvalidCredential
 	}
 
 	return nil
@@ -60,7 +60,6 @@ const passwordKeyLen = 32
 
 const maxPassword = 128
 const minPassword = 5
-const minEntropyBits = 40
 
 func isPasswordValid(password string) error {
 	if len(password) > maxPassword {

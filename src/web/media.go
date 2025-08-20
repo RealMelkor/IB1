@@ -174,17 +174,6 @@ func uploadFile(file *multipart.FileHeader,
 	return hash + extension, nil
 }
 
-func extractFrameGif(in string, out string) error {
-	c := exec.Command(
-		"ffmpeg", "-i", in, out,
-	)
-	c.Stderr = os.Stderr
-	c.Stdout = nil
-	c.Run()
-	_, err := os.Stat(out)
-	return err
-}
-
 func extractFrame(in string, out string) error {
 	var c *exec.Cmd
 	if strings.HasSuffix(in, ".gif") {

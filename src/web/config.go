@@ -21,9 +21,9 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-var invalidForm = errors.New("invalid form")
-var invalidID = errors.New("invalid id")
-var invalidRequest = errors.New("invalid request")
+var errInvalidForm = errors.New("invalid form")
+var errInvalidID = errors.New("invalid id")
+var errInvalidRequest = errors.New("invalid request")
 
 func getPostForm(c echo.Context, param string) (string, bool) {
 	v := c.Request().PostFormValue(param)
@@ -59,16 +59,9 @@ func handleConfig(f echo.HandlerFunc, param string) echo.HandlerFunc {
 			param + "-error", dst)
 }
 
-func canSetConfig(c echo.Context, f echo.HandlerFunc) echo.HandlerFunc {
-	if err := needPrivilege(c, db.ADMINISTRATION); err != nil {
-		return func(c echo.Context) error { return err }
-	}
-	return f
-}
-
 func setDefaultTheme(c echo.Context) error {
 	theme, ok := getPostForm(c, "theme")
-        if !ok { return invalidForm }
+        if !ok { return errInvalidForm }
         _, ok = getThemesTable()[theme]
         if !ok { return errors.New("invalid theme") }
 	config.Cfg.Home.Theme = theme
@@ -80,28 +73,28 @@ func updateConfig(c echo.Context) error {
 	if err := setDefaultTheme(c); err != nil { return err }
 
 	title, ok := getPostForm(c, "title")
-        if !ok { return invalidForm }
+        if !ok { return errInvalidForm }
 	config.Cfg.Home.Title = title
 
 	description, ok := getPostForm(c, "description")
-        if !ok { return invalidForm }
+        if !ok { return errInvalidForm }
 	config.Cfg.Home.Description = description
 
 	listener, ok := getPostForm(c, "listener")
-        if !ok { return invalidForm }
+        if !ok { return errInvalidForm }
 	requireRestart := config.Cfg.Web.Listener != listener
 	config.Cfg.Web.Listener = listener
 
 	domain, ok := getPostForm(c, "domain")
-        if !ok { return invalidForm }
+        if !ok { return errInvalidForm }
 	config.Cfg.Web.Domain = domain
 
 	baseURL, ok := getPostForm(c, "base-url")
-        if !ok { return invalidForm }
+        if !ok { return errInvalidForm }
 	config.Cfg.Web.BaseURL = baseURL
 
 	defaultname, ok := getPostForm(c, "defaultname")
-        if !ok { return invalidForm }
+        if !ok { return errInvalidForm }
 	config.Cfg.Post.DefaultName = defaultname
 
 	captcha, _ := getPostForm(c, "captcha")
@@ -141,7 +134,7 @@ func updateMedia(c echo.Context) error {
 	config.Cfg.Media.ApprovalQueue = v
 
 	tmp, ok := getPostForm(c, "tmp")
-        if !ok { return invalidForm }
+        if !ok { return errInvalidForm }
 	err := os.MkdirAll(config.Cfg.Media.Tmp, 0700)
 	if err != nil { return err }
 	config.Cfg.Media.Tmp = tmp
@@ -235,7 +228,7 @@ func updateSSL(c echo.Context) error {
 	config.Cfg.SSL.RedirectToSSL = v == "on"
 
 	listener, ok := getPostForm(c, "address")
-        if !ok { return invalidForm }
+        if !ok { return errInvalidForm }
 	config.Cfg.SSL.Listener = listener
 
 	data, err := loadFile(c, "certificate")
@@ -251,7 +244,7 @@ func updateSSL(c echo.Context) error {
 func createBoard(c echo.Context) error {
 	board, hasBoard := getPostForm(c, "board")
 	name, hasName := getPostForm(c, "name")
-        if !hasBoard || !hasName { return invalidForm }
+        if !hasBoard || !hasName { return errInvalidForm }
 	description, _ := getPostForm(c, "description")
 	acc, err := loggedAs(c)
 	if err != nil { return err }
@@ -263,7 +256,7 @@ func createBoard(c echo.Context) error {
 func updateBoard(c echo.Context) error {
 	board, hasBoard := getPostForm(c, "board")
 	name, hasName := getPostForm(c, "name")
-        if !hasBoard || !hasName { return invalidForm }
+        if !hasBoard || !hasName { return errInvalidForm }
 	enabled, _ := getPostForm(c, "enabled")
 	description, _ := getPostForm(c, "description")
 	countryFlag, _ := getPostForm(c, "country-flag")
@@ -312,7 +305,7 @@ func createTheme(c echo.Context) error {
 	file, err := c.FormFile("theme")
         if err != nil { return err }
 	name, hasName := getPostForm(c, "name")
-        if !hasName { return invalidForm }
+        if !hasName { return errInvalidForm }
 	enabled, _ := getPostForm(c, "enabled")
 	disabled := enabled != "on"
 	data := make([]byte, file.Size)
@@ -333,9 +326,9 @@ func createTheme(c echo.Context) error {
 
 func updateTheme(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil { return invalidID }
+	if err != nil { return errInvalidID }
 	name, hasName := getPostForm(c, "name")
-        if !hasName { return invalidForm }
+        if !hasName { return errInvalidForm }
 	enabled, _ := getPostForm(c, "enabled")
 	disabled := enabled != "on"
 	err = db.Theme{}.Update(id, db.Theme{
@@ -348,7 +341,7 @@ func updateTheme(c echo.Context) error {
 
 func deleteTheme(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil { return invalidID }
+	if err != nil { return errInvalidID }
 	err = db.Theme{}.RemoveID(id, db.Theme{})
 	if err != nil { return err }
 	reloadThemes()
@@ -357,7 +350,7 @@ func deleteTheme(c echo.Context) error {
 
 func createBlacklist(c echo.Context) error {
 	host, hasHost:= getPostForm(c, "host")
-        if !hasHost { return invalidForm }
+        if !hasHost { return errInvalidForm }
 	v, err := url.Parse("https://" + host + "/")
 	if err != nil { return err }
 
@@ -376,7 +369,7 @@ func createBlacklist(c echo.Context) error {
 
 func deleteBlacklist(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil { return invalidID }
+	if err != nil { return errInvalidID }
 	err = db.Blacklist{}.RemoveID(id, db.Blacklist{})
 	if err != nil { return err }
 	dnsbl.ClearCache()
@@ -385,9 +378,9 @@ func deleteBlacklist(c echo.Context) error {
 
 func updateBlacklist(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil { return invalidID }
+	if err != nil { return errInvalidID }
 	host, hasHost := getPostForm(c, "host")
-        if !hasHost { return invalidForm }
+        if !hasHost { return errInvalidForm }
 	enabled, _ := getPostForm(c, "enabled")
 	disabled := enabled != "on"
 	allowRead, _ := getPostForm(c, "allow-read")
@@ -401,7 +394,7 @@ func updateBlacklist(c echo.Context) error {
 
 func addBan(c echo.Context) error {
 	ip, hasIP := getPostForm(c, "ip")
-        if !hasIP { return invalidForm }
+        if !hasIP { return errInvalidForm }
 	board, _ := getPostForm(c, "board")
 	boardID, err := strconv.Atoi(board)
 	if err != nil { return err }
@@ -418,7 +411,7 @@ func addBan(c echo.Context) error {
 
 func deleteBan(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil { return invalidID }
+	if err != nil { return errInvalidID }
 	return db.RemoveBan(uint(id))
 }
 
@@ -435,7 +428,7 @@ func asOwner(f func(db.Board, echo.Context)error) echo.HandlerFunc {
 				return f(v, c)
 			}
 		}
-		return invalidID
+		return errInvalidID
 	}, "boards-error", "/boards")
 }
 
@@ -443,7 +436,7 @@ func updateOwnedBoard(_ db.Board, c echo.Context) error {
 	acc, err := loggedAs(c)
 	if err != nil { return err }
 	v, _ := getPostForm(c, "owner")
-	if acc.Name != v { return invalidForm }
+	if acc.Name != v { return errInvalidForm }
 	return updateBoard(c)
 }
 
@@ -472,7 +465,7 @@ func addAccount(c echo.Context) error {
 
 func updateAccount(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil { return invalidID }
+	if err != nil { return errInvalidID }
 	name := c.Request().PostFormValue("name")
 	password := c.Request().PostFormValue("password")
 	rank := c.Request().PostFormValue("rank")
@@ -481,7 +474,7 @@ func updateAccount(c echo.Context) error {
 
 func deleteAccount(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil { return invalidID }
+	if err != nil { return errInvalidID }
 	return db.RemoveAccount(uint(id))
 }
 

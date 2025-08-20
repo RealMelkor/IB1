@@ -54,7 +54,7 @@ func CanBypassApproval(hash string, secret string) error {
 		Where("hash = ? AND secret = ?", hash, secret).
 		Count(&count).Error
 	if err != nil { return err }
-	if count == 0 { return needPrivilege }
+	if count == 0 { return errNeedPrivilege }
 	return nil
 }
 
@@ -216,18 +216,18 @@ func Extract(path string) error {
 		}
 
 		if err := db.ScanRows(rows, &v); err != nil { return err }
-		if v.Data == nil || len(v.Data) == 0 { continue }
+		if len(v.Data) == 0 { continue }
 
 		f, err := os.Create(path + "/" + v.Media)
-		defer f.Close()
 		if err != nil { return err }
+		defer f.Close()
 		_, err = f.Write(v.Data)
 		if err != nil { return err }
 		f.Close()
 
 		f, err = os.Create(path + "/thumbnail/" + v.Hash + ".png")
-		defer f.Close()
 		if err != nil { return err }
+		defer f.Close()
 		_, err = f.Write(v.Thumbnail)
 		if err != nil { return err }
 		f.Close()

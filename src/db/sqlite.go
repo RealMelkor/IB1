@@ -7,5 +7,5 @@ import (
 )
 
 func sqlite_open(path string) gorm.Dialector {
-	return sqlite.Open(Path)
+	return sqlite.Open(path)
 }

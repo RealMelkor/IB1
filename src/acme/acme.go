@@ -5,8 +5,6 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
-	"os"
-	"io"
 
 	"github.com/go-acme/lego/v4/certcrypto"
 	"github.com/go-acme/lego/v4/certificate"
@@ -33,17 +31,6 @@ func (u user) GetRegistration() *registration.Resource {
 
 func (u *user) GetPrivateKey() crypto.PrivateKey {
 	return u.key
-}
-
-func copyFile(src string, dst string) error {
-	from, err := os.Open(src)
-	if err != nil { return err }
-	defer from.Close()
-	to, err := os.Create(dst)
-	if err != nil { return err }
-	defer to.Close()
-	_, err = io.Copy(to, from)
-	return err
 }
 
 func Generate(domain string, email string, port string, www bool) (

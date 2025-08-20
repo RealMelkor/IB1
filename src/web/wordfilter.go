@@ -12,11 +12,11 @@ import (
 
 func createWordfilter(c echo.Context) error {
 	from, hasFrom := getPostForm(c, "from")
-        if !hasFrom { return invalidForm }
+        if !hasFrom { return errInvalidForm }
 	_, err := regexp.Compile(from)
 	if err != nil { return err }
 	to, hasTo := getPostForm(c, "to")
-        if !hasTo { return invalidForm }
+        if !hasTo { return errInvalidForm }
 	enabled, _ := getPostForm(c, "enabled")
 	disabled := enabled != "on"
 	wordfilters.Refresh()
@@ -29,16 +29,16 @@ func createWordfilter(c echo.Context) error {
 
 func deleteWordfilter(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil { return invalidID }
+	if err != nil { return errInvalidID }
 	wordfilters.Refresh()
 	return db.Wordfilter{}.RemoveID(id, db.Wordfilter{})
 }
 
 func updateWordfilter(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil { return invalidID }
+	if err != nil { return errInvalidID }
 	from, hasFrom := getPostForm(c, "from")
-        if !hasFrom { return invalidForm }
+        if !hasFrom { return errInvalidForm }
 	_, err = regexp.Compile(from)
 	if err != nil { return err }
 	to, _ := getPostForm(c, "to")

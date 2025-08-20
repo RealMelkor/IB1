@@ -214,7 +214,7 @@ func hasBoardPrivilege(f echo.HandlerFunc,
 
 func canView(c echo.Context, board db.Board) error {
 	if !board.Private { return nil }
-	if board.Disabled { return invalidRequest }
+	if board.Disabled { return errInvalidRequest }
 	acc, err := loggedAs(c)
 	if err == nil {
 		if board.OwnerID != nil && acc.ID == *board.OwnerID {
@@ -335,17 +335,6 @@ func unauth(f echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
-func auth(f echo.HandlerFunc) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		_, err := loggedAs(c)
-		if err != nil {
-			c.Redirect(http.StatusFound, "/")
-			return nil
-		}
-		return f(c)
-	}
-}
-
 func notFound(c echo.Context) error {
 	return c.Blob(http.StatusNotFound, "text/plain", []byte("Not Found"))
 }
@@ -384,7 +373,7 @@ func Init() error {
 	}
 	go clearSession()
 
-	c := make(chan os.Signal)
+	c := make(chan os.Signal, 3)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-c

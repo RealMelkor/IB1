@@ -5,56 +5,47 @@ import (
 )
 
 type SafeMap[T any] struct {
-        data    map[string]T
-        mutex   sync.Mutex
+	data	sync.Map
 }
 
-func (m *SafeMap[any]) Set(key string, value any) {
-        m.mutex.Lock()
-        m.data[key] = value
-        m.mutex.Unlock()
+func (m *SafeMap[T]) Set(key string, value T) {
+        m.data.Store(key, value)
 }
 
-func (m *SafeMap[any]) Get(key string) (any, bool) {
-        m.mutex.Lock()
-        v, ok := m.data[key]
-        m.mutex.Unlock()
-        return v, ok
+func (m *SafeMap[T]) Get(key string) (T, bool) {
+	v, ok := m.data.Load(key)
+	return v.(T), ok
 }
 
-func (m *SafeMap[any]) Delete(key string) {
-        m.mutex.Lock()
-        delete(m.data, key)
-        m.mutex.Unlock()
+func (m *SafeMap[T]) Delete(key string) {
+	m.data.Delete(key)
 }
 
-func (m *SafeMap[any]) Clear() {
-        m.mutex.Lock()
-        m.data = map[string]any{}
-        m.mutex.Unlock()
+func (m *SafeMap[T]) Clear() {
+	m.data = sync.Map{}
 }
 
-func (m *SafeMap[any]) Length() int {
-        m.mutex.Lock()
-        v := len(m.data)
-        m.mutex.Unlock()
-        return v
+func (m *SafeMap[T]) Length() int {
+	i := 0
+	m.data.Range(func(key, val any)bool{
+		i++
+		return true
+	})
+        return i
 }
 
-func (m *SafeMap[any]) Init() {
-        m.data = map[string]any{}
-        m.mutex = sync.Mutex{}
+func (m *SafeMap[T]) Init() {
+        m.data = sync.Map{}
 }
 
-func (m *SafeMap[any]) Iter(f func(string, any)(any,bool)) {
-        m.mutex.Lock()
-	for k, v := range m.data {
-		n, keep := f(k, v)
+func (m *SafeMap[T]) Iter(f func(string, T)(T, bool)) {
+	m.data.Range(func(key, val any)bool {
+		n, keep := f(key.(string), val.(T))
 		if keep == false {
-			delete(m.data, k)
+			m.data.Delete(key)
 		} else {
-			m.data[k] = n
+			m.data.Store(key, n)
 		}
-	}
-        m.mutex.Unlock()
+		return true
+	})
 }

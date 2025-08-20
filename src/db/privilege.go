@@ -159,7 +159,7 @@ func DeleteRankByID(id int) error {
 	v, err := unauthenticated.Get()
 	if err != nil { return err }
 	if v.ID == uint(id) {
-		return errors.New("Cannot delete 'unauthenticated' group")
+		return errors.New("cannot delete 'unauthenticated' group")
 	}
 	sessions.Clear()
 	return Rank{}.RemoveID(id, Rank{})

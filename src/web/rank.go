@@ -20,7 +20,7 @@ func parsePrivileges(c echo.Context) []string {
 
 func createRank(c echo.Context) error {
 	name, hasName := getPostForm(c, "name")
-        if !hasName { return invalidForm }
+        if !hasName { return errInvalidForm }
 	return db.CreateRank(name, parsePrivileges(c))
 }
 
@@ -28,7 +28,7 @@ func updateRank(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil { return err }
 	name, hasName := getPostForm(c, "name")
-        if !hasName { return invalidForm }
+        if !hasName { return errInvalidForm }
 	return db.UpdateRank(id, name, parsePrivileges(c))
 }
 
@@ -40,7 +40,7 @@ func deleteRank(c echo.Context) error {
 
 func createMemberRank(c echo.Context) error {
         name, hasName := getPostForm(c, "name")
-        if !hasName { return invalidForm }
+        if !hasName { return errInvalidForm }
 	return db.MemberRank{}.Add(db.MemberRank{
                 Name: name,
 		Privileges: db.ParseMemberPrivileges(parsePrivileges(c)),
@@ -51,7 +51,7 @@ func updateMemberRank(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil { return err }
 	name, hasName := getPostForm(c, "name")
-        if !hasName { return invalidForm }
+        if !hasName { return errInvalidForm }
 	return db.MemberRank{}.Update(id, db.MemberRank{
                 Name: name,
 		Privileges: db.ParseMemberPrivileges(parsePrivileges(c)),

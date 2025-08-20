@@ -15,7 +15,6 @@ const retention = 7200 // 2 hours
 type cached struct {
 	timestamp	int64
 	listed		bool
-	allowRead	bool
 }
 var cache = util.SafeMap[cached]{}
 var blacklists []db.Blacklist

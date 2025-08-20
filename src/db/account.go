@@ -5,7 +5,7 @@ import (
 	"errors"
 )
 
-var needPrivilege = errors.New("privilege insufficient")
+var errNeedPrivilege = errors.New("privilege insufficient")
 
 type Account struct {
 	gorm.Model
@@ -79,7 +79,7 @@ func Login(name string, password string) (string, error) {
 	var account Account
 	res := db.Where("UPPER(name) = UPPER(?)", name).Find(&Account{})
 	if res.Error != nil { return "", res.Error }
-	if res.RowsAffected < 1 { return "", invalidCredential }
+	if res.RowsAffected < 1 { return "", errInvalidCredential }
 	err := res.First(&account).Error
 	if err != nil { return "", err }
 	err = comparePassword(password, account.Password)
@@ -162,7 +162,7 @@ func (account Account) Can(privilege Privilege) error {
 	for _, v := range account.Rank.Privileges {
 		if v == privilege { return nil }
 	}
-	return needPrivilege
+	return errNeedPrivilege
 }
 
 func (account Account) CanAsMember(board Board,
@@ -171,7 +171,7 @@ func (account Account) CanAsMember(board Board,
 	if err := account.Can(Privilege(privilege)); err == nil { return nil }
 	member, err := board.GetMember(account)
 	if err != nil { return err }
-	if !member.Rank.Can(privilege) { return needPrivilege }
+	if !member.Rank.Can(privilege) { return errNeedPrivilege }
 	return nil
 }
 
