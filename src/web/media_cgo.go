@@ -1,4 +1,5 @@
 //go:build cgo
+
 package web
 
 import (
@@ -8,11 +9,15 @@ import (
 func cleanImage(in string, out string) error {
 
 	buffer, err := bimg.Read(in)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 
 	img, err := bimg.NewImage(buffer).Process(
-			bimg.Options{StripMetadata: true})
-	if err != nil { return err }
+		bimg.Options{StripMetadata: true})
+	if err != nil {
+		return err
+	}
 
 	bimg.Write(out, img)
 	return nil
@@ -21,12 +26,16 @@ func cleanImage(in string, out string) error {
 func thumbnail(in string, out string) error {
 
 	buffer, err := bimg.Read(in)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 
 	img := bimg.NewImage(buffer)
 
 	size, err := img.Size()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	w := size.Width
 	h := size.Height
 	if w > h {
@@ -38,7 +47,9 @@ func thumbnail(in string, out string) error {
 	}
 
 	newImage, err := img.Resize(w, h)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 
 	return bimg.Write(out, newImage)
 }

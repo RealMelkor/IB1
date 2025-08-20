@@ -1,9 +1,10 @@
 //go:build !cgo
+
 package db
 
 import (
-	"gorm.io/gorm"
 	"github.com/glebarez/sqlite"
+	"gorm.io/gorm"
 )
 
 func sqlite_open(path string) gorm.Dialector {

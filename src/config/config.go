@@ -1,84 +1,84 @@
 package config
 
 import (
-	"encoding/json"
 	"crypto/rand"
+	"encoding/json"
 )
 
 var Cfg Config
 
 type RateLimit struct {
-	MaxAttempts	int
-	Timeout		int
+	MaxAttempts int
+	Timeout     int
 }
 
 type Config struct {
 	Home struct {
-		Title		string
-		Description	string
-		Language	string
-		Theme		string
-		Favicon		[]byte
-		FaviconMime	string
+		Title       string
+		Description string
+		Language    string
+		Theme       string
+		Favicon     []byte
+		FaviconMime string
 	}
 	Web struct {
-		Domain		string
-		BaseURL		string
-		Listener	string
+		Domain   string
+		BaseURL  string
+		Listener string
 	}
 	Acme struct {
-		Email           string
-		Port		string
-		DisableWWW	bool
+		Email      string
+		Port       string
+		DisableWWW bool
 	}
 	SSL struct {
-		Enabled		bool
-		Certificate	[]byte
-		Key		[]byte
-		Listener	string
-		DisableHTTP	bool
-		RedirectToSSL	bool
+		Enabled       bool
+		Certificate   []byte
+		Key           []byte
+		Listener      string
+		DisableHTTP   bool
+		RedirectToSSL bool
 	}
 	Media struct {
-		InDatabase	bool
-		Path		string
-		Tmp		string
-		MaxSize		uint64
-		ApprovalQueue	bool
-		AllowVideos	bool
-		Key		[]byte
-		PendingMedia	[]byte
-		PendingMime	string
-		NotificationURL	string
-		Spoiler		[]byte
-		SpoilerMime	string
-		ImageThreshold	int
-		HotlinkShield	int
-		HotlinkKey	[]byte
+		InDatabase      bool
+		Path            string
+		Tmp             string
+		MaxSize         uint64
+		ApprovalQueue   bool
+		AllowVideos     bool
+		Key             []byte
+		PendingMedia    []byte
+		PendingMime     string
+		NotificationURL string
+		Spoiler         []byte
+		SpoilerMime     string
+		ImageThreshold  int
+		HotlinkShield   int
+		HotlinkKey      []byte
 	}
 	Captcha struct {
-		Enabled		bool
-		Length		int
+		Enabled bool
+		Length  int
 	}
 	Post struct {
-		DefaultName	string
-		AsciiOnly	bool
-		ReadOnly	bool
-		Key		[]byte
+		DefaultName string
+		AsciiOnly   bool
+		ReadOnly    bool
+		Key         []byte
 	}
 	Board struct {
-		MaxThreads	uint
+		MaxThreads uint
 	}
 	Accounts struct {
-		AllowRegistration	bool
-		DefaultRank		string
+		AllowRegistration bool
+		DefaultRank       string
 	}
 	RateLimit struct {
-		Login		RateLimit
-		Registration	RateLimit
-		Account		RateLimit
-		Thread		RateLimit
-		Post		RateLimit
+		Login        RateLimit
+		Registration RateLimit
+		Account      RateLimit
+		Thread       RateLimit
+		Post         RateLimit
 	}
 }
 
@@ -118,17 +118,23 @@ func LoadConfig(data []byte) error {
 	if Cfg.Media.Key == nil {
 		Cfg.Media.Key = make([]byte, 64)
 		_, err := rand.Read(Cfg.Media.Key)
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 	}
 	if Cfg.Post.Key == nil {
 		Cfg.Post.Key = make([]byte, 512)
 		_, err := rand.Read(Cfg.Post.Key)
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 	}
 	if Cfg.Media.HotlinkKey == nil {
 		Cfg.Media.HotlinkKey = make([]byte, 32)
 		_, err := rand.Read(Cfg.Media.HotlinkKey)
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 	}
 	return err
 }

@@ -1,25 +1,25 @@
 package web
 
 import (
-	"github.com/labstack/echo/v4"
-	"net/http"
-	"hash/fnv"
 	"bytes"
-	"errors"
-	"os"
-	"os/signal"
-	"syscall"
-	"io/fs"
-	"strings"
-	"time"
-	"strconv"
-	"log"
 	"crypto/rand"
 	"encoding/binary"
-	
+	"errors"
+	"github.com/labstack/echo/v4"
+	"hash/fnv"
+	"io/fs"
+	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"strconv"
+	"strings"
+	"syscall"
+	"time"
+
+	"IB1/config"
 	"IB1/db"
 	"IB1/dnsbl"
-	"IB1/config"
 )
 
 func serveMedia(c echo.Context, data []byte, name string) {
@@ -34,7 +34,9 @@ func clientIP(c echo.Context) string {
 		s = strings.Replace(s, "[", "", 1)
 		s = strings.Replace(s, "]", "", 1)
 		i := strings.LastIndex(s, ":")
-		if i == -1 { return s }
+		if i == -1 {
+			return s
+		}
 		return s[:i]
 	}
 	return ip
@@ -46,7 +48,9 @@ func fatalError(c echo.Context, err error) {
 
 func imageError(f echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		if err := f(c); err == nil { return nil }
+		if err := f(c); err == nil {
+			return nil
+		}
 		serveMedia(c, mediaError, "media")
 		return nil
 	}
@@ -54,15 +58,21 @@ func imageError(f echo.HandlerFunc) echo.HandlerFunc {
 
 func mediaCheck(f echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		if !config.Cfg.Media.ApprovalQueue { return f(c) }
+		if !config.Cfg.Media.ApprovalQueue {
+			return f(c)
+		}
 		user, err := loggedAs(c)
 		if err == nil && user.Can(db.VIEW_PENDING_MEDIA) == nil {
 			return f(c)
 		}
 		hash := strings.Split(c.Param("hash"), ".")[0]
 		media, err := db.GetMedia(hash)
-		if err != nil { return err }
-		if media.Approved { return f(c) }
+		if err != nil {
+			return err
+		}
+		if media.Approved {
+			return f(c)
+		}
 		return pendingMediaImage(c)
 	}
 }
@@ -71,8 +81,12 @@ func thumbnailCheck(f echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		hash := strings.Split(c.Param("hash"), ".")[0]
 		media, err := db.GetMedia(hash)
-		if err != nil { return err }
-		if media.HideThumbnail { return spoilerImage(c) }
+		if err != nil {
+			return err
+		}
+		if media.HideThumbnail {
+			return spoilerImage(c)
+		}
 		return f(c)
 	}
 }
@@ -81,7 +95,9 @@ func secretCheck(f echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		hash := strings.Split(c.Param("hash"), ".")[0]
 		err := db.CanBypassApproval(hash, c.Param("secret"))
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 		return f(c)
 	}
 }
@@ -91,7 +107,9 @@ func approveMedia(c echo.Context) error {
 	if c.Request().Method == "GET" {
 		hash = c.Param("hash")
 		err := db.ApprovalBypass{}.Delete(c.Param("secret"))
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 	} else {
 		hash = c.FormValue("media")
 	}
@@ -115,8 +133,12 @@ func denyMedia(c echo.Context) error {
 
 func banPendingMedia(c echo.Context) error {
 	hash := strings.Split(c.FormValue("media"), ".")[0]
-	if err := banImage(hash); err != nil { return err }
-	if err := db.RemoveMedia(hash); err != nil { return err }
+	if err := banImage(hash); err != nil {
+		return err
+	}
+	if err := db.RemoveMedia(hash); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -133,7 +155,7 @@ func err(f echo.HandlerFunc) echo.HandlerFunc {
 }
 
 func logger(next echo.HandlerFunc) echo.HandlerFunc {
-	return func (c echo.Context) error {
+	return func(c echo.Context) error {
 		t1 := time.Now()
 		id, err := getID(c)
 		if id != "" && err == nil {
@@ -143,7 +165,9 @@ func logger(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 		name := ""
 		user, err := loggedAs(c)
-		if err == nil { name = "[" + user.Name + "]" }
+		if err == nil {
+			name = "[" + user.Name + "]"
+		}
 		err = next(c)
 		t2 := time.Now()
 		r := c.Request()
@@ -153,15 +177,15 @@ func logger(next echo.HandlerFunc) echo.HandlerFunc {
 			blacklist = "(blacklisted)"
 		}
 		log.Println(
-			"[" + id + "][" + ip + blacklist + "][" +
-			r.Method + "]" + name,
+			"["+id+"]["+ip+blacklist+"]["+
+				r.Method+"]"+name,
 			r.URL.String(), t2.Sub(t1))
 		return err
 	}
 }
 
 func redirectHTTPS(next echo.HandlerFunc) echo.HandlerFunc {
-	return func (c echo.Context) error {
+	return func(c echo.Context) error {
 		prefix := "/.well-known/acme-challenge/"
 		if strings.HasPrefix(c.Request().RequestURI, prefix) {
 			return proxyAcme(c)
@@ -176,13 +200,15 @@ func redirectHTTPS(next echo.HandlerFunc) echo.HandlerFunc {
 			}
 		}
 		return c.Redirect(http.StatusFound,
-			"https://" + host + port + c.Request().RequestURI)
+			"https://"+host+port+c.Request().RequestURI)
 	}
 }
 
 func isBanned(c echo.Context) error {
 	_, err := loggedAs(c)
-	if err == nil { return nil }
+	if err == nil {
+		return nil
+	}
 	board, err := db.GetBoard(c.Param("board"))
 	if err != nil {
 		return db.IsBanned(clientIP(c), board.ID)
@@ -192,53 +218,75 @@ func isBanned(c echo.Context) error {
 
 func hasPrivilege(f echo.HandlerFunc, privilege db.Privilege) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		if err := needPrivilege(c, privilege); err != nil { return err }
+		if err := needPrivilege(c, privilege); err != nil {
+			return err
+		}
 		return f(c)
 	}
 }
 
 func hasBoardPrivilege(f echo.HandlerFunc,
-		privilege db.MemberPrivilege) echo.HandlerFunc {
+	privilege db.MemberPrivilege) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		if needPrivilege(c, privilege.Generic()) != nil {
 			user, err := loggedAs(c)
-			if err != nil { return err }
+			if err != nil {
+				return err
+			}
 			board, err := db.GetBoard(c.Param("board"))
-			if err != nil { return err }
+			if err != nil {
+				return err
+			}
 			err = user.CanAsMember(board, privilege)
-			if err != nil { return err }
+			if err != nil {
+				return err
+			}
 		}
 		return f(c)
 	}
 }
 
 func canView(c echo.Context, board db.Board) error {
-	if !board.Private { return nil }
-	if board.Disabled { return errInvalidRequest }
+	if !board.Private {
+		return nil
+	}
+	if board.Disabled {
+		return errInvalidRequest
+	}
 	acc, err := loggedAs(c)
 	if err == nil {
 		if board.OwnerID != nil && acc.ID == *board.OwnerID {
 			return nil
 		}
 		_, err := board.GetMember(acc)
-		if err == nil { return nil }
+		if err == nil {
+			return nil
+		}
 	}
 	priv := db.USE_PRIVATE
 	if c.Request().Method == "GET" {
 		priv = db.VIEW_PRIVATE
 	}
 	err = needPrivilege(c, priv)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
 func privateBoard(f echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		name := c.Param("board")
-		if name == "" { return f(c) }
+		if name == "" {
+			return f(c)
+		}
 		board, err := db.GetBoard(name)
-		if err != nil { return err }
-		if err := canView(c, board); err != nil { return err }
+		if err != nil {
+			return err
+		}
+		if err := canView(c, board); err != nil {
+			return err
+		}
 		return f(c)
 	}
 }
@@ -248,7 +296,9 @@ func isReadOnly(c echo.Context) bool {
 		return false
 	}
 	for _, v := range c.ParamNames() {
-		if v != "csrf" { continue }
+		if v != "csrf" {
+			continue
+		}
 		return false
 	}
 	return true
@@ -268,12 +318,16 @@ func hotlinkHash(c echo.Context, offset int) int {
 		binary.Read(rand.Reader, binary.BigEndian, &v)
 		return int(v)
 	}
-	v := time.Now().Unix() / 600 + int64(offset)
-	if config.Cfg.Media.HotlinkShield == 1 { return int(v) }
+	v := time.Now().Unix()/600 + int64(offset)
+	if config.Cfg.Media.HotlinkShield == 1 {
+		return int(v)
+	}
 	h := fnv.New32()
 	h.Write(config.Cfg.Media.HotlinkKey)
 	binary.Write(h, binary.BigEndian, v)
-	if config.Cfg.Media.HotlinkShield == 2 { return int(h.Sum32()) }
+	if config.Cfg.Media.HotlinkShield == 2 {
+		return int(h.Sum32())
+	}
 	h.Write([]byte(id))
 	return int(h.Sum32())
 }
@@ -282,14 +336,17 @@ func hotlinkShield(f echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		skip := false
 		for _, v := range c.ParamNames() {
-			if v != "secret" { continue }
+			if v != "secret" {
+				continue
+			}
 			skip = true
 			break
 		}
-		skip = skip || config.Cfg.Media.HotlinkShield == 0 || !(
-			strings.HasPrefix(c.Request().RequestURI, "/media/") ||
+		skip = skip || config.Cfg.Media.HotlinkShield == 0 || !(strings.HasPrefix(c.Request().RequestURI, "/media/") ||
 			strings.HasPrefix(c.Request().RequestURI, "/banner/"))
-		if skip { return f(c) }
+		if skip {
+			return f(c)
+		}
 		v, err := strconv.Atoi(c.QueryParam("v"))
 		if err == nil && (v == hotlinkHash(c, 0) || v == hotlinkHash(c, -1)) {
 			return f(c)
@@ -308,7 +365,7 @@ func blacklistCheck(f echo.HandlerFunc) echo.HandlerFunc {
 }
 
 func catchCustom(f echo.HandlerFunc, param string,
-			redirect string) echo.HandlerFunc {
+	redirect string) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		if err := f(c); err != nil {
 			set(c)(param, err.Error())
@@ -341,7 +398,9 @@ func notFound(c echo.Context) error {
 
 func text(f echo.HandlerFunc, text string) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		if err := f(c); err != nil { return err }
+		if err := f(c); err != nil {
+			return err
+		}
 		return c.Blob(http.StatusOK, "text/plain", []byte(text))
 	}
 }
@@ -351,7 +410,7 @@ func pendingMediaImage(c echo.Context) error {
 		return c.Blob(http.StatusOK, "image/png", pendingMedia)
 	}
 	return c.Blob(http.StatusOK, config.Cfg.Media.PendingMime,
-			config.Cfg.Media.PendingMedia)
+		config.Cfg.Media.PendingMedia)
 }
 
 func spoilerImage(c echo.Context) error {
@@ -359,7 +418,7 @@ func spoilerImage(c echo.Context) error {
 		return c.Blob(http.StatusOK, "image/png", spoiler)
 	}
 	return c.Blob(http.StatusOK, config.Cfg.Media.SpoilerMime,
-			config.Cfg.Media.Spoiler)
+		config.Cfg.Media.Spoiler)
 }
 
 func Init() error {
@@ -382,12 +441,14 @@ func Init() error {
 	}()
 
 	if !config.Cfg.Media.InDatabase {
-		os.MkdirAll(config.Cfg.Media.Path + "/thumbnail", 0700)
+		os.MkdirAll(config.Cfg.Media.Path+"/thumbnail", 0700)
 	}
 	os.MkdirAll(config.Cfg.Media.Tmp, 0700)
 
 	r := echo.New()
-	if err := initTemplate(); err != nil { return err }
+	if err := initTemplate(); err != nil {
+		return err
+	}
 
 	r.Use(logger)
 	r.Use(err)
@@ -406,7 +467,7 @@ func Init() error {
 			return c.Blob(http.StatusOK, "image/png", favicon)
 		}
 		return c.Blob(http.StatusOK, config.Cfg.Home.FaviconMime,
-				config.Cfg.Home.Favicon)
+			config.Cfg.Home.Favicon)
 	})
 	r.GET("/static/pending", pendingMediaImage)
 	r.GET("/static/spoiler", spoilerImage)
@@ -415,22 +476,28 @@ func Init() error {
 	})
 	r.GET("/static/:file", func(c echo.Context) error {
 		content, ok := themesContent[c.Param("file")]
-		if !ok { return notFound(c) }
+		if !ok {
+			return notFound(c)
+		}
 		serveMedia(c, content, c.Param("file"))
 		return nil
 	})
 	r.GET("/static/:file", func(c echo.Context) error {
 		sub, err := fs.Sub(static, "static")
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 		http.ServeFileFS(c.Response().Writer, c.Request(),
-				sub, c.Param("file"))
+			sub, c.Param("file"))
 		return nil
 	})
 	r.GET("/static/flags/:file", func(c echo.Context) error {
 		sub, err := fs.Sub(flags, "static/flags")
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 		http.ServeFileFS(c.Response().Writer, c.Request(),
-				sub, c.Param("file"))
+			sub, c.Param("file"))
 		return nil
 	})
 	if config.Cfg.Captcha.Enabled {
@@ -488,7 +555,7 @@ func Init() error {
 	r.POST("/boards/:id/remove",
 		redirect(asOwner(removeMember), "/boards"))
 	r.POST("/boards/:id/delete",
-		redirect(asOwner(func(_ db.Board, c echo.Context)error{
+		redirect(asOwner(func(_ db.Board, c echo.Context) error {
 			return deleteBoard(c)
 		}), "/boards"))
 	r.POST("/boards/:id/member",
@@ -580,14 +647,18 @@ func Init() error {
 			func(c echo.Context) error {
 				parts := strings.Split(c.Param("hash"), ".")
 				data, _, err := db.GetMediaData(parts[0])
-				if err != nil { return err }
+				if err != nil {
+					return err
+				}
 				serveMedia(c, data, c.Param("hash"))
 				return nil
 			})))
 		f := func(c echo.Context) error {
 			parts := strings.Split(c.Param("hash"), ".")
 			data, err := db.GetThumbnail(parts[0])
-			if err != nil { return err }
+			if err != nil {
+				return err
+			}
 			serveMedia(c, data, c.Param("hash"))
 			return nil
 		}
@@ -601,11 +672,13 @@ func Init() error {
 			path = strings.TrimPrefix(path, "/media")
 			secret := c.Param("secret")
 			if secret != "" {
-				path = strings.Replace(path, secret + "/", "", 1)
+				path = strings.Replace(path, secret+"/", "", 1)
 			}
 			path = config.Cfg.Media.Path + path
 			f, err := os.Open(path)
-			if err != nil { return err }
+			if err != nil {
+				return err
+			}
 			http.ServeContent(c.Response().Writer,
 				c.Request(), c.Param("hash"),
 				time.Now(), f)

@@ -254,6 +254,8 @@ var countries = map[string]string{
 
 func CountryName(code string) string {
 	v, ok := countries[code]
-	if !ok { v = "Unknown" }
+	if !ok {
+		v = "Unknown"
+	}
 	return v
 }

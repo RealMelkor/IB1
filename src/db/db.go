@@ -1,19 +1,19 @@
 package db
 
 import (
+	"IB1/config"
+	"errors"
+	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
-	"gorm.io/driver/mysql"
-	"errors"
-	"os"
 	"log"
+	"os"
 	"time"
-	"IB1/config"
 )
 
 type Config struct {
 	gorm.Model
-	Data		[]byte
+	Data []byte
 }
 
 const (
@@ -38,14 +38,22 @@ func Init() error {
 	config.LoadDefault()
 	if Type == "" {
 		v, ok := os.LookupEnv("DB_TYPE")
-		if ok { Type = v }
+		if ok {
+			Type = v
+		}
 	}
 	if Path == "" {
 		v, ok := os.LookupEnv("DB_PATH")
-		if ok { Path = v }
+		if ok {
+			Path = v
+		}
 	}
-	if Type == "" { Type = "sqlite" }
-	if Path == "" { Path = "ib1.db" }
+	if Type == "" {
+		Type = "sqlite"
+	}
+	if Path == "" {
+		Path = "ib1.db"
+	}
 	switch Type {
 	case "mysql":
 		dbType = TYPE_MYSQL
@@ -68,17 +76,25 @@ func Init() error {
 	} else {
 		return errors.New("unknown database")
 	}
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 
 	db.AutoMigrate(&Board{}, &Thread{}, &Post{}, &Ban{}, &Theme{},
-			&Reference{}, &Account{}, &Session{}, &Config{},
-			&Media{}, &Banner{}, &BannedImage{}, &Ban{},
-			&Rank{}, &MemberRank{}, &Membership{}, &Blacklist{},
-			&Wordfilter{}, &CIDR{}, &KeyValue{}, &ApprovalBypass{})
+		&Reference{}, &Account{}, &Session{}, &Config{},
+		&Media{}, &Banner{}, &BannedImage{}, &Ban{},
+		&Rank{}, &MemberRank{}, &Membership{}, &Blacklist{},
+		&Wordfilter{}, &CIDR{}, &KeyValue{}, &ApprovalBypass{})
 
-	if err := LoadBoards(); err != nil { return err }
-	if err := LoadBanList(); err != nil { return err }
-	if err := LoadConfig(); err != nil { return err }
+	if err := LoadBoards(); err != nil {
+		return err
+	}
+	if err := LoadBanList(); err != nil {
+		return err
+	}
+	if err := LoadConfig(); err != nil {
+		return err
+	}
 	go func() {
 		for {
 			exist, err := HasSuperuser()
@@ -91,7 +107,9 @@ func Init() error {
 			log.Println(err)
 		}
 	}()
-	if err := UpdateConfig(); err != nil { return err }
+	if err := UpdateConfig(); err != nil {
+		return err
+	}
 	go cleanMediaTask()
 
 	for i := range memberPrivileges {
@@ -168,7 +186,9 @@ func UpdateConfig() error {
 	var err error
 	db.Exec("DELETE FROM configs")
 	cfg.Data, err = config.GetRaw()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	return db.Create(&cfg).Error
 }
 

@@ -1,21 +1,21 @@
 package db
 
 import (
-	"errors"
-	"fmt"
-	"strings"
 	"crypto/rand"
 	"crypto/subtle"
 	"encoding/base64"
+	"errors"
+	"fmt"
 	"golang.org/x/crypto/argon2"
+	"strings"
 )
 
 var errInvalidCredential = errors.New("invalid credentials")
 
-func comparePassword(password, hash string) (error) {
+func comparePassword(password, hash string) error {
 
 	parts := strings.Split(hash, "$")
-	if (len(parts) < 4) {
+	if len(parts) < 4 {
 		return errors.New("invalid hash")
 	}
 	var time uint32
@@ -73,7 +73,9 @@ func isPasswordValid(password string) error {
 
 func hashPassword(password string) (string, error) {
 
-	if err := isPasswordValid(password); err != nil { return "", err }
+	if err := isPasswordValid(password); err != nil {
+		return "", err
+	}
 
 	// Generate a Salt
 	salt := make([]byte, 16)

@@ -2,17 +2,19 @@ package web
 
 import (
 	"errors"
-	"strconv"
 	"net/http"
+	"strconv"
 
 	"github.com/labstack/echo/v4"
 
-	"IB1/db"
 	"IB1/config"
+	"IB1/db"
 )
 
 func readOnly(f echo.HandlerFunc) echo.HandlerFunc {
-	if !config.Cfg.Post.ReadOnly { return f }
+	if !config.Cfg.Post.ReadOnly {
+		return f
+	}
 	return func(echo.Context) error {
 		return errors.New("the website is currently read-only")
 	}
@@ -22,14 +24,24 @@ func loginAs(c echo.Context) error {
 	name := c.Request().PostFormValue("username")
 	password := c.Request().PostFormValue("password")
 	err := verifyCaptcha(c)
-	if err != nil { return err }
-	if err := accountLimit.Try(name); err != nil { return err }
-	if err := loginLimit.Try(clientIP(c)); err != nil { return err }
+	if err != nil {
+		return err
+	}
+	if err := accountLimit.Try(name); err != nil {
+		return err
+	}
+	if err := loginLimit.Try(clientIP(c)); err != nil {
+		return err
+	}
 	token, err := db.Login(name, password)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	setCookie(c, "token", token)
 	theme, err := db.GetUserTheme(name)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	setCookiePermanent(c, "theme", theme)
 	c.Redirect(http.StatusFound, "/")
 	return nil
@@ -39,15 +51,25 @@ func register(c echo.Context) error {
 	name := c.Request().PostFormValue("username")
 	password := c.Request().PostFormValue("password")
 	confirm := c.Request().PostFormValue("confirm")
-	if confirm != password { return errors.New("passwords don't match") }
+	if confirm != password {
+		return errors.New("passwords don't match")
+	}
 	err := verifyCaptcha(c)
-	if err != nil { return err }
-	if err := registrationLimit.Try(clientIP(c)); err != nil { return err }
+	if err != nil {
+		return err
+	}
+	if err := registrationLimit.Try(clientIP(c)); err != nil {
+		return err
+	}
 	err = db.CreateAccount(name, password,
-			config.Cfg.Accounts.DefaultRank, false)
-	if err != nil { return err }
+		config.Cfg.Accounts.DefaultRank, false)
+	if err != nil {
+		return err
+	}
 	token, err := db.Login(name, password)
-	if err != nil { return errors.New("invalid credentials") }
+	if err != nil {
+		return errors.New("invalid credentials")
+	}
 	setCookie(c, "token", token)
 	c.Redirect(http.StatusFound, "/")
 	return nil
@@ -55,7 +77,9 @@ func register(c echo.Context) error {
 
 func disconnect(c echo.Context) error {
 	_, err := loggedAs(c)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	db.Disconnect(getCookie(c, "token"))
 	deleteCookie(c, "token")
 	c.Redirect(http.StatusFound, "/")
@@ -66,13 +90,21 @@ func onPost(f func(db.Post) error) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		board := c.Param("board")
 		id, err := strconv.Atoi(c.Param("id"))
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 
 		post, err := db.GetPostFromBoard(board, id)
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 		post.Board, err = db.GetBoard(board)
-		if err != nil { return err }
-		if err := f(post);  err != nil { return err }
+		if err != nil {
+			return err
+		}
+		if err := f(post); err != nil {
+			return err
+		}
 
 		dst := "/" + board
 		if id != post.Thread.Number {
@@ -101,7 +133,9 @@ func hide(post db.Post) error {
 
 func pin(post db.Post) error {
 	thread, err := db.GetThread(post.Board, post.Thread.Number)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	return thread.Pin()
 }
 
@@ -112,10 +146,14 @@ func banMedia(post db.Post) error {
 func cancel(c echo.Context) error {
 	board := c.Param("board")
 	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 
 	post, err := db.GetPostFromBoard(board, id)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	if post.Session != getCookie(c, "id") || post.Session == "" {
 		user, err := loggedAs(c)
 		if err != nil || user.ID != post.OwnerID {
@@ -124,7 +162,9 @@ func cancel(c echo.Context) error {
 	}
 
 	err = db.Remove(board, id)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 
 	dst := "/" + board
 	if id != post.Thread.Number {
@@ -138,19 +178,27 @@ func ban(c echo.Context) error {
 	board := c.Param("board")
 	ip := c.Param("ip")
 	v, err := db.GetBoard(board)
-	if err != nil { return err }
-	if err := db.BanIP(ip, 86400, v.ID); err != nil { return err }
-	c.Redirect(http.StatusFound, "/" + board)
+	if err != nil {
+		return err
+	}
+	if err := db.BanIP(ip, 86400, v.ID); err != nil {
+		return err
+	}
+	c.Redirect(http.StatusFound, "/"+board)
 	return nil
 }
 
 func newThread(c echo.Context) error {
 
-	if err := isBanned(c); err != nil { return err }
+	if err := isBanned(c); err != nil {
+		return err
+	}
 
 	boardName := c.Param("board")
 	board, err := db.GetBoard(boardName)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 
 	name, _ := getPostForm(c, "name")
 	title, _ := getPostForm(c, "title")
@@ -162,36 +210,52 @@ func newThread(c echo.Context) error {
 		return errors.New("invalid form")
 	}
 
-	if err := checkCaptcha(c); err != nil { return err }
-	if err := threadLimit.Try(clientIP(c)); err != nil { return err }
+	if err := checkCaptcha(c); err != nil {
+		return err
+	}
+	if err := threadLimit.Try(clientIP(c)); err != nil {
+		return err
+	}
 
 	media := ""
 	file, err := c.FormFile("media")
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	user, err := loggedAs(c)
-	if err == nil && signed == "on" { name = user.Name }
+	if err == nil && signed == "on" {
+		name = user.Name
+	}
 	approved := user.Can(db.BYPASS_MEDIA_APPROVAL) == nil
 	media, err = uploadFile(file, approved, spoiler == "on")
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 
 	parsed, _ := parseContent(content, 0)
 	number, err := db.CreateThread(board, title, name, media, clientIP(c),
-					getCookie(c, "id"), user,
-					signed == "on", rank == "on", parsed)
-	if err != nil { return err }
+		getCookie(c, "id"), user,
+		signed == "on", rank == "on", parsed)
+	if err != nil {
+		return err
+	}
 
-	c.Redirect(http.StatusFound, c.Request().URL.Path + "/" +
-			strconv.Itoa(number))
+	c.Redirect(http.StatusFound, c.Request().URL.Path+"/"+
+		strconv.Itoa(number))
 	return nil
 }
 
 func newPost(c echo.Context) error {
 
-	if err := isBanned(c); err != nil { return err }
+	if err := isBanned(c); err != nil {
+		return err
+	}
 
 	boardName := c.Param("board")
 	board, err := db.GetBoard(boardName)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 
 	if board.ReadOnly && needPrivilege(c, db.BYPASS_READONLY) != nil {
 		return errors.New("the board is in read-only mode")
@@ -199,9 +263,13 @@ func newPost(c echo.Context) error {
 
 	threadNumberStr := c.Param("thread")
 	threadNumber, err := strconv.Atoi(threadNumberStr)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	thread, err := db.GetThread(board, threadNumber)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 
 	name, _ := getPostForm(c, "name")
 	content, _ := getPostForm(c, "content")
@@ -210,26 +278,38 @@ func newPost(c echo.Context) error {
 	spoiler, _ := getPostForm(c, "spoiler")
 	sage, _ := getPostForm(c, "sage")
 
-	if err := checkCaptcha(c); err != nil { return err }
-	if err := postLimit.Try(clientIP(c)); err != nil { return err }
+	if err := checkCaptcha(c); err != nil {
+		return err
+	}
+	if err := postLimit.Try(clientIP(c)); err != nil {
+		return err
+	}
 
 	media := ""
 	user, err := loggedAs(c)
-	if err == nil && signed == "on" { name = user.Name }
+	if err == nil && signed == "on" {
+		name = user.Name
+	}
 	file, err := c.FormFile("media")
-	if err == nil { 
+	if err == nil {
 		approved := user.Can(db.BYPASS_MEDIA_APPROVAL) == nil
 		media, err = uploadFile(file, approved, spoiler == "on")
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 	}
 
 	content, err = filterText(content)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	parsed, refs := parseContent(content, thread.ID)
 	number, err := db.CreatePost(thread, parsed, name, media, clientIP(c),
-			getCookie(c, "id"), user, signed == "on", rank == "on",
-			sage == "on", nil)
-	if err != nil { return err }
+		getCookie(c, "id"), user, signed == "on", rank == "on",
+		sage == "on", nil)
+	if err != nil {
+		return err
+	}
 
 	for _, v := range refs {
 		db.CreateReference(thread.ID, number, v)

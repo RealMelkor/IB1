@@ -1,10 +1,10 @@
 package dnsbl
 
 import (
-	"time"
+	"errors"
 	"net"
 	"strings"
-	"errors"
+	"time"
 
 	"IB1/db"
 	"IB1/util"
@@ -13,16 +13,19 @@ import (
 const retention = 7200 // 2 hours
 
 type cached struct {
-	timestamp	int64
-	listed		bool
+	timestamp int64
+	listed    bool
 }
+
 var cache = util.SafeMap[cached]{}
 var blacklists []db.Blacklist
 
 func Init() error {
 	cache.Init()
 	v, err := db.Blacklist{}.GetAll()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	blacklists = v
 	return nil
 }
@@ -35,13 +38,13 @@ func IsListedOn(ip string, blacklist string) bool {
 	host := parts[3] + "." + parts[2] + "." + parts[1] + "." + parts[0] +
 		"." + blacklist
 	v, ok := cache.Get(host)
-	if ok && time.Now().Unix() - v.timestamp < retention {
+	if ok && time.Now().Unix()-v.timestamp < retention {
 		return v.listed
 	}
 	ips, err := net.LookupIP(host)
 	listed := err == nil && len(ips) > 0
 	cache.Set(host, cached{
-		listed: listed,
+		listed:    listed,
 		timestamp: time.Now().Unix(),
 	})
 	return listed
@@ -49,7 +52,9 @@ func IsListedOn(ip string, blacklist string) bool {
 
 func IsListed(ip string, readOperation bool) error {
 	for _, v := range blacklists {
-		if v.Disabled || (v.AllowRead && readOperation) { continue }
+		if v.Disabled || (v.AllowRead && readOperation) {
+			continue
+		}
 		if IsListedOn(ip, v.Host) {
 			return errors.New(ip + " is blacklisted")
 		}
@@ -60,7 +65,9 @@ func IsListed(ip string, readOperation bool) error {
 func ClearCache() error {
 	cache.Clear()
 	v, err := db.Blacklist{}.GetAll()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	blacklists = v
 	return err
 }

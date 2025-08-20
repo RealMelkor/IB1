@@ -1,10 +1,10 @@
 package web
 
 import (
-        "errors"
 	"IB1/util"
+	"errors"
 
-        "github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4"
 )
 
 func csrf(f echo.HandlerFunc) echo.HandlerFunc {
@@ -17,7 +17,9 @@ func csrf(f echo.HandlerFunc) echo.HandlerFunc {
 			check = true
 		} else {
 			for _, v := range c.ParamNames() {
-				if v != "csrf" { continue }
+				if v != "csrf" {
+					continue
+				}
 				value = c.Param("csrf")
 				check = true
 				break
@@ -25,11 +27,15 @@ func csrf(f echo.HandlerFunc) echo.HandlerFunc {
 		}
 		if check {
 			token := get(c)("csrf")
-			if token != value { return invalid }
+			if token != value {
+				return invalid
+			}
 		}
 		if check || get(c)("csrf") == nil {
 			token, err := util.NewToken()
-			if err != nil { return err }
+			if err != nil {
+				return err
+			}
 			set(c)("csrf", token)
 		}
 		return f(c)

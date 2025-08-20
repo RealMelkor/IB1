@@ -1,14 +1,14 @@
 package db
 
 import (
-	"log"
-	"io"
-	"net"
-	"bufio"
-	"strings"
-	"net/http"
 	"archive/tar"
-        "compress/gzip"
+	"bufio"
+	"compress/gzip"
+	"io"
+	"log"
+	"net"
+	"net/http"
+	"strings"
 
 	"github.com/yl2chen/cidranger"
 )
@@ -16,45 +16,58 @@ import (
 var countries = map[string]cidranger.Ranger{}
 
 type CIDR struct {
-	CIDR	string
-	Country	string
+	CIDR    string
+	Country string
 }
 
-const ZonesURL =
-	"https://www.ipdeny.com/ipblocks/data/countries/all-zones.tar.gz"
+const ZonesURL = "https://www.ipdeny.com/ipblocks/data/countries/all-zones.tar.gz"
 
 func LoadCountries() error {
 	var count int64
 	db.Model(&CIDR{}).Count(&count)
 	if count == 0 {
-		if err := UpdateZones(ZonesURL); err != nil { return err }
+		if err := UpdateZones(ZonesURL); err != nil {
+			return err
+		}
 		db.Model(&CIDR{}).Count(&count)
 	}
 	rows, err := db.Model(&CIDR{}).Rows()
-        if err != nil { return err }
-        defer rows.Close()
-        for rows.Next() {
-                var v CIDR
-                if err := db.ScanRows(rows, &v); err != nil { return err }
-		if v.Country == "zz" { continue }
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var v CIDR
+		if err := db.ScanRows(rows, &v); err != nil {
+			return err
+		}
+		if v.Country == "zz" {
+			continue
+		}
 		tmp, ok := countries[v.Country]
 		if !ok {
 			tmp = cidranger.NewPCTrieRanger()
 		}
 		_, cidr, _ := net.ParseCIDR(v.CIDR)
-		if cidr == nil { continue }
-                tmp.Insert(cidranger.NewBasicRangerEntry(*cidr))
+		if cidr == nil {
+			continue
+		}
+		tmp.Insert(cidranger.NewBasicRangerEntry(*cidr))
 		countries[v.Country] = tmp
-        }
+	}
 	log.Println(count, "CIDRs entries loaded")
 	return nil
 }
 
 func UpdateZones(url string) error {
 	resp, err := http.Get(url)
-	if err != nil { return err }
-	uncompress, err := gzip.NewReader(resp.Body)	
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
+	uncompress, err := gzip.NewReader(resp.Body)
+	if err != nil {
+		return err
+	}
 	defer uncompress.Close()
 	tarReader := tar.NewReader(uncompress)
 	for {
@@ -66,7 +79,9 @@ func UpdateZones(url string) error {
 		}
 
 		info := header.FileInfo()
-		if info.IsDir() { continue }
+		if info.IsDir() {
+			continue
+		}
 
 		country := strings.Split(info.Name(), ".")[0]
 		log.Println("Loading zone: '" + country + "'")
@@ -78,23 +93,35 @@ func UpdateZones(url string) error {
 }
 
 func loadCountryBlocks(reader io.Reader, country string) error {
-	if country == "zz" { return nil }
+	if country == "zz" {
+		return nil
+	}
 	buf := bufio.NewReader(reader)
 	var CIDRs [1024]CIDR
 	for i := 0; ; i++ {
 		line, _, err := buf.ReadLine()
 		if err == io.EOF {
-			if i == 0 { return nil }
+			if i == 0 {
+				return nil
+			}
 			return db.Create(CIDRs[0:i]).Error
 		}
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 		_, ip, err := net.ParseCIDR(string(line))
-		if err != nil { return err }
-		if ip == nil { continue }
+		if err != nil {
+			return err
+		}
+		if ip == nil {
+			continue
+		}
 
 		if i == len(CIDRs) {
 			err := db.Create(CIDRs[0:i]).Error
-			if err != nil { return err }
+			if err != nil {
+				return err
+			}
 			i = 0
 		}
 		CIDRs[i] = CIDR{CIDR: ip.String(), Country: country}
@@ -103,10 +130,14 @@ func loadCountryBlocks(reader io.Reader, country string) error {
 
 func GetCountry(_ip string) string {
 	ip := net.ParseIP(_ip)
-        if ip == nil { return "" }
+	if ip == nil {
+		return ""
+	}
 	for k, v := range countries {
 		b, err := v.Contains(ip)
-		if err != nil { return "" }
+		if err != nil {
+			return ""
+		}
 		if b {
 			return k
 		}

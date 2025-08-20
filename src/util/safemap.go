@@ -5,11 +5,11 @@ import (
 )
 
 type SafeMap[T any] struct {
-	data	sync.Map
+	data sync.Map
 }
 
 func (m *SafeMap[T]) Set(key string, value T) {
-        m.data.Store(key, value)
+	m.data.Store(key, value)
 }
 
 func (m *SafeMap[T]) Get(key string) (T, bool) {
@@ -27,19 +27,19 @@ func (m *SafeMap[T]) Clear() {
 
 func (m *SafeMap[T]) Length() int {
 	i := 0
-	m.data.Range(func(key, val any)bool{
+	m.data.Range(func(key, val any) bool {
 		i++
 		return true
 	})
-        return i
+	return i
 }
 
 func (m *SafeMap[T]) Init() {
-        m.data = sync.Map{}
+	m.data = sync.Map{}
 }
 
-func (m *SafeMap[T]) Iter(f func(string, T)(T, bool)) {
-	m.data.Range(func(key, val any)bool {
+func (m *SafeMap[T]) Iter(f func(string, T) (T, bool)) {
+	m.data.Range(func(key, val any) bool {
 		n, keep := f(key.(string), val.(T))
 		if keep == false {
 			m.data.Delete(key)

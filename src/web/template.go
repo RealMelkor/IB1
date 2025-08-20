@@ -1,26 +1,26 @@
 package web
 
 import (
-	"embed"
-	"html/template"
-	"net/http"
-	"strings"
-	"strconv"
-	"io"
 	"crypto/rand"
-	"math/big"
+	"embed"
+	"encoding/base32"
 	"fmt"
 	"hash/fnv"
-	"encoding/base32"
+	"html/template"
+	"io"
+	"math/big"
+	"net/http"
+	"strconv"
+	"strings"
 
+	"github.com/gabriel-vasile/mimetype"
+	"github.com/labstack/echo/v4"
 	"github.com/tdewolff/minify/v2"
 	"github.com/tdewolff/minify/v2/css"
 	"github.com/tdewolff/minify/v2/html"
-	"github.com/labstack/echo/v4"
-	"github.com/gabriel-vasile/mimetype"
 
-	"IB1/db"
 	"IB1/config"
+	"IB1/db"
 	"IB1/util"
 )
 
@@ -62,15 +62,15 @@ func render(_template string, data any, c echo.Context) error {
 	w := minifyHTML(c.Response().Writer)
 	defer w.Close()
 	funcs := template.FuncMap{
-		"get": get(c),
-		"once": once(c),
-		"set": set(c),
-		"has": has(c),
+		"get":   get(c),
+		"once":  once(c),
+		"set":   set(c),
+		"has":   has(c),
 		"param": func(param string) any { return c.Param(param) },
 		"render": func(template string, v any) error {
 			return templates.Lookup(template).Execute(w, v)
 		},
-		"session": func() string { return getCookie(c, "id") },
+		"session":  func() string { return getCookie(c, "id") },
 		"isLogged": func() bool { return isLogged(c) },
 		"can": func(priv string) bool {
 			acc, err := loggedAs(c)
@@ -87,43 +87,61 @@ func render(_template string, data any, c echo.Context) error {
 				return err == nil && v
 			}
 			board, err := db.GetBoard(c.Param("board"))
-			if err != nil { return false }
+			if err != nil {
+				return false
+			}
 			return acc.CanAsMember(board,
 				db.GetMemberPrivilege(priv)) == nil
 		},
 		"isSelf": func(acc db.Account) bool {
 			self, err := loggedAs(c)
-			if err != nil { return false }
+			if err != nil {
+				return false
+			}
 			return self.ID == acc.ID
 		},
 		"self": func() db.Account {
 			self, err := loggedAs(c)
-			if err != nil { return db.Account{} }
+			if err != nil {
+				return db.Account{}
+			}
 			return self
 		},
 		"canView": func(board db.Board) bool {
 			return canView(c, board) == nil
 		},
 		"hotlink": func() string {
-			if config.Cfg.Media.HotlinkShield == 0 { return "" }
+			if config.Cfg.Media.HotlinkShield == 0 {
+				return ""
+			}
 			return "?v=" + strconv.Itoa(hotlinkHash(c, 0))
 		},
 	}
 	err := templates.Funcs(funcs).Lookup("header").Execute(w, header(c))
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	err = templates.Funcs(funcs).Lookup(_template).Execute(w, data)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	err = templates.Lookup("footer").Execute(w, header(c))
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
 func isMedia(media string, mediaType db.MediaType) bool {
 	parts := strings.Split(media, ".")
-	if len(parts) < 2 { return false }
-	ext := parts[len(parts) - 1]
-	v, ok := extensions["." + ext]
-	if !ok { return false }
+	if len(parts) < 2 {
+		return false
+	}
+	ext := parts[len(parts)-1]
+	v, ok := extensions["."+ext]
+	if !ok {
+		return false
+	}
 	return mediaType == v
 }
 
@@ -132,47 +150,57 @@ func initTemplate() error {
 	funcs := template.FuncMap{
 		"boards": func() []db.Board {
 			boards, err := db.GetBoards()
-			if err != nil { return nil }
+			if err != nil {
+				return nil
+			}
 			return boards
 		},
 		"isCaptchaEnabled": func() bool {
-			return	config.Cfg.Captcha.Enabled
+			return config.Cfg.Captcha.Enabled
 		},
-		"config": func() config.Config { return config.Cfg },
-		"isLogged": func() bool { return false },
-		"can": func(string) bool { return false },
+		"config":    func() config.Config { return config.Cfg },
+		"isLogged":  func() bool { return false },
+		"can":       func(string) bool { return false },
 		"memberCan": func(string) bool { return false },
-		"set": func(string, string) string {return ""},
-		"get": func(string) string {return ""},
-		"once": func(string) string {return ""},
-		"has": func(string) bool {return false},
-		"param": func(string) any { return "" },
-		"render": func(string, any) error { return nil },
-		"session": func() string {return ""},
-		"csrf": func() string { return "" },
-		"hotlink": func() string { return "" },
-		"hasRank": func(string) bool {return false},
-		"isSelf": func(db.Account) bool {return false},
-		"self": func() db.Account {return db.Account{}} ,
+		"set":       func(string, string) string { return "" },
+		"get":       func(string) string { return "" },
+		"once":      func(string) string { return "" },
+		"has":       func(string) bool { return false },
+		"param":     func(string) any { return "" },
+		"render":    func(string, any) error { return nil },
+		"session":   func() string { return "" },
+		"csrf":      func() string { return "" },
+		"hotlink":   func() string { return "" },
+		"hasRank":   func(string) bool { return false },
+		"isSelf":    func(db.Account) bool { return false },
+		"self":      func() db.Account { return db.Account{} },
 		"defer": func(i *uint) uint {
-			if i == nil { return 0 }
+			if i == nil {
+				return 0
+			}
 			return *i
 		},
 		"capitalize": func(s string) string {
-			if s == "" { return "" }
+			if s == "" {
+				return ""
+			}
 			return strings.ToUpper(s[0:1]) + s[1:]
 		},
 		"pendingMedia": func() string {
 			hash, mime, err := db.GetPendingApproval()
-			if err != nil { return "" }
+			if err != nil {
+				return ""
+			}
 			m := mimetype.Lookup(mime)
-			if m == nil { return "" }
+			if m == nil {
+				return ""
+			}
 			return hash + m.Extension()
 		},
 		"isPending": func(media string) bool {
 			v, err := db.GetMedia(media)
 			return config.Cfg.Media.ApprovalQueue &&
-					err == nil && !v.Approved
+				err == nil && !v.Approved
 		},
 		"hasUnapproved": func() bool {
 			return db.HasUnapproved()
@@ -188,8 +216,10 @@ func initTemplate() error {
 		},
 		"extension": func(path string) string {
 			parts := strings.Split(path, ".")
-			if len(parts) < 1 { return "" }
-			return parts[len(parts) - 1]
+			if len(parts) < 1 {
+				return ""
+			}
+			return parts[len(parts)-1]
 		},
 		"banners": func() []uint {
 			v, _ := db.GetAllBanners()
@@ -205,7 +235,9 @@ func initTemplate() error {
 		},
 		"ranks": func() []string {
 			ranks, err := db.GetRanks()
-			if err != nil { return nil }
+			if err != nil {
+				return nil
+			}
 			res := []string{}
 			for _, v := range ranks {
 				res = append(res, v.Name)
@@ -214,7 +246,9 @@ func initTemplate() error {
 		},
 		"memberRanks": func() []string {
 			ranks, err := db.GetMemberRanks()
-			if err != nil { return nil }
+			if err != nil {
+				return nil
+			}
 			res := []string{}
 			for _, v := range ranks {
 				res = append(res, v.Name)
@@ -224,7 +258,7 @@ func initTemplate() error {
 		"idColor": func(in string) string {
 			h := fnv.New32()
 			sum := h.Sum([]byte(in))
-			sum[sum[3] % 3] |= 0xA0
+			sum[sum[3]%3] |= 0xA0
 			return fmt.Sprintf("#%02X%02X%02X",
 				sum[0], sum[1], sum[2])
 		},
@@ -242,26 +276,32 @@ func initTemplate() error {
 		},
 	}
 	templates, err = template.New("frontend").Funcs(funcs).
-				ParseFS(templatesFS, "html/*.html")
-	if err != nil { return err }
-	if err := minifyStylesheet(); err != nil { return err }
+		ParseFS(templatesFS, "html/*.html")
+	if err != nil {
+		return err
+	}
+	if err := minifyStylesheet(); err != nil {
+		return err
+	}
 	return nil
 }
 
 func header(c echo.Context) any {
 	boards, err := db.GetBoards()
-	if err != nil { return nil }
+	if err != nil {
+		return nil
+	}
 	account, err := loggedAs(c)
 	logged := err == nil
 	theme := getTheme(c)
 	data := struct {
-		Config	config.Config
-		Url	string
-		Theme	string
-		Themes	[]string
-		Logged	bool
-		Account	db.Account
-		Boards	[]db.Board
+		Config  config.Config
+		Url     string
+		Theme   string
+		Themes  []string
+		Logged  bool
+		Account db.Account
+		Boards  []db.Board
 	}{
 		config.Cfg,
 		c.Request().RequestURI,
@@ -288,54 +328,72 @@ func renderBoards(c echo.Context) error {
 
 func renderDashboard(c echo.Context) error {
 	boards, err := db.GetBoards()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	accounts, err := db.GetAccounts()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	themes, err := db.Theme{}.GetAll()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	ranks, err := db.GetRanks()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	memberRanks, err := db.GetMemberRanks()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	wordfilters, err := db.Wordfilter{}.GetAll()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	bannedImages, err := db.GetBannedImages()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	bans, err := db.GetBanList()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	blacklists, err := db.Blacklist{}.GetAll()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	data := struct {
-		Accounts	[]db.Account
-		Boards		[]db.Board
-		Config		config.Config
-		Theme		string
-		Themes		[]string
-		Privileges	[]string
-		MemberPrivileges[]string
-		Bans		[]db.Ban
-		BannedImages	[]db.BannedImage
-		UserThemes	[]db.Theme
-		Wordfilters	[]db.Wordfilter
-		Blacklists	[]db.Blacklist
-		Ranks		[]db.Rank
-		MemberRanks	[]db.MemberRank
-		Header		any
+		Accounts         []db.Account
+		Boards           []db.Board
+		Config           config.Config
+		Theme            string
+		Themes           []string
+		Privileges       []string
+		MemberPrivileges []string
+		Bans             []db.Ban
+		BannedImages     []db.BannedImage
+		UserThemes       []db.Theme
+		Wordfilters      []db.Wordfilter
+		Blacklists       []db.Blacklist
+		Ranks            []db.Rank
+		MemberRanks      []db.MemberRank
+		Header           any
 	}{
-		Accounts: accounts,
-		Boards: boards,
-		Config: config.Cfg,
-		Bans:	bans,
-		BannedImages: bannedImages,
-		Themes: getThemes(),
-		UserThemes: themes,
-		Wordfilters: wordfilters,
-		Blacklists: blacklists,
-		Ranks: ranks,
-		MemberRanks: memberRanks,
-		Privileges: db.GetPrivileges(),
+		Accounts:         accounts,
+		Boards:           boards,
+		Config:           config.Cfg,
+		Bans:             bans,
+		BannedImages:     bannedImages,
+		Themes:           getThemes(),
+		UserThemes:       themes,
+		Wordfilters:      wordfilters,
+		Blacklists:       blacklists,
+		Ranks:            ranks,
+		MemberRanks:      memberRanks,
+		Privileges:       db.GetPrivileges(),
 		MemberPrivileges: db.GetMemberPrivileges(),
-		Header: header(c),
+		Header:           header(c),
 	}
 	return render("admin.html", data, c)
 }
@@ -356,29 +414,37 @@ func addLinks(content string, thread uint) (string, []int) {
 	const quote = "&gt;&gt;"
 	var refs []int
 	for i := strings.Index(content, quote); i >= 0 &&
-			i + len(quote) < len(content); {
+		i+len(quote) < len(content); {
 
 		index := strings.Index(content[i:], quote)
-		if index < 0 { break }
+		if index < 0 {
+			break
+		}
 		i += index + len(quote)
 
 		j := i
 		length := len(content)
 		for ; j < length; j++ {
-			if (content[j] < '0' || content[j] > '9') { break }
+			if content[j] < '0' || content[j] > '9' {
+				break
+			}
 		}
 		if j < length && content[j] != ' ' && content[j] != '\n' &&
-				content[j] == '\t' {
+			content[j] == '\t' {
 			continue
 		}
 		number := content[i:j]
 		n, err := strconv.Atoi(number)
-		if err != nil { continue }
-		if _, err := db.GetPost(thread, n); err != nil { continue }
+		if err != nil {
+			continue
+		}
+		if _, err := db.GetPost(thread, n); err != nil {
+			continue
+		}
 		refs = append(refs, n)
 		str := "<a class=\"l-" + number + "\" href=\"#" + number +
 			"\">&gt;&gt;" + number + "</a>"
-		content = content[:i - len(quote)] + str + content[j:]
+		content = content[:i-len(quote)] + str + content[j:]
 		i += len(str) - len(quote)
 	}
 
@@ -392,11 +458,19 @@ func addGreentext(content string) string {
 	next := 0
 	for i := 0; i >= 0 && i < length; i = next {
 		next = strings.Index(content[i:], br)
-		if next == -1 { next = length } else { next += i + len(br) }
-		if strings.Index(content[i:next], "&gt;&gt;") == 0 { continue }
-		if strings.Index(content[i:next], "&gt;") != 0 { continue }
+		if next == -1 {
+			next = length
+		} else {
+			next += i + len(br)
+		}
+		if strings.Index(content[i:next], "&gt;&gt;") == 0 {
+			continue
+		}
+		if strings.Index(content[i:next], "&gt;") != 0 {
+			continue
+		}
 		line := "<span class=\"green-text\">" +
-				content[i:next] + "</span>"
+			content[i:next] + "</span>"
 		content = content[:i] + line + content[next:]
 		length = len(content)
 		next = i + len(line)
@@ -413,7 +487,9 @@ func asciiOnly(s string) string {
 			i++
 		}
 	}
-	if i == 0 { return "" }
+	if i == 0 {
+		return ""
+	}
 	return string(res[:i])
 }
 
@@ -432,7 +508,9 @@ func minifyCSS(in []byte) ([]byte, error) {
 	m := minify.New()
 	m.AddFunc("text/css", css.Minify)
 	res, err := m.Bytes("text/css", in)
-	if err != nil { return nil, err }
+	if err != nil {
+		return nil, err
+	}
 	return res, nil
 }
 
@@ -444,13 +522,18 @@ func minifyHTML(w io.Writer) io.WriteCloser {
 }
 
 var stylesheet []byte = nil
+
 func minifyStylesheet() error {
 	m := minify.New()
 	m.AddFunc("text/css", css.Minify)
 	data, err := static.ReadFile("static/common.css")
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	res, err := m.Bytes("text/css", data)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	stylesheet = res
 	return nil
 }

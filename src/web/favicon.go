@@ -1,9 +1,9 @@
 package web
 
 import (
-	"github.com/labstack/echo/v4"
-	"github.com/gabriel-vasile/mimetype"
 	"errors"
+	"github.com/gabriel-vasile/mimetype"
+	"github.com/labstack/echo/v4"
 	"strings"
 
 	"IB1/config"
@@ -12,13 +12,19 @@ import (
 
 func handleImage(c echo.Context, param string) ([]byte, string, error) {
 	file, err := c.FormFile(param)
-        if err != nil { return nil, "", err }
+	if err != nil {
+		return nil, "", err
+	}
 	f, err := file.Open()
-        if err != nil { return nil, "", err }
+	if err != nil {
+		return nil, "", err
+	}
 	defer f.Close()
 	data := make([]byte, file.Size)
 	_, err = f.Read(data)
-        if err != nil { return nil, "", err }
+	if err != nil {
+		return nil, "", err
+	}
 
 	mime := mimetype.Detect(data)
 	if strings.Index(mime.String(), "image/") != 0 {
@@ -29,7 +35,9 @@ func handleImage(c echo.Context, param string) ([]byte, string, error) {
 
 func updateFavicon(c echo.Context) error {
 	data, mime, err := handleImage(c, "favicon")
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	config.Cfg.Home.FaviconMime = mime
 	config.Cfg.Home.Favicon = data
 	db.UpdateConfig()

@@ -1,8 +1,8 @@
 package db
 
 import (
-	"gorm.io/gorm"
 	"encoding/json"
+	"gorm.io/gorm"
 )
 
 type MemberPrivilege int
@@ -10,7 +10,9 @@ type MemberPrivilege int
 func (p *MemberPrivilege) UnmarshalJSON(data []byte) error {
 	var priv string
 	err := json.Unmarshal(data, &priv)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	v, ok := memberPrivileges[priv]
 	if !ok {
 		v = MemberPrivilege(NONE)
@@ -28,44 +30,46 @@ func (p MemberPrivilege) Generic() Privilege {
 }
 
 var memberPrivileges = map[string]MemberPrivilege{
-	"BAN_USER": 0,
-	"APPROVE_MEDIA": 0,
-	"REMOVE_MEDIA": 0,
-	"REMOVE_POST": 0,
-	"HIDE_POST": 0,
-	"BYPASS_CAPTCHA": 0,
+	"BAN_USER":              0,
+	"APPROVE_MEDIA":         0,
+	"REMOVE_MEDIA":          0,
+	"REMOVE_POST":           0,
+	"HIDE_POST":             0,
+	"BYPASS_CAPTCHA":        0,
 	"BYPASS_MEDIA_APPROVAL": 0,
-	"VIEW_HIDDEN": 0,
-	"VIEW_PENDING_MEDIA": 0,
-	"VIEW_IP": 0,
-	"BAN_IP": 0,
-	"SHOW_RANK": 0,
-	"CREATE_POST": 0,
-	"CREATE_THREAD": 0,
-	"PIN_THREAD": 0,
+	"VIEW_HIDDEN":           0,
+	"VIEW_PENDING_MEDIA":    0,
+	"VIEW_IP":               0,
+	"BAN_IP":                0,
+	"SHOW_RANK":             0,
+	"CREATE_POST":           0,
+	"CREATE_THREAD":         0,
+	"PIN_THREAD":            0,
 }
 
 type MemberRank struct {
 	gorm.Model
 	CRUD[MemberRank]
-	Name		string			`gorm:"unique"`
-	Privileges	[]MemberPrivilege	`gorm:"serializer:json"`
+	Name       string            `gorm:"unique"`
+	Privileges []MemberPrivilege `gorm:"serializer:json"`
 }
 
 type Membership struct {
 	gorm.Model
 	CRUD[Membership]
-	MemberID	int	 `gorm:"uniqueIndex:idx_pair"`
-	Member		Account
-	BoardID		int	 `gorm:"uniqueIndex:idx_pair"`
-	Board		Board
-	RankID		int
-	Rank		MemberRank
+	MemberID int `gorm:"uniqueIndex:idx_pair"`
+	Member   Account
+	BoardID  int `gorm:"uniqueIndex:idx_pair"`
+	Board    Board
+	RankID   int
+	Rank     MemberRank
 }
 
 func GetMemberPrivilege(privilege string) MemberPrivilege {
 	v, ok := memberPrivileges[privilege]
-	if !ok { return MemberPrivilege(NONE) }
+	if !ok {
+		return MemberPrivilege(NONE)
+	}
 	return v
 }
 
@@ -99,7 +103,9 @@ func (rank MemberRank) Has(privilege string) bool {
 
 func (rank MemberRank) Can(priv MemberPrivilege) bool {
 	for _, v := range rank.Privileges {
-		if v == priv { return true }
+		if v == priv {
+			return true
+		}
 	}
 	return false
 }
@@ -123,7 +129,9 @@ func CreateMemberRank(name string, privileges []string) error {
 
 func UpdateMemberRank(id int, name string, privileges []string) error {
 	v, err := unauthenticated.Get()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	if v.ID == uint(id) {
 		name = UNAUTHENTICATED
 		unauthenticated.Refresh()

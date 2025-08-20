@@ -1,9 +1,9 @@
 package db
 
 import (
-	"gorm.io/gorm"
 	"encoding/json"
 	"errors"
+	"gorm.io/gorm"
 
 	"IB1/util"
 )
@@ -17,7 +17,9 @@ type Privilege int
 func (p *Privilege) UnmarshalJSON(data []byte) error {
 	var priv string
 	err := json.Unmarshal(data, &priv)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	*p = GetPrivilege(string(priv))
 	return nil
 }
@@ -65,8 +67,8 @@ const (
 type Rank struct {
 	gorm.Model
 	CRUD[Rank]
-	Name		string		`gorm:"unique"`
-	Privileges	[]Privilege	`gorm:"serializer:json"`
+	Name       string      `gorm:"unique"`
+	Privileges []Privilege `gorm:"serializer:json"`
 }
 
 var privileges = func() map[string]Privilege {
@@ -79,7 +81,9 @@ var privileges = func() map[string]Privilege {
 
 func GetPrivilege(privilege string) Privilege {
 	v, ok := privileges[privilege]
-	if !ok { return NONE }
+	if !ok {
+		return NONE
+	}
 	return v
 }
 
@@ -104,7 +108,9 @@ func (rank Rank) Has(privilege string) bool {
 
 func (rank Rank) Can(priv Privilege) bool {
 	for _, v := range rank.Privileges {
-		if v == priv { return true }
+		if v == priv {
+			return true
+		}
 	}
 	return false
 }
@@ -121,7 +127,9 @@ func UnauthenticatedCan(privilege string) (bool, error) {
 
 func AsUnauthenticated(privilege Privilege) (bool, error) {
 	v, err := unauthenticated.Get()
-	if err != nil { return false, err }
+	if err != nil {
+		return false, err
+	}
 	return v.Can(privilege), nil
 }
 
@@ -144,7 +152,9 @@ func CreateRank(name string, privileges []string) error {
 
 func UpdateRank(id int, name string, privileges []string) error {
 	v, err := unauthenticated.Get()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	if v.ID == uint(id) {
 		name = UNAUTHENTICATED
 		unauthenticated.Refresh()
@@ -157,7 +167,9 @@ func UpdateRank(id int, name string, privileges []string) error {
 
 func DeleteRankByID(id int) error {
 	v, err := unauthenticated.Get()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	if v.ID == uint(id) {
 		return errors.New("cannot delete 'unauthenticated' group")
 	}

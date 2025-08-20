@@ -8,8 +8,8 @@ import (
 type Wordfilter struct {
 	gorm.Model
 	CRUD[Wordfilter]
-	From		string		`gorm:"unique"`
-	To		string
-	Disabled	bool
-	Regexp		*regexp.Regexp	`gorm:"-:all"`
+	From     string `gorm:"unique"`
+	To       string
+	Disabled bool
+	Regexp   *regexp.Regexp `gorm:"-:all"`
 }

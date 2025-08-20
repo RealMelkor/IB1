@@ -1,22 +1,22 @@
 package web
 
 import (
+	"IB1/acme"
+	"IB1/config"
+	"IB1/db"
+	"IB1/dnsbl"
+	"context"
 	"errors"
-	"strconv"
+	"io"
+	"math/rand"
+	"net"
+	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
+	"strconv"
 	"syscall"
 	"time"
-	"io"
-	"context"
-	"net"
-	"net/url"
-	"net/http"
-	"math/rand"
-	"IB1/db"
-	"IB1/config"
-	"IB1/acme"
-	"IB1/dnsbl"
 
 	"github.com/labstack/echo/v4"
 )
@@ -33,7 +33,9 @@ func getPostForm(c echo.Context, param string) (string, bool) {
 func redirect(f echo.HandlerFunc, redirect string) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		err := f(c)
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 		c.Redirect(http.StatusFound, redirect)
 		return nil
 	}
@@ -48,53 +50,75 @@ func needPrivilege(c echo.Context, privilege db.Privilege) error {
 		}
 	}
 	v, err := db.AsUnauthenticated(privilege)
-	if err != nil { return err }
-	if !v { return errors.New("insufficient privilege") }
+	if err != nil {
+		return err
+	}
+	if !v {
+		return errors.New("insufficient privilege")
+	}
 	return nil
 }
 
 func handleConfig(f echo.HandlerFunc, param string) echo.HandlerFunc {
 	dst := "/dashboard/" + param
 	return catchCustom(redirect(hasPrivilege(f, db.ADMINISTRATION), dst),
-			param + "-error", dst)
+		param+"-error", dst)
 }
 
 func setDefaultTheme(c echo.Context) error {
 	theme, ok := getPostForm(c, "theme")
-        if !ok { return errInvalidForm }
-        _, ok = getThemesTable()[theme]
-        if !ok { return errors.New("invalid theme") }
+	if !ok {
+		return errInvalidForm
+	}
+	_, ok = getThemesTable()[theme]
+	if !ok {
+		return errors.New("invalid theme")
+	}
 	config.Cfg.Home.Theme = theme
 	return nil
 }
 
 func updateConfig(c echo.Context) error {
 
-	if err := setDefaultTheme(c); err != nil { return err }
+	if err := setDefaultTheme(c); err != nil {
+		return err
+	}
 
 	title, ok := getPostForm(c, "title")
-        if !ok { return errInvalidForm }
+	if !ok {
+		return errInvalidForm
+	}
 	config.Cfg.Home.Title = title
 
 	description, ok := getPostForm(c, "description")
-        if !ok { return errInvalidForm }
+	if !ok {
+		return errInvalidForm
+	}
 	config.Cfg.Home.Description = description
 
 	listener, ok := getPostForm(c, "listener")
-        if !ok { return errInvalidForm }
+	if !ok {
+		return errInvalidForm
+	}
 	requireRestart := config.Cfg.Web.Listener != listener
 	config.Cfg.Web.Listener = listener
 
 	domain, ok := getPostForm(c, "domain")
-        if !ok { return errInvalidForm }
+	if !ok {
+		return errInvalidForm
+	}
 	config.Cfg.Web.Domain = domain
 
 	baseURL, ok := getPostForm(c, "base-url")
-        if !ok { return errInvalidForm }
+	if !ok {
+		return errInvalidForm
+	}
 	config.Cfg.Web.BaseURL = baseURL
 
 	defaultname, ok := getPostForm(c, "defaultname")
-        if !ok { return errInvalidForm }
+	if !ok {
+		return errInvalidForm
+	}
 	config.Cfg.Post.DefaultName = defaultname
 
 	captcha, _ := getPostForm(c, "captcha")
@@ -113,11 +137,17 @@ func updateConfig(c echo.Context) error {
 
 	threadsStr, _ := getPostForm(c, "maxthreads")
 	threads, err := strconv.ParseUint(threadsStr, 10, 64)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	config.Cfg.Board.MaxThreads = uint(threads)
 
-	if err := db.UpdateConfig(); err != nil { return err }
-	if requireRestart { return restart(c, "main") }
+	if err := db.UpdateConfig(); err != nil {
+		return err
+	}
+	if requireRestart {
+		return restart(c, "main")
+	}
 	return nil
 }
 
@@ -134,33 +164,47 @@ func updateMedia(c echo.Context) error {
 	config.Cfg.Media.ApprovalQueue = v
 
 	tmp, ok := getPostForm(c, "tmp")
-        if !ok { return errInvalidForm }
+	if !ok {
+		return errInvalidForm
+	}
 	err := os.MkdirAll(config.Cfg.Media.Tmp, 0700)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	config.Cfg.Media.Tmp = tmp
 
 	path, _ := getPostForm(c, "media")
-	if path == "" { path = config.Cfg.Media.Path }
-	if !config.Cfg.Media.InDatabase {
-		err = os.MkdirAll(path + "/thumbnail", 0700)
+	if path == "" {
+		path = config.Cfg.Media.Path
 	}
-	if err != nil { return err }
+	if !config.Cfg.Media.InDatabase {
+		err = os.MkdirAll(path+"/thumbnail", 0700)
+	}
+	if err != nil {
+		return err
+	}
 	config.Cfg.Media.Path = path
 
 	sizeStr, _ := getPostForm(c, "maxsize")
 	size, err := strconv.ParseUint(sizeStr, 10, 64)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	config.Cfg.Media.MaxSize = size
 
 	thresholdStr, _ := getPostForm(c, "threshold")
 	threshold, err := strconv.Atoi(thresholdStr)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	config.Cfg.Media.ImageThreshold = threshold
 
 	ntfyURL, _ := getPostForm(c, "ntfy")
 	if ntfyURL != "" {
 		u, err := url.ParseRequestURI(ntfyURL)
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 		ntfyURL = u.String()
 	}
 	config.Cfg.Media.NotificationURL = ntfyURL
@@ -169,13 +213,17 @@ func updateMedia(c echo.Context) error {
 	v = video == "on"
 	if v && !config.Cfg.Media.AllowVideos {
 		c := exec.Command("ffmpeg", "-version")
-		if err := c.Run(); err != nil { return err }
+		if err := c.Run(); err != nil {
+			return err
+		}
 	}
 	config.Cfg.Media.AllowVideos = v
 
 	hotlink, _ := getPostForm(c, "hotlink-shield")
 	config.Cfg.Media.HotlinkShield, err = strconv.Atoi(hotlink)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 
 	data, mime, err := handleImage(c, "pending")
 	if err == nil {
@@ -189,8 +237,12 @@ func updateMedia(c echo.Context) error {
 		config.Cfg.Media.SpoilerMime = mime
 	}
 
-	if err := db.UpdateConfig(); err != nil { return err }
-	if requireRestart { return restart(c, "media") }
+	if err := db.UpdateConfig(); err != nil {
+		return err
+	}
+	if requireRestart {
+		return restart(c, "media")
+	}
 	return nil
 }
 
@@ -210,9 +262,13 @@ func clearSpoilerImage(echo.Context) error {
 
 func loadFile(c echo.Context, name string) ([]byte, error) {
 	file, err := c.FormFile(name)
-        if err != nil { return nil, err }
+	if err != nil {
+		return nil, err
+	}
 	f, err := file.Open()
-	if err != nil { return nil, err }
+	if err != nil {
+		return nil, err
+	}
 	return io.ReadAll(f)
 }
 
@@ -228,35 +284,50 @@ func updateSSL(c echo.Context) error {
 	config.Cfg.SSL.RedirectToSSL = v == "on"
 
 	listener, ok := getPostForm(c, "address")
-        if !ok { return errInvalidForm }
+	if !ok {
+		return errInvalidForm
+	}
 	config.Cfg.SSL.Listener = listener
 
 	data, err := loadFile(c, "certificate")
-        if err == nil { config.Cfg.SSL.Certificate = data }
+	if err == nil {
+		config.Cfg.SSL.Certificate = data
+	}
 	data, err = loadFile(c, "key")
-        if err == nil { config.Cfg.SSL.Key = data }
+	if err == nil {
+		config.Cfg.SSL.Key = data
+	}
 
-	if err := db.UpdateConfig(); err != nil { return err }
+	if err := db.UpdateConfig(); err != nil {
+		return err
+	}
 	return restart(c, "ssl")
 }
-
 
 func createBoard(c echo.Context) error {
 	board, hasBoard := getPostForm(c, "board")
 	name, hasName := getPostForm(c, "name")
-        if !hasBoard || !hasName { return errInvalidForm }
+	if !hasBoard || !hasName {
+		return errInvalidForm
+	}
 	description, _ := getPostForm(c, "description")
 	acc, err := loggedAs(c)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	err = db.CreateBoard(board, name, description, acc.ID)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	return db.LoadBoards()
 }
 
 func updateBoard(c echo.Context) error {
 	board, hasBoard := getPostForm(c, "board")
 	name, hasName := getPostForm(c, "name")
-        if !hasBoard || !hasName { return errInvalidForm }
+	if !hasBoard || !hasName {
+		return errInvalidForm
+	}
 	enabled, _ := getPostForm(c, "enabled")
 	description, _ := getPostForm(c, "description")
 	countryFlag, _ := getPostForm(c, "country-flag")
@@ -265,9 +336,13 @@ func updateBoard(c echo.Context) error {
 	private, _ := getPostForm(c, "private")
 	owner, _ := getPostForm(c, "owner")
 	boards, err := db.GetBoards()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	for _, v := range boards {
-		if strconv.Itoa(int(v.ID)) != c.Param("id") { continue }
+		if strconv.Itoa(int(v.ID)) != c.Param("id") {
+			continue
+		}
 		v.Name = board
 		v.LongName = name
 		v.Description = description
@@ -278,22 +353,30 @@ func updateBoard(c echo.Context) error {
 		v.Private = private == "on"
 		if owner != "" {
 			account, err := db.GetAccount(owner)
-			if err != nil { return err }
+			if err != nil {
+				return err
+			}
 			v.OwnerID = &account.ID
 		} else {
 			v.OwnerID = nil
 		}
-		if err := db.UpdateBoard(v); err != nil { return err }
+		if err := db.UpdateBoard(v); err != nil {
+			return err
+		}
 		return db.LoadBoards()
 	}
-        return errors.New("invalid board")
+	return errors.New("invalid board")
 }
 
 func deleteBoard(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	for i, v := range db.Boards {
-		if v.ID != uint(id) { continue }
+		if v.ID != uint(id) {
+			continue
+		}
 		delete(db.Boards, i)
 	}
 	v := db.Board{}
@@ -303,107 +386,149 @@ func deleteBoard(c echo.Context) error {
 
 func createTheme(c echo.Context) error {
 	file, err := c.FormFile("theme")
-        if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	name, hasName := getPostForm(c, "name")
-        if !hasName { return errInvalidForm }
+	if !hasName {
+		return errInvalidForm
+	}
 	enabled, _ := getPostForm(c, "enabled")
 	disabled := enabled != "on"
 	data := make([]byte, file.Size)
 	f, err := file.Open()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	defer f.Close()
 	_, err = f.Read(data)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	data, err = minifyCSS(data)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	err = db.Theme{}.Add(db.Theme{
 		Name: name, Content: string(data), Disabled: disabled,
 	})
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	reloadThemes()
 	return nil
 }
 
 func updateTheme(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil { return errInvalidID }
+	if err != nil {
+		return errInvalidID
+	}
 	name, hasName := getPostForm(c, "name")
-        if !hasName { return errInvalidForm }
+	if !hasName {
+		return errInvalidForm
+	}
 	enabled, _ := getPostForm(c, "enabled")
 	disabled := enabled != "on"
 	err = db.Theme{}.Update(id, db.Theme{
 		Name: name, Disabled: disabled,
 	})
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	reloadThemes()
 	return nil
 }
 
 func deleteTheme(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil { return errInvalidID }
+	if err != nil {
+		return errInvalidID
+	}
 	err = db.Theme{}.RemoveID(id, db.Theme{})
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	reloadThemes()
 	return nil
 }
 
 func createBlacklist(c echo.Context) error {
-	host, hasHost:= getPostForm(c, "host")
-        if !hasHost { return errInvalidForm }
+	host, hasHost := getPostForm(c, "host")
+	if !hasHost {
+		return errInvalidForm
+	}
 	v, err := url.Parse("https://" + host + "/")
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 
 	enabled, _ := getPostForm(c, "enabled")
 	disabled := enabled != "on"
 	allowRead, _ := getPostForm(c, "allow-read")
 	err = db.Blacklist{}.Add(db.Blacklist{
-		Disabled: disabled,
-		Host: v.Hostname(),
+		Disabled:  disabled,
+		Host:      v.Hostname(),
 		AllowRead: allowRead == "on",
 	})
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	dnsbl.ClearCache()
 	return nil
 }
 
 func deleteBlacklist(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil { return errInvalidID }
+	if err != nil {
+		return errInvalidID
+	}
 	err = db.Blacklist{}.RemoveID(id, db.Blacklist{})
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	dnsbl.ClearCache()
 	return nil
 }
 
 func updateBlacklist(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil { return errInvalidID }
+	if err != nil {
+		return errInvalidID
+	}
 	host, hasHost := getPostForm(c, "host")
-        if !hasHost { return errInvalidForm }
+	if !hasHost {
+		return errInvalidForm
+	}
 	enabled, _ := getPostForm(c, "enabled")
 	disabled := enabled != "on"
 	allowRead, _ := getPostForm(c, "allow-read")
 	err = db.Blacklist{}.Update(id, db.Blacklist{
 		Host: host, Disabled: disabled, AllowRead: allowRead == "on",
 	})
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	dnsbl.ClearCache()
 	return nil
 }
 
 func addBan(c echo.Context) error {
 	ip, hasIP := getPostForm(c, "ip")
-        if !hasIP { return errInvalidForm }
+	if !hasIP {
+		return errInvalidForm
+	}
 	board, _ := getPostForm(c, "board")
 	boardID, err := strconv.Atoi(board)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	expiry, hasExpiry := getPostForm(c, "expiration")
 	duration := int64(3600)
-        if hasExpiry {
+	if hasExpiry {
 		expiration, err := time.Parse("2006-01-02T03:04", expiry)
 		if err == nil {
-			duration =  expiration.Unix() - time.Now().Unix()
+			duration = expiration.Unix() - time.Now().Unix()
 		}
 	}
 	return db.BanIP(ip, duration, uint(boardID))
@@ -411,18 +536,26 @@ func addBan(c echo.Context) error {
 
 func deleteBan(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil { return errInvalidID }
+	if err != nil {
+		return errInvalidID
+	}
 	return db.RemoveBan(uint(id))
 }
 
-func asOwner(f func(db.Board, echo.Context)error) echo.HandlerFunc {
+func asOwner(f func(db.Board, echo.Context) error) echo.HandlerFunc {
 	return catchCustom(func(c echo.Context) error {
 		account, err := loggedAs(c)
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 		boards, err := account.GetBoards()
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 		id, err := strconv.Atoi(c.Param("id"))
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 		for _, v := range boards {
 			if v.ID == uint(id) {
 				return f(v, c)
@@ -434,9 +567,13 @@ func asOwner(f func(db.Board, echo.Context)error) echo.HandlerFunc {
 
 func updateOwnedBoard(_ db.Board, c echo.Context) error {
 	acc, err := loggedAs(c)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	v, _ := getPostForm(c, "owner")
-	if acc.Name != v { return errInvalidForm }
+	if acc.Name != v {
+		return errInvalidForm
+	}
 	return updateBoard(c)
 }
 
@@ -465,7 +602,9 @@ func addAccount(c echo.Context) error {
 
 func updateAccount(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil { return errInvalidID }
+	if err != nil {
+		return errInvalidID
+	}
 	name := c.Request().PostFormValue("name")
 	password := c.Request().PostFormValue("password")
 	rank := c.Request().PostFormValue("rank")
@@ -474,7 +613,9 @@ func updateAccount(c echo.Context) error {
 
 func deleteAccount(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil { return errInvalidID }
+	if err != nil {
+		return errInvalidID
+	}
 	return db.RemoveAccount(uint(id))
 }
 
@@ -488,16 +629,18 @@ func restart(c echo.Context, redirect string) error {
 		err := syscall.Exec(os.Args[0], os.Args, os.Environ())
 		if err != nil {
 			set(c)("restart-error",
-				"Restart failed: " + err.Error())
+				"Restart failed: "+err.Error())
 		}
 	}()
 	set(c)("restart", "Restart is in progress")
-	return c.Redirect(http.StatusFound, "/dashboard/" + redirect)
+	return c.Redirect(http.StatusFound, "/dashboard/"+redirect)
 }
 
 func updateGeoIP(c echo.Context) error {
 	err := db.UpdateZones(db.ZonesURL)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	set(c)("info", "Zones updated succesfully")
 	return db.LoadCountries()
 }
@@ -506,20 +649,26 @@ func fetchSSL(c echo.Context) error {
 	config.Cfg.Acme.Email, _ = getPostForm(c, "email")
 	v, _ := getPostForm(c, "disable-www")
 	config.Cfg.Acme.DisableWWW = v == "ok"
-	config.Cfg.Acme.Port = strconv.Itoa(rand.Int() % 62535 + 2048)
+	config.Cfg.Acme.Port = strconv.Itoa(rand.Int()%62535 + 2048)
 	crt, key, err := acme.Generate(
 		config.Cfg.Web.Domain, config.Cfg.Acme.Email,
 		config.Cfg.Acme.Port, !config.Cfg.Acme.DisableWWW)
 	config.Cfg.Acme.Port = ""
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	config.Cfg.SSL.Certificate = crt
 	config.Cfg.SSL.Key = key
-	if err := db.UpdateConfig(); err != nil { return err }
+	if err := db.UpdateConfig(); err != nil {
+		return err
+	}
 	return restart(c, "ssl")
 }
 
 func proxyAcme(c echo.Context) error {
-	if config.Cfg.Acme.Port == "" { return errors.New("not found") }
+	if config.Cfg.Acme.Port == "" {
+		return errors.New("not found")
+	}
 	dialer := &net.Dialer{
 		Timeout:   30 * time.Second,
 		KeepAlive: 30 * time.Second,
@@ -527,26 +676,36 @@ func proxyAcme(c echo.Context) error {
 	transport := http.DefaultTransport.(*http.Transport)
 	transport.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
 		return dialer.DialContext(ctx, network,
-				"127.0.0.1:" + config.Cfg.Acme.Port)
+			"127.0.0.1:"+config.Cfg.Acme.Port)
 	}
 	client := &http.Client{
 		Transport: transport,
 	}
 	resp, err := client.Get(
 		"http://" + c.Request().Host + c.Request().RequestURI)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	defer resp.Body.Close()
 	data, err := io.ReadAll(resp.Body)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	return c.Blob(resp.StatusCode, resp.Header.Get("Content-Type"), data)
 }
 
 func getInt(c echo.Context, param string) (int, error) {
 	str, ok := getPostForm(c, param)
-	if !ok { return 0, errors.New("missing parameter") }
+	if !ok {
+		return 0, errors.New("missing parameter")
+	}
 	v, err := strconv.Atoi(str)
-	if err != nil { return 0, err }
-	if v < 0 { return 0, errors.New("invalid value") }
+	if err != nil {
+		return 0, err
+	}
+	if v < 0 {
+		return 0, errors.New("invalid value")
+	}
 	return v, nil
 }
 
@@ -555,32 +714,54 @@ func rateLimits(c echo.Context) error {
 	tmp := config.Cfg.RateLimit
 
 	tmp.Login.MaxAttempts, err = getInt(c, "login-attempts")
-	if err != nil { return err }
-	tmp.Login.Timeout , err = getInt(c, "login-timeout")
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
+	tmp.Login.Timeout, err = getInt(c, "login-timeout")
+	if err != nil {
+		return err
+	}
 
 	tmp.Account.MaxAttempts, err = getInt(c, "account-attempts")
-	if err != nil { return err }
-	tmp.Account.Timeout , err = getInt(c, "account-timeout")
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
+	tmp.Account.Timeout, err = getInt(c, "account-timeout")
+	if err != nil {
+		return err
+	}
 
 	tmp.Registration.MaxAttempts, err = getInt(c, "register-attempts")
-	if err != nil { return err }
-	tmp.Registration.Timeout , err = getInt(c, "register-timeout")
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
+	tmp.Registration.Timeout, err = getInt(c, "register-timeout")
+	if err != nil {
+		return err
+	}
 
 	tmp.Post.MaxAttempts, err = getInt(c, "post-attempts")
-	if err != nil { return err }
-	tmp.Post.Timeout , err = getInt(c, "post-timeout")
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
+	tmp.Post.Timeout, err = getInt(c, "post-timeout")
+	if err != nil {
+		return err
+	}
 
 	tmp.Thread.MaxAttempts, err = getInt(c, "thread-attempts")
-	if err != nil { return err }
-	tmp.Thread.Timeout , err = getInt(c, "thread-timeout")
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
+	tmp.Thread.Timeout, err = getInt(c, "thread-timeout")
+	if err != nil {
+		return err
+	}
 
 	config.Cfg.RateLimit = tmp
-	if err := db.UpdateConfig(); err != nil { return err }
+	if err := db.UpdateConfig(); err != nil {
+		return err
+	}
 	reloadRatelimits()
 	return nil
 }

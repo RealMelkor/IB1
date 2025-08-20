@@ -6,7 +6,7 @@ import (
 
 type Banner struct {
 	gorm.Model
-	Data		[]byte
+	Data []byte
 }
 
 func AddBanner(data []byte) error {

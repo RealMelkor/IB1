@@ -1,12 +1,12 @@
 package db
 
 import (
-	"time"
-	"os"
-	"log"
-	"path/filepath"
 	"errors"
+	"log"
+	"os"
+	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/corona10/goimagehash"
 	"gorm.io/gorm"
@@ -15,6 +15,7 @@ import (
 )
 
 type MediaType uint8
+
 const (
 	MEDIA_PICTURE MediaType = iota
 	MEDIA_VIDEO
@@ -22,26 +23,26 @@ const (
 )
 
 type Media struct {
-	Hash		string `gorm:"unique"`
-	Mime		string
-	Data		[]byte
-	Thumbnail	[]byte
-	Approved	bool
-	HideThumbnail	bool
-	Type		MediaType
+	Hash          string `gorm:"unique"`
+	Mime          string
+	Data          []byte
+	Thumbnail     []byte
+	Approved      bool
+	HideThumbnail bool
+	Type          MediaType
 }
 
 type BannedImage struct {
 	gorm.Model
-	Hash		int64
-	Kind		int
+	Hash int64
+	Kind int
 }
 
 type ApprovalBypass struct {
 	gorm.Model
 	CRUD[ApprovalBypass]
-	Secret		string
-	Hash		string
+	Secret string
+	Hash   string
 }
 
 func (ApprovalBypass) Delete(secret string) error {
@@ -53,17 +54,23 @@ func CanBypassApproval(hash string, secret string) error {
 	err := db.Model(&ApprovalBypass{}).
 		Where("hash = ? AND secret = ?", hash, secret).
 		Count(&count).Error
-	if err != nil { return err }
-	if count == 0 { return errNeedPrivilege }
+	if err != nil {
+		return err
+	}
+	if count == 0 {
+		return errNeedPrivilege
+	}
 	return nil
 }
 
 func AddMedia(data []byte, thumbnail []byte, mediaType MediaType, hash string,
-		mime string, approved bool, spoiler bool) (bool, error) {
+	mime string, approved bool, spoiler bool) (bool, error) {
 	var media Media
 	var count int64
 	db.First(&media, "hash = ?", hash).Count(&count)
-	if count > 0 { return false, nil }
+	if count > 0 {
+		return false, nil
+	}
 	err := db.Create(&Media{
 		Hash: hash, Mime: mime, Data: data, Thumbnail: thumbnail,
 		Approved: approved, Type: mediaType, HideThumbnail: spoiler,
@@ -74,14 +81,18 @@ func AddMedia(data []byte, thumbnail []byte, mediaType MediaType, hash string,
 func GetThumbnail(hash string) ([]byte, error) {
 	var media Media
 	err := db.Select("thumbnail").First(&media, "hash = ?", hash).Error
-	if err != nil { return nil, err }
+	if err != nil {
+		return nil, err
+	}
 	return media.Thumbnail, nil
 }
 
 func GetMediaData(hash string) ([]byte, string, error) {
 	var media Media
 	err := db.Select("data", "mime").First(&media, "hash = ?", hash).Error
-	if err != nil { return nil, "", err }
+	if err != nil {
+		return nil, "", err
+	}
 	return media.Data, media.Mime, nil
 }
 
@@ -94,14 +105,20 @@ func cleanOrphanMedias() error {
 		if err := db.Raw(query).Scan(&orphans).Error; err != nil {
 			return err
 		}
-		if len(orphans) == 0 { return nil }
+		if len(orphans) == 0 {
+			return nil
+		}
 		for _, v := range orphans {
 			files, err := filepath.Glob(
 				config.Cfg.Media.Path + "/" + v.Hash + ".*")
-			if err != nil { continue }
-			for _, v := range files { os.Remove(v) }
+			if err != nil {
+				continue
+			}
+			for _, v := range files {
+				os.Remove(v)
+			}
 			os.Remove(config.Cfg.Media.Path +
-					"/thumbnail/" + v.Hash + ".png")
+				"/thumbnail/" + v.Hash + ".png")
 		}
 	}
 	if dbType == TYPE_MYSQL {
@@ -122,13 +139,15 @@ func cleanMediaTask() {
 func GetPendingApproval() (string, string, error) {
 	var media Media
 	err := db.First(&media, "approved = 0").Error
-	if err != nil { err = db.First(&media, "approved IS NULL").Error }
+	if err != nil {
+		err = db.First(&media, "approved IS NULL").Error
+	}
 	return media.Hash, media.Mime, err
 }
 
 func Approve(hash string) error {
 	return db.Model(&Media{}).Where("hash = ?", hash).
-			Update("approved", true).Error
+		Update("approved", true).Error
 }
 
 func ApproveAll() error {
@@ -144,8 +163,12 @@ func RemoveMedia(hash string) error {
 	if !config.Cfg.Media.InDatabase {
 		files, err := filepath.Glob(
 			config.Cfg.Media.Path + "/" + hash + ".*")
-		if err != nil { return err }
-		for _, v := range files { os.Remove(v) }
+		if err != nil {
+			return err
+		}
+		for _, v := range files {
+			os.Remove(v)
+		}
 		os.Remove(
 			config.Cfg.Media.Path + "/thumbnail/" + hash + ".png")
 	}
@@ -162,15 +185,21 @@ func GetMedia(hash string) (Media, error) {
 
 func IsImageBanned(hash goimagehash.ImageHash) error {
 	rows, err := db.Model(&BannedImage{}).Select("hash, kind").Rows()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	defer rows.Close()
 	for rows.Next() {
 		var v BannedImage
-		if err := db.ScanRows(rows, &v); err != nil { return err }
+		if err := db.ScanRows(rows, &v); err != nil {
+			return err
+		}
 		img := goimagehash.NewImageHash(
-				uint64(v.Hash), goimagehash.Kind(v.Kind))
+			uint64(v.Hash), goimagehash.Kind(v.Kind))
 		distance, err := hash.Distance(img)
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 		if distance < config.Cfg.Media.ImageThreshold {
 			return errors.New("banned image")
 		}
@@ -203,33 +232,49 @@ func Extract(path string) error {
 		Select("media.hash, media.data, media.thumbnail, posts.media").
 		Joins("inner join posts on media.hash = posts.media_hash").
 		Rows()
-	if err != nil { return err }
-	err = os.MkdirAll(path + "/thumbnail", 0755)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
+	err = os.MkdirAll(path+"/thumbnail", 0755)
+	if err != nil {
+		return err
+	}
 	defer rows.Close()
 	for rows.Next() {
-		var v struct{
-			Hash		string
-			Data		[]byte
-			Thumbnail	[]byte
-			Media		string
+		var v struct {
+			Hash      string
+			Data      []byte
+			Thumbnail []byte
+			Media     string
 		}
 
-		if err := db.ScanRows(rows, &v); err != nil { return err }
-		if len(v.Data) == 0 { continue }
+		if err := db.ScanRows(rows, &v); err != nil {
+			return err
+		}
+		if len(v.Data) == 0 {
+			continue
+		}
 
 		f, err := os.Create(path + "/" + v.Media)
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 		defer f.Close()
 		_, err = f.Write(v.Data)
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 		f.Close()
 
 		f, err = os.Create(path + "/thumbnail/" + v.Hash + ".png")
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 		defer f.Close()
 		_, err = f.Write(v.Thumbnail)
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 		f.Close()
 	}
 	return nil
@@ -237,15 +282,23 @@ func Extract(path string) error {
 
 func Load(path string) error {
 	dir, err := os.ReadDir(path)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	for _, v := range dir {
-		if !v.Type().IsRegular() { continue }
+		if !v.Type().IsRegular() {
+			continue
+		}
 		hash := strings.Split(v.Name(), ".")[0]
 		data, err := os.ReadFile(path + "/" + v.Name())
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 		thumbnail, err := os.ReadFile(
-				path + "/thumbnail/" + hash + ".png")
-		if err != nil { return err }
+			path + "/thumbnail/" + hash + ".png")
+		if err != nil {
+			return err
+		}
 		db.Model(&Media{}).Where("hash = ?", hash).Updates(
 			map[string]interface{}{
 				"data": data, "thumnbail": thumbnail,

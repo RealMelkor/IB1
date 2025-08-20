@@ -1,17 +1,17 @@
 package web
 
 import (
+	"bytes"
+	"crypto/rand"
+	"errors"
+	"fmt"
+	"golang.org/x/crypto/blake2b"
+	"io"
+	"mime/multipart"
 	"os"
 	"os/exec"
-	"io"
-	"time"
-	"fmt"
-	"bytes"
-	"errors"
-	"crypto/rand"
-	"golang.org/x/crypto/blake2b"
-	"mime/multipart"
 	"strings"
+	"time"
 
 	"github.com/gabriel-vasile/mimetype"
 
@@ -23,7 +23,9 @@ func uniqueRandomName() (string, error) {
 	now := time.Now().UnixMilli()
 	bytes := make([]byte, 16)
 	_, err := rand.Read(bytes)
-	if err != nil { return "", err }
+	if err != nil {
+		return "", err
+	}
 	str := fmt.Sprintf("%x", now)
 	for _, v := range bytes {
 		str += fmt.Sprintf("%x", v)
@@ -33,33 +35,43 @@ func uniqueRandomName() (string, error) {
 
 func hashFile(path string) (string, error) {
 	f, err := os.Open(path)
-	if err != nil { return "", err }
+	if err != nil {
+		return "", err
+	}
 	defer f.Close()
 
 	h, err := blake2b.New256(config.Cfg.Media.Key)
-	if err != nil { return "", err }
-	if _, err := io.Copy(h, f); err != nil { return "", err }
+	if err != nil {
+		return "", err
+	}
+	if _, err := io.Copy(h, f); err != nil {
+		return "", err
+	}
 
 	return fmt.Sprintf("%x", h.Sum(nil)), nil
 }
 
 var extensions = map[string]db.MediaType{
-	".png": db.MEDIA_PICTURE,
-	".jpg": db.MEDIA_PICTURE,
+	".png":  db.MEDIA_PICTURE,
+	".jpg":  db.MEDIA_PICTURE,
 	".jpeg": db.MEDIA_PICTURE,
-	".gif": db.MEDIA_PICTURE,
+	".gif":  db.MEDIA_PICTURE,
 	".webp": db.MEDIA_PICTURE,
 	".webm": db.MEDIA_VIDEO,
-	".mp4": db.MEDIA_VIDEO,
+	".mp4":  db.MEDIA_VIDEO,
 }
 
 func saveUploadedFile(file *multipart.FileHeader, out string) error {
 	src, err := file.Open()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	defer src.Close()
 
 	dst, err := os.Create(out)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	defer dst.Close()
 
 	_, err = io.Copy(dst, src)
@@ -78,7 +90,7 @@ func validExtension(extension string) (db.MediaType, error) {
 }
 
 func uploadFile(file *multipart.FileHeader,
-		approved bool, spoiler bool) (string, error) {
+	approved bool, spoiler bool) (string, error) {
 
 	if uint64(file.Size) > config.Cfg.Media.MaxSize {
 		return "", errors.New("media is above size limit")
@@ -86,17 +98,25 @@ func uploadFile(file *multipart.FileHeader,
 
 	// write file to disk
 	name, err := uniqueRandomName()
-	if err != nil { return "", err }
+	if err != nil {
+		return "", err
+	}
 	path := config.Cfg.Media.Tmp + "/" + name
-	if err = saveUploadedFile(file, path); err != nil { return "", err }
+	if err = saveUploadedFile(file, path); err != nil {
+		return "", err
+	}
 	defer os.Remove(path)
 
 	// verify extension
 	mime, err := mimetype.DetectFile(path)
-	if err != nil { return "", err }
+	if err != nil {
+		return "", err
+	}
 	extension := mime.Extension()
 	mediaType, err := validExtension(extension)
-	if err != nil { return "", err }
+	if err != nil {
+		return "", err
+	}
 
 	// check if media is banned
 	mediaPath := path
@@ -108,13 +128,19 @@ func uploadFile(file *multipart.FileHeader,
 		defer os.Remove(mediaPath)
 	}
 	f, err := os.Open(mediaPath)
-	if err != nil { return "", err }
-	if err := isImageBanned(f); err != nil { return "", err }
+	if err != nil {
+		return "", err
+	}
+	if err := isImageBanned(f); err != nil {
+		return "", err
+	}
 
 	// clean up the metadata
 	out := config.Cfg.Media.Tmp + "/clean_" + name + extension
 	if mediaType == db.MEDIA_PICTURE && extension != ".gif" {
-		if err := cleanImage(path, out); err != nil { return "", err }
+		if err := cleanImage(path, out); err != nil {
+			return "", err
+		}
 		os.Remove(path)
 		defer os.Remove(out)
 	} else {
@@ -123,7 +149,9 @@ func uploadFile(file *multipart.FileHeader,
 
 	// rename to the hash of itself
 	hash, err := hashFile(out)
-	if err != nil { return "", err }
+	if err != nil {
+		return "", err
+	}
 	if config.Cfg.Media.InDatabase { // store media in database
 		tn := config.Cfg.Media.Tmp + "/thumbnail_" + hash + ".png"
 		src := out
@@ -134,15 +162,23 @@ func uploadFile(file *multipart.FileHeader,
 			}
 			defer os.Remove(src)
 		}
-		if err := thumbnail(src, tn); err != nil { return "", err }
+		if err := thumbnail(src, tn); err != nil {
+			return "", err
+		}
 		defer os.Remove(tn)
 		tn_data, err := os.ReadFile(tn)
-		if err != nil { return "", err }
+		if err != nil {
+			return "", err
+		}
 		data, err := os.ReadFile(out)
-		if err != nil { return "", err }
+		if err != nil {
+			return "", err
+		}
 		toApprove, err := db.AddMedia(data, tn_data, mediaType,
 			hash, mime.String(), approved, spoiler)
-		if err != nil { return "", err }
+		if err != nil {
+			return "", err
+		}
 		if toApprove {
 			err = notify(hash)
 		}
@@ -153,10 +189,14 @@ func uploadFile(file *multipart.FileHeader,
 	if toApprove && err == nil {
 		err = notify(hash)
 	}
-	if err != nil { return "", err }
+	if err != nil {
+		return "", err
+	}
 	media := config.Cfg.Media.Path + "/" + hash + extension
 	err = move(out, media)
-	if err != nil { return "", err }
+	if err != nil {
+		return "", err
+	}
 
 	// create thumbnail
 	if mediaType == db.MEDIA_VIDEO {
@@ -168,8 +208,10 @@ func uploadFile(file *multipart.FileHeader,
 		defer os.Remove(media)
 	}
 	err = thumbnail(media,
-		config.Cfg.Media.Path + "/thumbnail/" + hash + ".png");
-	if err != nil { return "", err }
+		config.Cfg.Media.Path+"/thumbnail/"+hash+".png")
+	if err != nil {
+		return "", err
+	}
 
 	return hash + extension, nil
 }
@@ -195,13 +237,19 @@ func extractFrame(in string, out string) error {
 
 func move(source string, destination string) error {
 	src, err := os.Open(source)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	defer src.Close()
 	dst, err := os.Create(destination)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	defer dst.Close()
 	_, err = io.Copy(dst, src)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	fi, err := os.Stat(source)
 	if err != nil {
 		os.Remove(destination)
@@ -221,10 +269,12 @@ func mediaReader(hash string) (io.Reader, error) {
 	if !config.Cfg.Media.InDatabase {
 		if !isPicture {
 			return os.Open(config.Cfg.Media.Path +
-					"/thumbnail/" + hash + ".png")
+				"/thumbnail/" + hash + ".png")
 		}
 		post, err := db.GetPostFromMedia(hash)
-		if err != nil { return nil, err }
+		if err != nil {
+			return nil, err
+		}
 		return os.Open(config.Cfg.Media.Path + "/" + post.Media)
 	}
 	var data []byte
@@ -234,7 +284,9 @@ func mediaReader(hash string) (io.Reader, error) {
 	} else {
 		data, err = db.GetThumbnail(hash)
 	}
-	if err != nil { return nil, err }
+	if err != nil {
+		return nil, err
+	}
 	r := bytes.NewReader(data)
 	return r, nil
 }

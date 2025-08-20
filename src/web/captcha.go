@@ -1,9 +1,9 @@
 package web
 
 import (
-	"time"
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/dchest/captcha"
 	"github.com/labstack/echo/v4"
@@ -40,17 +40,21 @@ func captchaImage(c echo.Context) error {
 	}
 	c.Response().WriteHeader(http.StatusOK)
 	return captcha.WriteImage(c.Response().Writer, id,
-			captcha.StdWidth, captcha.StdHeight)
+		captcha.StdWidth, captcha.StdHeight)
 }
 
 func captchaVerify(c echo.Context, answer string) bool {
 	v := get(c)("captcha-need")
-	if v == nil { return false }
+	if v == nil {
+		return false
+	}
 	return v.(string) == answer
 }
 
 func checkCaptcha(c echo.Context) error {
-	if !config.Cfg.Captcha.Enabled { return nil }
+	if !config.Cfg.Captcha.Enabled {
+		return nil
+	}
 	// trusted users don't need captcha
 	if user, err := loggedAs(c); err == nil {
 		if err := user.Can(db.BYPASS_CAPTCHA); err == nil {
@@ -61,9 +65,15 @@ func checkCaptcha(c echo.Context) error {
 }
 
 func verifyCaptcha(c echo.Context) error {
-	if !config.Cfg.Captcha.Enabled { return nil }
+	if !config.Cfg.Captcha.Enabled {
+		return nil
+	}
 	captcha, hasCaptcha := getPostForm(c, "captcha")
-	if !hasCaptcha { return errors.New("invalid form") }
-	if !captchaVerify(c, captcha) { return errors.New("wrong captcha") }
+	if !hasCaptcha {
+		return errors.New("invalid form")
+	}
+	if !captchaVerify(c, captcha) {
+		return errors.New("wrong captcha")
+	}
 	return nil
 }

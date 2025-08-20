@@ -34,10 +34,12 @@ func (u *user) GetPrivateKey() crypto.PrivateKey {
 }
 
 func Generate(domain string, email string, port string, www bool) (
-						[]byte, []byte, error) {
+	[]byte, []byte, error) {
 
 	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
-	if err != nil { return nil, nil, err }
+	if err != nil {
+		return nil, nil, err
+	}
 
 	user := user{
 		Email: email,
@@ -50,26 +52,36 @@ func Generate(domain string, email string, port string, www bool) (
 	conf.Certificate.KeyType = certcrypto.RSA4096
 
 	client, err := lego.NewClient(conf)
-	if err != nil { return nil, nil, err }
+	if err != nil {
+		return nil, nil, err
+	}
 
 	err = client.Challenge.SetHTTP01Provider(
 		http01.NewProviderServer("", port))
-	if err != nil { return nil, nil, err }
+	if err != nil {
+		return nil, nil, err
+	}
 
 	reg, err := client.Registration.Register(
 		registration.RegisterOptions{TermsOfServiceAgreed: true})
-	if err != nil { return nil, nil, err }
+	if err != nil {
+		return nil, nil, err
+	}
 	user.Registration = reg
 
 	domains := []string{domain}
-	if www { domains = append(domains, "www." + domain) }
+	if www {
+		domains = append(domains, "www."+domain)
+	}
 
 	request := certificate.ObtainRequest{
 		Domains: domains,
 		Bundle:  true,
 	}
 	certificates, err := client.Certificate.Obtain(request)
-	if err != nil { return nil, nil, err }
+	if err != nil {
+		return nil, nil, err
+	}
 
 	return certificates.Certificate, certificates.PrivateKey,
 		db.UpdateConfig()

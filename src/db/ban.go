@@ -1,9 +1,9 @@
 package db
 
 import (
-	"time"
-	"net"
 	"errors"
+	"net"
+	"time"
 
 	"github.com/yl2chen/cidranger"
 	"gorm.io/gorm"
@@ -11,10 +11,10 @@ import (
 
 type Ban struct {
 	gorm.Model
-	CIDR		string
-	Expiry		int64
-	BoardID		*uint
-	Board		Board
+	CIDR    string
+	Expiry  int64
+	BoardID *uint
+	Board   Board
 }
 
 var ranger = map[uint]cidranger.Ranger{}
@@ -28,7 +28,9 @@ func GetBanList() ([]Ban, error) {
 func LoadBanList() error {
 	var BanList = []Ban{}
 	tx := db.Find(&BanList)
-	if tx.Error != nil {  return tx.Error }
+	if tx.Error != nil {
+		return tx.Error
+	}
 	for _, v := range BanList {
 		id := uint(0)
 		if v.BoardID != nil {
@@ -46,13 +48,23 @@ func LoadBanList() error {
 
 func IsBanned(_ip string, boardID uint) error {
 	ip := net.ParseIP(_ip)
-	if ip == nil { return errors.New("invalid ip") }
+	if ip == nil {
+		return errors.New("invalid ip")
+	}
 	v, err := ranger[0].Contains(ip)
-	if err != nil { return err }
-	if v { return errors.New("banned") }
+	if err != nil {
+		return err
+	}
+	if v {
+		return errors.New("banned")
+	}
 	v, err = ranger[boardID].Contains(ip)
-	if err != nil { return err }
-	if v { return errors.New("banned") }
+	if err != nil {
+		return err
+	}
+	if v {
+		return errors.New("banned")
+	}
 	return nil
 }
 
@@ -72,19 +84,27 @@ func BanIP(ip string, duration int64, boardID uint) error {
 	_, _, err := net.ParseCIDR(ip)
 	if err != nil {
 		_ip := net.ParseIP(ip)
-		if _ip == nil { return errors.New("invalid ip") }
+		if _ip == nil {
+			return errors.New("invalid ip")
+		}
 		ip = _ip.String() + "/32"
 	}
 	v := &boardID
-	if boardID == 0 { v = nil }
+	if boardID == 0 {
+		v = nil
+	}
 	ban := Ban{
-		CIDR: ip,
-		Expiry: time.Now().Unix() + duration,
+		CIDR:    ip,
+		Expiry:  time.Now().Unix() + duration,
 		BoardID: v,
 	}
-	if err := db.Create(&ban).Error; err != nil { return err }
+	if err := db.Create(&ban).Error; err != nil {
+		return err
+	}
 	_, cidr, err := net.ParseCIDR(ip)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	_, ok := ranger[boardID]
 	if !ok {
 		ranger[boardID] = cidranger.NewPCTrieRanger()
@@ -94,11 +114,17 @@ func BanIP(ip string, duration int64, boardID uint) error {
 
 func RemoveBan(id uint) error {
 	err := db.Unscoped().Delete(&Ban{}, id).Error
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	var ban Ban
-	if err := db.Find(&ban, id).Error; err != nil { return err }
+	if err := db.Find(&ban, id).Error; err != nil {
+		return err
+	}
 	_, cidr, err := net.ParseCIDR(ban.CIDR)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	ranger[ban.ID].Remove(*cidr)
 	return nil
 }

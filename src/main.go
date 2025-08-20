@@ -1,10 +1,10 @@
 package main
 
 import (
-	"log"
-	"IB1/web"
-	"IB1/db"
 	"IB1/config"
+	"IB1/db"
+	"IB1/web"
+	"log"
 )
 
 const VERSION = "v0.6"
