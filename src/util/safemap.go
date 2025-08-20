@@ -6,6 +6,7 @@ import (
 
 type SafeMap[T any] struct {
 	data sync.Map
+	empty T
 }
 
 func (m *SafeMap[T]) Set(key string, value T) {
@@ -14,6 +15,9 @@ func (m *SafeMap[T]) Set(key string, value T) {
 
 func (m *SafeMap[T]) Get(key string) (T, bool) {
 	v, ok := m.data.Load(key)
+	if !ok {
+		return m.empty, ok
+	}
 	return v.(T), ok
 }
 

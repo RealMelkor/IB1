@@ -51,6 +51,9 @@ func IsBanned(_ip string, boardID uint) error {
 	if ip == nil {
 		return errors.New("invalid ip")
 	}
+	if len(ranger) < 1 {
+		return nil
+	}
 	v, err := ranger[0].Contains(ip)
 	if err != nil {
 		return err
