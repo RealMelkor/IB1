@@ -401,3 +401,40 @@ body {
 		max-width: 100%;
 	}
 }
+
+body {
+	background-color: #eef2ff;
+}
+.post {
+	background-color: #d6daf0;
+}
+.title {
+	color: #0f0c5d;
+}
+.name {
+	color: #117743;
+}
+.boards th {
+	background-color: #9988ee;
+}
+.boards td {
+	background-color: #d6daf0;
+}
+.new-form th {
+	background-color: #9988ee;
+}
+.post-ref {
+	color: #34345c;
+}
+.post-ref:hover {
+	color: #D00;
+}
+.post-hidden {
+	background-color: #99c;
+}
+.legacy-separator {
+	display: none;
+}
+.legacy-link {
+	display: none;
+}

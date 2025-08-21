@@ -14,7 +14,7 @@
 {{end}}
 <div class="thread{{if (index .Posts 0).Disabled}} thread-hidden{{end}}">
 	<a href="{{.Number}}">
-		<img class="{{$border}}" src="/media/thumbnail/{{(index .Posts 0).Thumbnail}}{{$hotlink}}" alt="{{.Number}}">
+		<img class="{{$border}} legacy-center" src="/media/thumbnail/{{(index .Posts 0).Thumbnail}}{{$hotlink}}" alt="{{.Number}}">
 	</a>
 	<p class="thread-info">R: {{.Replies}} / I: {{.Images}}</p>
 {{if .Pinned}}

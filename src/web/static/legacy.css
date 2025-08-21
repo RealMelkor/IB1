@@ -1,0 +1,68 @@
+.center {
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
+	width: 50%;
+}
+
+.legacy-center {
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
+	width: 50%;
+}
+
+.new-form {
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
+	width: 50%;
+}
+
+
+#new-thread-check ~ form {
+	display: inline !important;
+}
+
+.new-form > form > input {
+	margin-left: 15px !important;
+	margin-bottom: 15px !important;
+}
+
+.new-form > label {
+	display: none;
+}
+
+#new-thread-check ~ label {
+	display: none !important;
+}
+
+.form-container {
+	position: inline !important;
+	height: auto !important;
+}
+
+.form {
+	position: inline !important;
+}
+
+#show-form {
+	display: none !important;
+}
+
+.legacy-separator {
+	display: block !important;
+}
+
+#show-form:checked ~ #new-reply {
+	display: inline !important;
+}
+
+.catalog {
+	display: block !important;
+}
+.legacy-link {
+	display: inline !important;
+	padding: 0;
+	margin: 0;
+}

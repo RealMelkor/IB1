@@ -2,8 +2,8 @@
 {{$board := $thread.Board}}
 {{template "banner"}}
 <h2 class="board-title">/{{$board.Name}}/ - {{$board.LongName}}</h2>
-{{ template "top" $board.Name }}
 {{if memberCan "CREATE_POST"}}
+<div class="separator legacy-separator"></div>
 <div class="form-container">
 <div class="post form new-form">
 <label for="show-form" class="btn">Hide new-reply box</label>
@@ -29,10 +29,6 @@
 		<tr>
 			<th>Sage</th>
 			<td><input type="checkbox" name="sage" style="width:auto;"></td>
-		</tr>
-		<tr>
-			<th>Subject</th>
-			<td><input type="text" id="title" name="title"></td>
 		</tr>
 {{if and isCaptchaEnabled (not (can "BYPASS_CAPTCHA"))}}
 		<tr>
@@ -69,5 +65,6 @@
 </div>
 </div>
 {{end}}
+{{ template "top" $board.Name }}
 {{ template "thread-template" $thread }}
 {{ template "bottom" $board.Name }}

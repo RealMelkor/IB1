@@ -11,7 +11,7 @@ type SafeObj[T any] struct {
 	Reload  func() (T, error)
 }
 
-func (m *SafeObj[any]) Get() (any, error) {
+func (m *SafeObj[T]) Get() (T, error) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 	if !m.updated {
@@ -26,7 +26,7 @@ func (m *SafeObj[any]) Get() (any, error) {
 	return v, nil
 }
 
-func (m *SafeObj[any]) Refresh() {
+func (m *SafeObj[T]) Refresh() {
 	m.mutex.Lock()
 	m.updated = false
 	m.mutex.Unlock()

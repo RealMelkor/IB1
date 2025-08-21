@@ -12,6 +12,10 @@ import (
 var themes []string
 var themesTable map[string]bool
 var themesContent map[string][]byte
+var legacyBrowsers = []string{
+	"Dillo",
+	"NetSurf",
+}
 
 func getThemes() []string {
 	if themes != nil {
@@ -72,6 +76,12 @@ func reloadThemes() {
 func getTheme(c echo.Context) string {
 	theme := getCookie(c, "theme")
 	if theme == "" {
+		agent := c.Request().Header.Get("User-Agent")
+		for _, v := range legacyBrowsers {
+			if strings.Contains(agent, v) {
+				return "legacy"
+			}
+		}
 		return config.Cfg.Home.Theme
 	}
 	_, ok := getThemesTable()[theme]

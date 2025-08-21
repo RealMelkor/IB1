@@ -318,7 +318,7 @@ func hotlinkHash(c echo.Context, offset int) int {
 		binary.Read(rand.Reader, binary.BigEndian, &v)
 		return int(v)
 	}
-	v := time.Now().Unix()/600 + int64(offset)
+	v := time.Now().Unix() / 600 + int64(offset)
 	if config.Cfg.Media.HotlinkShield == 1 {
 		return int(v)
 	}
@@ -334,22 +334,25 @@ func hotlinkHash(c echo.Context, offset int) int {
 
 func hotlinkShield(f echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		skip := false
+		if config.Cfg.Media.HotlinkShield == 0 {
+			return f(c)
+		}
 		for _, v := range c.ParamNames() {
 			if v != "secret" {
 				continue
 			}
-			skip = true
-			break
+			return f(c)
 		}
-		skip = skip || config.Cfg.Media.HotlinkShield == 0 || !(strings.HasPrefix(c.Request().RequestURI, "/media/") ||
-			strings.HasPrefix(c.Request().RequestURI, "/banner/"))
-		if skip {
+		media := strings.HasPrefix(c.Request().RequestURI, "/media/")
+		banner := strings.HasPrefix(c.Request().RequestURI, "/banner/")
+		if !media && !banner {
 			return f(c)
 		}
 		v, err := strconv.Atoi(c.QueryParam("v"))
-		if err == nil && (v == hotlinkHash(c, 0) || v == hotlinkHash(c, -1)) {
-			return f(c)
+		if err == nil {
+			if v == hotlinkHash(c, 0) || v == hotlinkHash(c, -1) {
+				return f(c)
+			}
 		}
 		return errors.New("expired")
 	}
