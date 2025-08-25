@@ -1,7 +1,7 @@
 {{range .Posts}}
 {{$id := .Number}}
 {{if .RandomID}}
-#t{{$.Number}} .poster-id {
+#p{{$id}} .poster-id {
 	background-color: {{idColor .RandomID}}
 }
 {{end}}

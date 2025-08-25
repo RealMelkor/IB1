@@ -157,7 +157,10 @@ func err(f echo.HandlerFunc) echo.HandlerFunc {
 func csp(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		c.Response().Header().Add("Content-Security-Policy",
-			"default-src 'self'; script-src 'none'")
+			"default-src 'none'; style-src 'self'; img-src 'self'; media-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'")
+		c.Response().Header().Add("X-Frame-Options", "Deny")
+		c.Response().Header().Add("X-Content-Type-Options", "nosniff")
+		c.Response().Header().Add("Referrer-Policy", "no-referrer")
 		return next(c)
 	}
 }

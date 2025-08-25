@@ -42,6 +42,9 @@ func setCookie(c echo.Context, name string, value string) {
 		Domain: config.Cfg.Web.Domain,
 		Name:   name,
 		Value:  value,
+		Secure: true,
+		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
 	}
 	c.SetCookie(&cookie)
 }
@@ -52,6 +55,9 @@ func setCookiePermanent(c echo.Context, name string, value string) {
 		Domain:  config.Cfg.Web.Domain,
 		Name:    name,
 		Value:   value,
+		Secure:	 true,
+		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
 		Expires: time.Now().Add(3600 * 24 * time.Hour),
 	}
 	c.SetCookie(&cookie)
@@ -69,6 +75,9 @@ func deleteCookie(c echo.Context, name string) {
 	cookie := http.Cookie{
 		Domain:  config.Cfg.Web.Domain,
 		Name:    name,
+		Secure:	 true,
+		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
 		Expires: time.Now().UTC().Add(time.Duration(-86400)),
 	}
 	c.SetCookie(&cookie)
