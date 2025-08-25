@@ -152,10 +152,10 @@ body {
 
 .bar {
 	font-size: 10pt;
+	margin-bottom: 10px;
 }
 
-.bar-second {
-	margin-top: 10px;
+.bar-right {
 	float: right;
 }
 
@@ -239,17 +239,13 @@ body {
 	border: 1px solid black;
 }
 
-.new-form td input {
-	width: 300px;
-}
-
 .new-form > form > input {
 	margin-left: 100%;
 	width: 90px;
 }
 
 .new-form td textarea {
-	width: 300px;
+	width: 100%;
 }
 
 .boards table {
@@ -368,7 +364,7 @@ body {
 	height: 16px;
 }
 
-@media screen and (max-width: 500px){
+@media screen and (max-width: 500px) {
 	.banner {
 		max-width: 300px;
 		height: auto;
@@ -385,9 +381,6 @@ body {
 		white-space: normal
 	}
 	.new-form td textarea {
-		width: auto;
-	}
-	.new-form td input {
 		width: auto;
 	}
 	.new-form > form > input {
@@ -437,4 +430,10 @@ body {
 }
 .legacy-link {
 	display: none;
+}
+.full-width {
+	width: 100%;
+}
+.no-border {
+	border: none;
 }

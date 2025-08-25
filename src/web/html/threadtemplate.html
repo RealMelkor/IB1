@@ -1,21 +1,5 @@
 {{define "thread-template"}}
 {{$hotlink := hotlink}}
-<style>
-{{range .Posts}}
-{{$id := .Number}}
-{{range .ReferredBy}}
-#t{{$.Number}}:has(.ref-{{.From}}:hover) #p{{.From}}, #t{{$.Number}}:has(.l-{{$id}}:hover) #p{{$id}} {
-	position: -webkit-sticky;
-	position: sticky;
-	bottom: 10px;
-	top: 10px;
-}
-#t{{$.Number}}:has(.ref-{{.From}}:hover) #p{{.From}} div, #t{{$.Number}}:has(.l-{{$id}}:hover) #p{{$id}} div {
-	background-color: var(--pc);
-}
-{{end}}
-{{end}}
-</style>
 <div id="t{{$.Number}}">
 {{range .Posts}}
 {{if (or (not .Disabled) (memberCan "VIEW_HIDDEN"))}}
@@ -40,7 +24,7 @@
 &nbsp;
 {{end}}
 {{if .RandomID}}
-	<span class="poster-id" style="background-color: {{idColor .RandomID}}">{{.RandomID}}</span>
+	<span class="poster-id">{{.RandomID}}</span>
 &nbsp;
 {{end}}
 {{if .Rank}}

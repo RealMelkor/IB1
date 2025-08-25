@@ -12,23 +12,23 @@
 	<table>
 		<tr>
 			<th>Name</th>
-			<td><input class="namefield" type="text" id="name" name="name"></td>
+			<td><input class="full-width" type="text" id="name" name="name"></td>
 		</tr>
 {{if isLogged}}
 		<tr>
 			<th>Signed</th>
-			<td><input type="checkbox" name="signed" style="width:auto;"></td>
+			<td><input type="checkbox" name="signed"></td>
 		</tr>
 {{end}}
 {{if can "SHOW_RANK"}}
 		<tr>
 			<th>Show rank</th>
-			<td><input type="checkbox" name="rank" style="width:auto;"></td>
+			<td><input type="checkbox" name="rank"></td>
 		</tr>
 {{end}}
 		<tr>
 			<th>Sage</th>
-			<td><input type="checkbox" name="sage" style="width:auto;"></td>
+			<td><input type="checkbox" name="sage"></td>
 		</tr>
 {{if and isCaptchaEnabled (not (can "BYPASS_CAPTCHA"))}}
 		<tr>
@@ -37,7 +37,7 @@
 		</tr>
 		<tr>
 			<th>Captcha</th>
-			<td><input type="text" id="captcha" name="captcha" required="required"></td>
+			<td><input class="full-width" type="text" id="captcha" name="captcha" required="required"></td>
 		</tr>
 {{end}}
 		<tr>
@@ -47,15 +47,15 @@
 		<tr>
 			<th>File</th>
 			<td>
-				<input style="width: auto;" type="file" id="media" name="media">
+				<input type="file" id="media" name="media">
 				<br>
 				<label for="spoiler">Spoiler</label>
-				<input id="spoiler" type="checkbox" name="spoiler" style="width:auto;">
+				<input id="spoiler" type="checkbox" name="spoiler">
 			</td>
 		</tr>
 		<tr>
 			<td colspan="3">
-				<input type="submit" style="width: 100%" value="New Reply">
+				<input type="submit" class="full-width" value="New Reply">
 			</td>
 		</tr>
 	</table>

@@ -24,7 +24,7 @@ import (
 	"IB1/util"
 )
 
-//go:embed html/*.html
+//go:embed html/*.html html/*.css
 var templatesFS embed.FS
 
 //go:embed static/*
@@ -56,9 +56,13 @@ func isLogged(c echo.Context) bool {
 }
 
 func render(_template string, data any, c echo.Context) error {
+	return renderContent(_template, data, c,
+		"text/html; charset=utf-8", false)
+}
+
+func renderContent(_template string, data any, c echo.Context, content string, plain bool) error {
+	c.Response().Writer.Header().Add("Content-Type", content)
 	c.Response().Writer.WriteHeader(http.StatusOK)
-	c.Response().Writer.Header().Add(
-		"Content-Type", "text/html; charset=utf-8")
 	w := minifyHTML(c.Response().Writer)
 	defer w.Close()
 	funcs := template.FuncMap{
@@ -117,17 +121,22 @@ func render(_template string, data any, c echo.Context) error {
 			return "?v=" + strconv.Itoa(hotlinkHash(c, 0))
 		},
 	}
-	err := templates.Funcs(funcs).Lookup("header").Execute(w, header(c))
+	if !plain {
+		err := templates.Funcs(funcs).Lookup("header").
+						Execute(w, header(c))
+		if err != nil {
+			return err
+		}
+	}
+	err := templates.Funcs(funcs).Lookup(_template).Execute(w, data)
 	if err != nil {
 		return err
 	}
-	err = templates.Funcs(funcs).Lookup(_template).Execute(w, data)
-	if err != nil {
-		return err
-	}
-	err = templates.Lookup("footer").Execute(w, header(c))
-	if err != nil {
-		return err
+	if !plain {
+		err = templates.Lookup("footer").Execute(w, header(c))
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -276,7 +285,7 @@ func initTemplate() error {
 		},
 	}
 	templates, err = template.New("frontend").Funcs(funcs).
-		ParseFS(templatesFS, "html/*.html")
+		ParseFS(templatesFS, "html/*.html", "html/*.css")
 	if err != nil {
 		return err
 	}
@@ -294,6 +303,7 @@ func header(c echo.Context) any {
 	account, err := loggedAs(c)
 	logged := err == nil
 	theme := getTheme(c)
+	threads, _ := getThreads(c)
 	data := struct {
 		Config  config.Config
 		Url     string
@@ -302,6 +312,7 @@ func header(c echo.Context) any {
 		Logged  bool
 		Account db.Account
 		Boards  []db.Board
+		Threads	[]db.Thread
 	}{
 		config.Cfg,
 		c.Request().RequestURI,
@@ -310,6 +321,7 @@ func header(c echo.Context) any {
 		logged,
 		account,
 		boards,
+		threads,
 	}
 	return data
 }

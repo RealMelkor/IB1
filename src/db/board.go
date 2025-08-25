@@ -67,6 +67,13 @@ func GetVisibleThreads(board Board) ([]Thread, error) {
 	return threads, err
 }
 
+func (thread Thread) GetLatestPost() Post {
+	var post Post
+	db.Model(Post{}).Order("number desc").
+			Where("thread_id = ?", thread.ID).First(&post)
+	return post
+}
+
 func LoadBoards() error {
 	var boards []Board
 	tx := db.Find(&boards)

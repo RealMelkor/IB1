@@ -154,6 +154,14 @@ func err(f echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
+func csp(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		c.Response().Header().Add("Content-Security-Policy",
+			"default-src 'self'; script-src 'none'")
+		return next(c)
+	}
+}
+
 func logger(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		t1 := time.Now()
@@ -454,6 +462,7 @@ func Init() error {
 	}
 
 	r.Use(logger)
+	r.Use(csp)
 	r.Use(err)
 	r.Use(csrf)
 	r.Use(hotlinkShield)
@@ -503,6 +512,7 @@ func Init() error {
 			sub, c.Param("file"))
 		return nil
 	})
+	r.GET("/css/:board/:thread", threadCSS)
 	if config.Cfg.Captcha.Enabled {
 		r.GET("/captcha", captchaImage)
 	}

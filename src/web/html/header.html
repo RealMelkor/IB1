@@ -9,6 +9,9 @@
 		<title>{{.Config.Home.Title}}</title>
 		<link rel="stylesheet" type="text/css" href="/static/common.css">
 		<link rel="stylesheet" type="text/css" href="/static/{{.Theme}}.css">
+		{{range .Threads}}
+		<link rel="stylesheet" type="text/css" href="/css/{{.Board.Name}}/{{.Number}}?{{.GetLatestPost.Number}}">
+		{{end}}
 		{{$mime := .Config.Home.FaviconMime}}
 		{{if (eq $mime "")}}
 		{{$mime = "image/png"}}
@@ -30,7 +33,7 @@
 			{{end}}
 			{{end}}
 			]
-			<div style="float: right;">
+			<div class="bar-right">
 			{{if .Logged}}
 			<span>Logged in as {{.Account.Name}}</span>
 			{{if (and .Config.Media.ApprovalQueue (can "APPROVE_MEDIA"))}}
@@ -53,7 +56,7 @@
 			</div>
 	</div>
 
-	<div class="bar bar-second">
+	<div class="bar bar-right">
 		<form method="POST" action="/config/client/theme?origin={{.Url}}">
 			<label>Theme:</label>
 			<select name="theme">
