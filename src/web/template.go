@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"hash/fnv"
 	"html/template"
-	"io"
 	"math/big"
 	"net/http"
 	"strconv"
@@ -15,9 +14,6 @@ import (
 
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/labstack/echo/v4"
-	"github.com/tdewolff/minify/v2"
-	"github.com/tdewolff/minify/v2/css"
-	"github.com/tdewolff/minify/v2/html"
 
 	"IB1/config"
 	"IB1/db"
@@ -408,144 +404,4 @@ func renderDashboard(c echo.Context) error {
 		Header:           header(c),
 	}
 	return render("admin.html", data, c)
-}
-
-func removeDuplicateInt(intSlice []int) []int {
-	allKeys := make(map[int]bool)
-	list := []int{}
-	for _, item := range intSlice {
-		if _, value := allKeys[item]; !value {
-			allKeys[item] = true
-			list = append(list, item)
-		}
-	}
-	return list
-}
-
-func addLinks(content string, thread uint) (string, []int) {
-	const quote = "&gt;&gt;"
-	var refs []int
-	for i := strings.Index(content, quote); i >= 0 &&
-		i+len(quote) < len(content); {
-
-		index := strings.Index(content[i:], quote)
-		if index < 0 {
-			break
-		}
-		i += index + len(quote)
-
-		j := i
-		length := len(content)
-		for ; j < length; j++ {
-			if content[j] < '0' || content[j] > '9' {
-				break
-			}
-		}
-		if j < length && content[j] != ' ' && content[j] != '\n' &&
-			content[j] == '\t' {
-			continue
-		}
-		number := content[i:j]
-		n, err := strconv.Atoi(number)
-		if err != nil {
-			continue
-		}
-		if _, err := db.GetPost(thread, n); err != nil {
-			continue
-		}
-		refs = append(refs, n)
-		str := "<a class=\"l-" + number + "\" href=\"#" + number +
-			"\">&gt;&gt;" + number + "</a>"
-		content = content[:i-len(quote)] + str + content[j:]
-		i += len(str) - len(quote)
-	}
-
-	return content, removeDuplicateInt(refs)
-}
-
-func addGreentext(content string) string {
-	const br = "<br>"
-	content = strings.ReplaceAll(content, "\r", "")
-	length := len(content)
-	next := 0
-	for i := 0; i >= 0 && i < length; i = next {
-		next = strings.Index(content[i:], br)
-		if next == -1 {
-			next = length
-		} else {
-			next += i + len(br)
-		}
-		if strings.Index(content[i:next], "&gt;&gt;") == 0 {
-			continue
-		}
-		if strings.Index(content[i:next], "&gt;") != 0 {
-			continue
-		}
-		line := "<span class=\"green-text\">" +
-			content[i:next] + "</span>"
-		content = content[:i] + line + content[next:]
-		length = len(content)
-		next = i + len(line)
-	}
-	return content
-}
-
-func asciiOnly(s string) string {
-	i := 0
-	res := make([]byte, len(s))
-	for _, c := range s {
-		if c == '\t' || c == '\n' || (c >= ' ' && c < 127) {
-			res[i] = byte(c)
-			i++
-		}
-	}
-	if i == 0 {
-		return ""
-	}
-	return string(res[:i])
-}
-
-func parseContent(content string, thread uint) (template.HTML, []int) {
-	if config.Cfg.Post.AsciiOnly {
-		content = asciiOnly(content)
-	}
-	content = template.HTMLEscapeString(content)
-	content = strings.Replace(content, "\n", "<br>", -1)
-	content, refs := addLinks(content, thread)
-	content = addGreentext(content)
-	return template.HTML(content), refs
-}
-
-func minifyCSS(in []byte) ([]byte, error) {
-	m := minify.New()
-	m.AddFunc("text/css", css.Minify)
-	res, err := m.Bytes("text/css", in)
-	if err != nil {
-		return nil, err
-	}
-	return res, nil
-}
-
-func minifyHTML(w io.Writer) io.WriteCloser {
-	m := minify.New()
-	m.AddFunc("text/html", html.Minify)
-	m.AddFunc("text/css", css.Minify)
-	return m.Writer("text/html", w)
-}
-
-var stylesheet []byte = nil
-
-func minifyStylesheet() error {
-	m := minify.New()
-	m.AddFunc("text/css", css.Minify)
-	data, err := static.ReadFile("static/common.css")
-	if err != nil {
-		return err
-	}
-	res, err := m.Bytes("text/css", data)
-	if err != nil {
-		return err
-	}
-	stylesheet = res
-	return nil
 }
