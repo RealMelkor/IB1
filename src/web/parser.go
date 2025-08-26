@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"net/url"
 	"html/template"
-	"log"
 
 	"github.com/tdewolff/minify/v2"
 	"github.com/tdewolff/minify/v2/css"
@@ -20,7 +19,7 @@ func removeDuplicate[T comparable](sliceList []T) []T {
 	allKeys := make(map[T]bool)
 	list := []T{}
 	for _, item := range sliceList {
-		if _, value := allKeys[item]; !value {
+		if !allKeys[item] {
 			allKeys[item] = true
 			list = append(list, item)
 		}
@@ -40,7 +39,6 @@ func parseLinks(content string) string {
 	for _, v := range links {
 		res, err := url.Parse(v)
 		if err != nil {
-			log.Println(v, err)
 			continue
 		}
 		s := "<a href=\"" + res.String() + "\">" + res.String() + "</a>"
@@ -137,8 +135,8 @@ func parseContent(content string, thread uint) (template.HTML, []int) {
 		content = asciiOnly(content)
 	}
 	content = template.HTMLEscapeString(content)
-	content = strings.Replace(content, "\n", "<br>", -1)
 	content = parseLinks(content)
+	content = strings.Replace(content, "\n", "<br>", -1)
 	content, refs := parseRefs(content, thread)
 	content = addGreentext(content)
 	return template.HTML(content), refs
