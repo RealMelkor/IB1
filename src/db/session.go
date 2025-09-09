@@ -20,8 +20,17 @@ type Session struct {
 	Token     string `gorm:"unique"`
 }
 
+type SessionKey struct {
+	session	string
+	key	string
+}
+
+func GetSessionKey(session, key string) SessionKey {
+	return SessionKey{session: session, key: key}
+}
+
 // cached session tokens
-var sessions = util.SafeMap[Account]{}
+var sessions = util.SafeMap[string, Account]{}
 
 func createSession(account Account) (string, error) {
 	token, err := util.NewToken()
@@ -36,23 +45,19 @@ func createSession(account Account) (string, error) {
 	return token, err
 }
 
-type KeyValues map[string]KeyValue
-
-func SaveSessions(sessions *util.SafeMap[KeyValues]) error {
+func SaveSessions(sessions *util.SafeMap[SessionKey, KeyValue]) error {
 	db.Session(&gorm.Session{AllowGlobalUpdate: true}).Delete(&KeyValue{})
-	sessions.Iter(func(key string, values KeyValues) (KeyValues, bool) {
-		for _, v := range values {
-			v.Token = key
-			if err := db.Create(v).Error; err != nil {
-				log.Println(err)
-			}
+	sessions.Iter(func(key SessionKey, v KeyValue) (KeyValue, bool) {
+		v.Token = key.key
+		if err := db.Create(v).Error; err != nil {
+			log.Println(err)
 		}
-		return values, true
+		return v, true
 	})
 	return nil
 }
 
-func LoadSessions(sessions *util.SafeMap[KeyValues]) error {
+func LoadSessions(sessions *util.SafeMap[SessionKey, KeyValue]) error {
 	rows, err := db.Model(&KeyValue{}).Rows()
 	if err != nil {
 		return err
@@ -63,12 +68,7 @@ func LoadSessions(sessions *util.SafeMap[KeyValues]) error {
 		if err := db.ScanRows(rows, &v); err != nil {
 			return err
 		}
-		m, ok := sessions.Get(v.Token)
-		if !ok {
-			m = KeyValues{}
-		}
-		m[v.Key] = v
-		sessions.Set(v.Token, m)
+		sessions.Set(GetSessionKey(v.Token, v.Key), v)
 	}
 	return nil
 }

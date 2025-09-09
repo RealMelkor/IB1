@@ -17,7 +17,7 @@ type cached struct {
 	listed    bool
 }
 
-var cache = util.SafeMap[cached]{}
+var cache = util.SafeMap[string, cached]{}
 var blacklists []db.Blacklist
 
 func Init() error {

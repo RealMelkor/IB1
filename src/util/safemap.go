@@ -4,32 +4,32 @@ import (
 	"sync"
 )
 
-type SafeMap[T any] struct {
+type SafeMap[T, T2 any] struct {
 	data sync.Map
-	empty T
+	empty T2
 }
 
-func (m *SafeMap[T]) Set(key string, value T) {
+func (m *SafeMap[T, T2]) Set(key T, value T2) {
 	m.data.Store(key, value)
 }
 
-func (m *SafeMap[T]) Get(key string) (T, bool) {
+func (m *SafeMap[T, T2]) Get(key T) (T2, bool) {
 	v, ok := m.data.Load(key)
 	if !ok {
 		return m.empty, ok
 	}
-	return v.(T), ok
+	return v.(T2), ok
 }
 
-func (m *SafeMap[T]) Delete(key string) {
+func (m *SafeMap[T, T2]) Delete(key T) {
 	m.data.Delete(key)
 }
 
-func (m *SafeMap[T]) Clear() {
+func (m *SafeMap[T, T2]) Clear() {
 	m.data = sync.Map{}
 }
 
-func (m *SafeMap[T]) Length() int {
+func (m *SafeMap[T, T2]) Length() int {
 	i := 0
 	m.data.Range(func(key, val any) bool {
 		i++
@@ -38,13 +38,13 @@ func (m *SafeMap[T]) Length() int {
 	return i
 }
 
-func (m *SafeMap[T]) Init() {
+func (m *SafeMap[T, T2]) Init() {
 	m.data = sync.Map{}
 }
 
-func (m *SafeMap[T]) Iter(f func(string, T) (T, bool)) {
+func (m *SafeMap[T, T2]) Iter(f func(T, T2) (T2, bool)) {
 	m.data.Range(func(key, val any) bool {
-		n, keep := f(key.(string), val.(T))
+		n, keep := f(key.(T), val.(T2))
 		if keep == false {
 			m.data.Delete(key)
 		} else {

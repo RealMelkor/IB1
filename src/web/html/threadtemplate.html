@@ -64,7 +64,6 @@
 {{if can "BAN_IP"}}
 	[<a class="action" href="/{{$.Board.Name}}/ban/{{.IP}}/{{get "csrf"}}">Ban</a>]
 {{end}}
-{{end}}
 &nbsp;
 {{range .ReferredBy}}
 	<a class="post-ref ref-{{.From}}" href="#{{.From}}">&gt;&gt;{{.From}}</a>
@@ -101,3 +100,4 @@
 {{end}}
 {{end}}
 </div>
+{{end}}

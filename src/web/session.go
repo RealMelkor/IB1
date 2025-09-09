@@ -18,19 +18,14 @@ type KeyValue struct {
 	Creation time.Time
 }
 
-var sessions = util.SafeMap[db.KeyValues]{}
+var sessions = util.SafeMap[db.SessionKey, db.KeyValue]{}
 
 func clearSession() {
 	for {
 		time.Sleep(KeyValueLifespan)
-		sessions.Iter(func(key string, s db.KeyValues) (db.KeyValues, bool) {
-			for k, v := range s {
-				diff := time.Since(v.Creation)
-				if diff > KeyValueLifespan {
-					delete(s, k)
-				}
-			}
-			return s, len(s) > 0
+		sessions.Iter(func(key db.SessionKey, v db.KeyValue) (db.KeyValue, bool) {
+			diff := time.Since(v.Creation)
+			return v, diff > KeyValueLifespan
 		})
 		db.SaveSessions(&sessions)
 	}
@@ -105,10 +100,6 @@ func getID(c echo.Context) (string, error) {
 			v = token
 		}
 	}
-	_, ok := sessions.Get(v)
-	if !ok {
-		sessions.Set(v, db.KeyValues{})
-	}
 	return v, nil
 }
 
@@ -118,11 +109,7 @@ func get(c echo.Context) func(string) any {
 		return func(string) any { return nil }
 	}
 	return func(param string) any {
-		m, ok := sessions.Get(id)
-		if !ok {
-			return nil
-		}
-		v, ok := m[param]
+		v, ok := sessions.Get(db.GetSessionKey(id, param))
 		if !ok {
 			return nil
 		}
@@ -136,18 +123,10 @@ func set(c echo.Context) func(string, any) any {
 		return func(string, any) any { return "" }
 	}
 	return func(param string, value any) any {
-		_, ok := sessions.Get(id)
-		if !ok {
-			sessions.Set(id, db.KeyValues{})
-		}
-		m, ok := sessions.Get(id)
-		if !ok {
-			return nil
-		}
-		m[param] = db.KeyValue{
+		v := db.KeyValue{
 			Creation: time.Now(), Value: value, Key: param,
 		}
-		sessions.Set(id, m)
+		sessions.Set(db.GetSessionKey(id, param), v)
 		return nil
 	}
 }
@@ -158,15 +137,11 @@ func once(c echo.Context) func(string) any {
 		return func(string) any { return nil }
 	}
 	return func(param string) any {
-		m, ok := sessions.Get(id)
+		v, ok := sessions.Get(db.GetSessionKey(id, param))
 		if !ok {
 			return nil
 		}
-		v, ok := m[param]
-		if ok {
-			delete(m, param)
-		}
-		sessions.Set(id, m)
+		sessions.Delete(db.GetSessionKey(id, param))
 		return v.Value
 	}
 }
@@ -177,11 +152,7 @@ func has(c echo.Context) func(string) bool {
 		return func(string) bool { return false }
 	}
 	return func(param string) bool {
-		m, ok := sessions.Get(id)
-		if !ok {
-			return false
-		}
-		_, ok = m[param]
+		_, ok := sessions.Get(db.GetSessionKey(id, param))
 		return ok
 	}
 }

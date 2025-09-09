@@ -10,7 +10,7 @@ import (
 )
 
 type rateLimit struct {
-	tries     util.SafeMap[int]
+	tries     util.SafeMap[string, int]
 	maximum   int
 	resetTime int
 	lastReset time.Time
