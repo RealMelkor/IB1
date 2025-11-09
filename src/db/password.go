@@ -8,6 +8,10 @@ import (
 	"fmt"
 	"golang.org/x/crypto/argon2"
 	"strings"
+
+	passwordvalidator "github.com/wagslane/go-password-validator"
+
+	"IB1/config"
 )
 
 var errInvalidCredential = errors.New("invalid credentials")
@@ -58,8 +62,8 @@ const passwordMemory = 64 * 1024
 const passwordThreads = 4
 const passwordKeyLen = 32
 
-const maxPassword = 128
-const minPassword = 5
+const maxPassword = 256
+const minPassword = 3
 
 func isPasswordValid(password string) error {
 	if len(password) > maxPassword {
@@ -68,7 +72,11 @@ func isPasswordValid(password string) error {
 	if len(password) < minPassword {
 		return errors.New("the password is too short")
 	}
-	return nil
+	entropy := config.Cfg.Accounts.MinimumEntropy
+	if entropy <= 0 {
+		return nil
+	}
+	return passwordvalidator.Validate(password, entropy)
 }
 
 func hashPassword(password string) (string, error) {

@@ -70,6 +70,10 @@
 			<td><input type="text" name="maxthreads" value="{{.Config.Board.MaxThreads}}" required></td>
 		</tr>
 		<tr>
+			<td>Minimum password entropy</td>
+			<td><input type="text" name="entropy" value="{{.Config.Accounts.MinimumEntropy}}" required></td>
+		</tr>
+		<tr>
 			<td>Restart process</td>
 			<td><input type="submit" formaction="/config/restart" value="Restart"></td>
 		</tr>

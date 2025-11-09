@@ -437,3 +437,7 @@ body {
 .no-border {
 	border: none;
 }
+.restrict-width {
+	max-width: 300px;
+	margin: auto;
+}

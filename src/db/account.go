@@ -59,8 +59,7 @@ func nameAvailable(name string) error {
 	return nil
 }
 
-func CreateAccount(name string, password string,
-	rank string, admin bool) error {
+func CreateAccount(name string, password string, rank string, admin bool) error {
 	hash, err := hashPassword(password)
 	if err != nil {
 		return err

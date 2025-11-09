@@ -142,6 +142,17 @@ func updateConfig(c echo.Context) error {
 	}
 	config.Cfg.Board.MaxThreads = uint(threads)
 
+	entropyStr, _ := getPostForm(c, "entropy")
+	entropy, err := strconv.ParseFloat(entropyStr, 64)
+	if err != nil {
+		return err
+	}
+	if entropy < 0 {
+		entropy = 0
+	}
+	config.Cfg.Accounts.MinimumEntropy = entropy
+
+
 	if err := db.UpdateConfig(); err != nil {
 		return err
 	}
