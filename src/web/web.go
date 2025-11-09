@@ -536,6 +536,8 @@ func Init() error {
 		hasBoardPrivilege(onPost(remove), db.REMOVE_POST.Member()))
 	r.GET("/:board/hide/:id/:csrf",
 		hasBoardPrivilege(onPost(hide), db.HIDE_POST.Member()))
+	r.GET("/:board/spoil/:id/:csrf",
+		hasBoardPrivilege(onPost(spoil), db.TOGGLE_SPOILER.Member()))
 	r.GET("/:board/pin/:id/:csrf",
 		hasBoardPrivilege(onPost(pin), db.PIN_THREAD.Member()))
 	r.GET("/:board/remove_media/:id/:csrf", hasBoardPrivilege(

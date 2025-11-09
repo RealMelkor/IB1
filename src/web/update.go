@@ -131,6 +131,10 @@ func hide(post db.Post) error {
 	return db.Hide(post.ID, post.Disabled)
 }
 
+func spoil(post db.Post) error {
+	return db.ToggleSpoiler(post.MediaHash)
+}
+
 func pin(post db.Post) error {
 	thread, err := db.GetThread(post.Board, post.Thread.Number)
 	if err != nil {

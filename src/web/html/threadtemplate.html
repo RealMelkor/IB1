@@ -47,6 +47,9 @@
 	[<a class="action" href="/{{$.Board.Name}}/pin/{{.Number}}/{{get "csrf"}}">{{if $.Pinned}}Unpin{{else}}Pin{{end}}</a>]
 {{end}}
 {{if .Media}}
+{{if memberCan "TOGGLE_SPOILER"}}
+[<a class="action" href="/{{$.Board.Name}}/spoil/{{.Number}}/{{get "csrf"}}">{{if .HasSpoiler}}Unspoil{{else}}Spoil{{end}}</a>]
+{{end}}
 {{if memberCan "REMOVE_MEDIA"}}
 	[<a class="action" href="/{{$.Board.Name}}/remove_media/{{.Number}}/{{get "csrf"}}">Delete Media</a>]
 {{else}}

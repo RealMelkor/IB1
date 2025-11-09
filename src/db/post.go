@@ -63,6 +63,14 @@ type Reference struct {
 	Thread   Thread
 }
 
+func (post Post) HasSpoiler() bool {
+	if post.MediaHash == "" {
+		return false
+	}
+	v, err := HasSpoiler(post.MediaHash)
+	return err == nil && v
+}
+
 func (post Post) FormatTimestamp() string {
 	tm := time.Unix(post.Timestamp, 0).UTC()
 	return fmt.Sprintf("%02d/%02d/%d (%s) %02d:%02d:%02d UTC",

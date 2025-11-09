@@ -183,6 +183,25 @@ func GetMedia(hash string) (Media, error) {
 	return media, err
 }
 
+func HasSpoiler(hash string) (bool, error) {
+	var media Media
+	err := db.First(&media, "hash = ?", hash).Error
+	if err != nil {
+		return false, err
+	}
+	return media.HideThumbnail, nil
+}
+
+func ToggleSpoiler(hash string) error {
+	var media Media
+	err := db.First(&media, "hash = ?", hash).Error
+	if err != nil {
+		return err
+	}
+	return db.Model(&Media{}).Where("hash = ?", hash).
+		Update("hide_thumbnail", !media.HideThumbnail).Error
+}
+
 func IsImageBanned(hash goimagehash.ImageHash) error {
 	rows, err := db.Model(&BannedImage{}).Select("hash, kind").Rows()
 	if err != nil {
