@@ -107,3 +107,38 @@ func setTheme(c echo.Context) error {
 	}
 	return user.SetTheme(theme)
 }
+
+func createTheme(theme []byte, name string, enabled bool) error {
+	data, err := minifyCSS(theme)
+	if err != nil {
+		return err
+	}
+	err = db.Theme{}.Add(db.Theme{
+		Name: name, Content: string(data), Disabled: !enabled,
+	})
+	if err != nil {
+		return err
+	}
+	reloadThemes()
+	return nil
+}
+
+func updateTheme(id int, name string, enabled bool) error {
+	err := db.Theme{}.Update(id, db.Theme{
+		Name: name, Disabled: !enabled,
+	})
+	if err != nil {
+		return err
+	}
+	reloadThemes()
+	return nil
+}
+
+func deleteTheme(id int) error {
+	err := db.Theme{}.RemoveID(id, db.Theme{})
+	if err != nil {
+		return err
+	}
+	reloadThemes()
+	return nil
+}

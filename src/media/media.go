@@ -1,4 +1,4 @@
-package web
+package media
 
 import (
 	"bytes"
@@ -17,7 +17,21 @@ import (
 
 	"IB1/config"
 	"IB1/db"
+	"IB1/notify"
 )
+
+func IsMedia(media string, mediaType db.MediaType) bool {
+	parts := strings.Split(media, ".")
+	if len(parts) < 2 {
+		return false
+	}
+	ext := parts[len(parts)-1]
+	v, ok := extensions["."+ext]
+	if !ok {
+		return false
+	}
+	return mediaType == v
+}
 
 func uniqueRandomName() (string, error) {
 	now := time.Now().UnixMilli()
@@ -89,7 +103,7 @@ func validExtension(extension string) (db.MediaType, error) {
 	return mediaType, nil
 }
 
-func uploadFile(file *multipart.FileHeader,
+func UploadFile(file *multipart.FileHeader,
 	approved bool, spoiler bool) (string, error) {
 
 	if uint64(file.Size) > config.Cfg.Media.MaxSize {
@@ -180,14 +194,14 @@ func uploadFile(file *multipart.FileHeader,
 			return "", err
 		}
 		if toApprove {
-			err = notify(hash)
+			err = notify.Notify(hash)
 		}
 		return hash + extension, err
 	}
 	toApprove, err := db.AddMedia(nil, nil, mediaType,
 		hash, mime.String(), approved, spoiler)
 	if toApprove && err == nil {
-		err = notify(hash)
+		err = notify.Notify(hash)
 	}
 	if err != nil {
 		return "", err
@@ -265,7 +279,7 @@ func move(source string, destination string) error {
 }
 
 func mediaReader(hash string) (io.Reader, error) {
-	isPicture := isMedia(hash, db.MEDIA_PICTURE)
+	isPicture := IsMedia(hash, db.MEDIA_PICTURE)
 	if !config.Cfg.Media.InDatabase {
 		if !isPicture {
 			return os.Open(config.Cfg.Media.Path +

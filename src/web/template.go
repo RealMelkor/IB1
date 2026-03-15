@@ -17,6 +17,7 @@ import (
 
 	"IB1/config"
 	"IB1/db"
+	"IB1/media"
 	"IB1/util"
 )
 
@@ -137,19 +138,6 @@ func renderContent(_template string, data any, c echo.Context, content string, p
 	return nil
 }
 
-func isMedia(media string, mediaType db.MediaType) bool {
-	parts := strings.Split(media, ".")
-	if len(parts) < 2 {
-		return false
-	}
-	ext := parts[len(parts)-1]
-	v, ok := extensions["."+ext]
-	if !ok {
-		return false
-	}
-	return mediaType == v
-}
-
 func initTemplate() error {
 	var err error
 	funcs := template.FuncMap{
@@ -213,11 +201,11 @@ func initTemplate() error {
 		"thumbnail": func(media string) string {
 			return strings.Split(media, ".")[0] + ".png"
 		},
-		"isPicture": func(media string) bool {
-			return isMedia(media, db.MEDIA_PICTURE)
+		"isPicture": func(name string) bool {
+			return media.IsMedia(name, db.MEDIA_PICTURE)
 		},
-		"isVideo": func(media string) bool {
-			return isMedia(media, db.MEDIA_VIDEO)
+		"isVideo": func(name string) bool {
+			return media.IsMedia(name, db.MEDIA_VIDEO)
 		},
 		"extension": func(path string) string {
 			parts := strings.Split(path, ".")

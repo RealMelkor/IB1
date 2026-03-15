@@ -9,6 +9,9 @@ import (
 
 	"IB1/config"
 	"IB1/db"
+	"IB1/media"
+	"IB1/ratelimit"
+	"IB1/filter"
 )
 
 func readOnly(f echo.HandlerFunc) echo.HandlerFunc {
@@ -27,10 +30,10 @@ func loginAs(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	if err := accountLimit.Try(name); err != nil {
+	if err := ratelimit.Account.Try(name); err != nil {
 		return err
 	}
-	if err := loginLimit.Try(clientIP(c)); err != nil {
+	if err := ratelimit.Login.Try(clientIP(c)); err != nil {
 		return err
 	}
 	token, err := db.Login(name, password)
@@ -58,7 +61,7 @@ func register(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	if err := registrationLimit.Try(clientIP(c)); err != nil {
+	if err := ratelimit.Registration.Try(clientIP(c)); err != nil {
 		return err
 	}
 	err = db.CreateAccount(name, password,
@@ -144,7 +147,7 @@ func pin(post db.Post) error {
 }
 
 func banMedia(post db.Post) error {
-	return banImage(post.MediaHash)
+	return media.Ban(post.MediaHash)
 }
 
 func cancel(c echo.Context) error {
@@ -217,11 +220,11 @@ func newThread(c echo.Context) error {
 	if err := checkCaptcha(c); err != nil {
 		return err
 	}
-	if err := threadLimit.Try(clientIP(c)); err != nil {
+	if err := ratelimit.Thread.Try(clientIP(c)); err != nil {
 		return err
 	}
 
-	media := ""
+	mediaFile := ""
 	file, err := c.FormFile("media")
 	if err != nil {
 		return err
@@ -231,13 +234,13 @@ func newThread(c echo.Context) error {
 		name = user.Name
 	}
 	approved := user.Can(db.BYPASS_MEDIA_APPROVAL) == nil
-	media, err = uploadFile(file, approved, spoiler == "on")
+	mediaFile, err = media.UploadFile(file, approved, spoiler == "on")
 	if err != nil {
 		return err
 	}
 
 	parsed, _ := parseContent(content, 0)
-	number, err := db.CreateThread(board, title, name, media, clientIP(c),
+	number, err := db.CreateThread(board, title, name, mediaFile, clientIP(c),
 		getCookie(c, "id"), user,
 		signed == "on", rank == "on", parsed)
 	if err != nil {
@@ -285,11 +288,11 @@ func newPost(c echo.Context) error {
 	if err := checkCaptcha(c); err != nil {
 		return err
 	}
-	if err := postLimit.Try(clientIP(c)); err != nil {
+	if err := ratelimit.Post.Try(clientIP(c)); err != nil {
 		return err
 	}
 
-	media := ""
+	mediaFile := ""
 	user, err := loggedAs(c)
 	if err == nil && signed == "on" {
 		name = user.Name
@@ -297,20 +300,21 @@ func newPost(c echo.Context) error {
 	file, err := c.FormFile("media")
 	if err == nil {
 		approved := user.Can(db.BYPASS_MEDIA_APPROVAL) == nil
-		media, err = uploadFile(file, approved, spoiler == "on")
+		mediaFile, err = media.UploadFile(
+				file, approved, spoiler == "on")
 		if err != nil {
 			return err
 		}
 	}
 
-	content, err = filterText(content)
+	content, err = filter.FilterText(content)
 	if err != nil {
 		return err
 	}
 	parsed, refs := parseContent(content, thread.ID)
-	number, err := db.CreatePost(thread, parsed, name, media, clientIP(c),
-		getCookie(c, "id"), user, signed == "on", rank == "on",
-		sage == "on", nil)
+	number, err := db.CreatePost(thread, parsed, name, mediaFile,
+		clientIP(c), getCookie(c, "id"), user, signed == "on",
+		rank == "on", sage == "on", nil)
 	if err != nil {
 		return err
 	}

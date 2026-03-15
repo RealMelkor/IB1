@@ -44,7 +44,7 @@ func updateFavicon(c echo.Context) error {
 	return nil
 }
 
-func clearFavicon(c echo.Context) error {
+func clearFavicon() error {
 	config.Cfg.Home.FaviconMime = ""
 	config.Cfg.Home.Favicon = nil
 	db.UpdateConfig()

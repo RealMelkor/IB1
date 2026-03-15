@@ -20,6 +20,8 @@ import (
 	"IB1/config"
 	"IB1/db"
 	"IB1/dnsbl"
+	"IB1/media"
+	"IB1/ratelimit"
 )
 
 func serveMedia(c echo.Context, data []byte, name string) {
@@ -133,7 +135,7 @@ func denyMedia(c echo.Context) error {
 
 func banPendingMedia(c echo.Context) error {
 	hash := strings.Split(c.FormValue("media"), ".")[0]
-	if err := banImage(hash); err != nil {
+	if err := media.Ban(hash); err != nil {
 		return err
 	}
 	if err := db.RemoveMedia(hash); err != nil {
@@ -440,7 +442,7 @@ func Init() error {
 	dnsbl.Init()
 	sessions.Init()
 	captchaInit()
-	reloadRatelimits()
+	ratelimit.Reload()
 	if err := db.LoadSessions(&sessions); err != nil {
 		return err
 	}
@@ -566,7 +568,7 @@ func Init() error {
 	}
 	r.GET("/boards", redirect(renderBoards, "/"))
 	r.POST("/boards/create", redirect(
-		hasPrivilege(createBoard, db.CREATE_BOARD), "/boards"))
+		hasPrivilege(createBoardReq, db.CREATE_BOARD), "/boards"))
 	r.POST("/boards/:id/update",
 		redirect(asOwner(updateOwnedBoard), "/boards"))
 	r.POST("/boards/:id/add", redirect(asOwner(addMember), "/boards"))
@@ -598,63 +600,71 @@ func Init() error {
 	r.POST("/config/media/ban/cancel",
 		handleConfig(removeBannedHash, "media"))
 	r.POST("/config/ssl/update", handleConfig(updateSSL, "ssl"))
-	r.POST("/config/board/create",
-		handleConfig(createBoard, "board"))
+	r.POST("/config/board/create", handleConfig(createBoardReq, "board"))
 	r.POST("/config/board/update/:id",
 		handleConfig(updateBoard, "board"))
 	r.POST("/config/board/delete/:id",
 		handleConfig(deleteBoard, "board"))
 
-	r.POST("/config/theme/create", handleConfig(createTheme, "theme"))
-	r.POST("/config/theme/delete/:id", handleConfig(deleteTheme, "theme"))
-	r.POST("/config/theme/update/:id", handleConfig(updateTheme, "theme"))
+	r.POST("/config/theme/create", handleConfig(generic(
+		createTheme, "theme", "name", "enabled"), "theme"))
+	r.POST("/config/theme/delete/:id", handleConfig(generic(
+		deleteTheme, "id"), "theme"))
+	r.POST("/config/theme/update/:id", handleConfig(generic(
+		updateTheme, "id", "name", "enabled"), "theme"))
 
-	r.POST("/config/wordfilter/create",
-		handleConfig(createWordfilter, "wordfilter"))
-	r.POST("/config/wordfilter/delete/:id",
-		handleConfig(deleteWordfilter, "wordfilter"))
-	r.POST("/config/wordfilter/update/:id",
-		handleConfig(updateWordfilter, "wordfilter"))
+	r.POST("/config/wordfilter/create", handleConfig(generic(
+		createWordfilter, "from", "to", "enabled"), "wordfilter"))
+	r.POST("/config/wordfilter/delete/:id", handleConfig(generic(
+		deleteWordfilter, "id"), "wordfilter"))
+	r.POST("/config/wordfilter/update/:id", handleConfig(generic(
+		updateWordfilter, "id", "from", "to", "enabled"), "wordfilter"))
 
-	r.POST("/config/blacklist/create",
-		handleConfig(createBlacklist, "blacklist"))
-	r.POST("/config/blacklist/delete/:id",
-		handleConfig(deleteBlacklist, "blacklist"))
-	r.POST("/config/blacklist/update/:id",
-		handleConfig(updateBlacklist, "blacklist"))
+	r.POST("/config/blacklist/create", handleConfig(generic(
+		createBlacklist, "host", "enabled", "allow-read"), "blacklist"))
+	r.POST("/config/blacklist/delete/:id", handleConfig(generic(
+		deleteBlacklist, "id"), "blacklist"))
+	r.POST("/config/blacklist/update/:id", handleConfig(generic(
+		updateBlacklist, "id", "host", "enabled", "allow-read"),
+		"blacklist"))
 
-	r.POST("/config/rank/create", handleConfig(createRank, "rank"))
-	r.POST("/config/rank/delete/:id", handleConfig(deleteRank, "rank"))
-	r.POST("/config/rank/update/:id", handleConfig(updateRank, "rank"))
+	r.POST("/config/rank/create", handleConfig(generic(
+		db.CreateRank, "name", "privileges"), "rank"))
+	r.POST("/config/rank/delete/:id", handleConfig(generic(
+		db.DeleteRankByID, "id"), "rank"))
+	r.POST("/config/rank/update/:id", handleConfig(generic(
+		db.UpdateRank, "id", "name", "privileges"), "rank"))
 
-	r.POST("/config/member/rank/create",
-		handleConfig(createMemberRank, "rank"))
-	r.POST("/config/member/rank/delete/:id",
-		handleConfig(deleteMemberRank, "rank"))
-	r.POST("/config/member/rank/update/:id",
-		handleConfig(updateMemberRank, "rank"))
+	r.POST("/config/member/rank/create", handleConfig(generic(
+		createMemberRank, "name", "privileges"), "rank"))
+	r.POST("/config/member/rank/delete/:id", handleConfig(generic(
+		deleteMemberRank, "id"), "rank"))
+	r.POST("/config/member/rank/update/:id", handleConfig(generic(
+		updateMemberRank, "id", "name", "privileges"), "rank"))
 
 	r.POST("/config/favicon/update",
 		handleConfig(updateFavicon, "favicon"))
 	r.POST("/config/favicon/clear",
-		handleConfig(clearFavicon, "favicon"))
+		handleConfig(generic(clearFavicon), "favicon"))
 
-	r.POST("/config/ban/create", handleConfig(addBan, "ban"))
-	r.POST("/config/ban/cancel/:id", handleConfig(deleteBan, "ban"))
+	r.POST("/config/ban/create", handleConfig(generic(
+		addBan, "ip", "board", "expiration"), "ban"))
+	r.POST("/config/ban/cancel/:id", handleConfig(generic(
+		db.RemoveBan, "id"), "ban"))
 
-	r.POST("/config/account/create",
-		handleConfig(addAccount, "account"))
-	r.POST("/config/account/update/:id",
-		handleConfig(updateAccount, "account"))
-	r.POST("/config/account/delete/:id",
-		handleConfig(deleteAccount, "account"))
+	r.POST("/config/account/create", handleConfig(generic(
+		db.CreateAccount, "name", "password", "rank", ""), "account"))
+	r.POST("/config/account/update/:id", handleConfig(generic(
+		db.UpdateAccount, "id", "name", "password", "rank"), "account"))
+	r.POST("/config/account/delete/:id", handleConfig(generic(
+		db.RemoveAccount, "id"), "account"))
 
 	r.POST("/config/restart", handleConfig(restartStandard, "main"))
 	r.POST("/config/acme/update", handleConfig(fetchSSL, "acme"))
-	r.POST("/config/banner/create",
-		handleConfig(addBanner, "banner"))
-	r.POST("/config/banner/delete/:id",
-		handleConfig(deleteBanner, "banner"))
+	r.POST("/config/banner/create", handleConfig(generic(
+		db.AddBanner, "banner"), "banner"))
+	r.POST("/config/banner/delete/:id", handleConfig(generic(
+		db.RemoveBanner, "id"), "banner"))
 	r.POST("/config/ratelimit/update",
 		handleConfig(rateLimits, "rate-limit"))
 	r.GET("/banner/:id", imageError(banner))

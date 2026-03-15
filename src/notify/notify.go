@@ -1,4 +1,4 @@
-package web
+package notify
 
 import (
 	"net/http"
@@ -9,7 +9,7 @@ import (
 	"IB1/util"
 )
 
-func notify(media string) error {
+func Notify(media string) error {
 	if config.Cfg.Media.NotificationURL == "" {
 		return nil
 	}

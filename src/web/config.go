@@ -4,7 +4,7 @@ import (
 	"IB1/acme"
 	"IB1/config"
 	"IB1/db"
-	"IB1/dnsbl"
+	"IB1/ratelimit"
 	"context"
 	"errors"
 	"io"
@@ -315,53 +315,39 @@ func updateSSL(c echo.Context) error {
 	return restart(c, "ssl")
 }
 
-func createBoard(c echo.Context) error {
-	board, hasBoard := getPostForm(c, "board")
-	name, hasName := getPostForm(c, "name")
-	if !hasBoard || !hasName {
-		return errInvalidForm
-	}
-	description, _ := getPostForm(c, "description")
-	acc, err := loggedAs(c)
-	if err != nil {
-		return err
-	}
-	err = db.CreateBoard(board, name, description, acc.ID)
+var createBoardReq = generic(createBoard,
+		"board", "name", "description", "self")
+
+func createBoard(board, name, description string, self uint) error {
+	err := db.CreateBoard(board, name, description, self)
 	if err != nil {
 		return err
 	}
 	return db.LoadBoards()
 }
 
-func updateBoard(c echo.Context) error {
-	board, hasBoard := getPostForm(c, "board")
-	name, hasName := getPostForm(c, "name")
-	if !hasBoard || !hasName {
-		return errInvalidForm
-	}
-	enabled, _ := getPostForm(c, "enabled")
-	description, _ := getPostForm(c, "description")
-	countryFlag, _ := getPostForm(c, "country-flag")
-	posterID, _ := getPostForm(c, "poster-id")
-	readonly, _ := getPostForm(c, "read-only")
-	private, _ := getPostForm(c, "private")
-	owner, _ := getPostForm(c, "owner")
+var updateBoard = generic(setBoard, "id", "board", "name", "description",
+		"owner", "enabled", "country-flag", "poster-id",
+		"read-only", "private")
+
+func setBoard(id uint, board, name, description, owner string, enabled,
+		countryFlag, posterID, readOnly, private bool) error {
 	boards, err := db.GetBoards()
 	if err != nil {
 		return err
 	}
 	for _, v := range boards {
-		if strconv.Itoa(int(v.ID)) != c.Param("id") {
+		if v.ID != id {
 			continue
 		}
 		v.Name = board
 		v.LongName = name
 		v.Description = description
-		v.Disabled = enabled != "on"
-		v.CountryFlag = countryFlag == "on"
-		v.PosterID = posterID == "on"
-		v.ReadOnly = readonly == "on"
-		v.Private = private == "on"
+		v.Disabled = enabled
+		v.CountryFlag = countryFlag
+		v.PosterID = posterID
+		v.ReadOnly = readOnly
+		v.Private = private
 		if owner != "" {
 			account, err := db.GetAccount(owner)
 			if err != nil {
@@ -395,162 +381,19 @@ func deleteBoard(c echo.Context) error {
 	return db.DeleteBoard(v)
 }
 
-func createTheme(c echo.Context) error {
-	file, err := c.FormFile("theme")
-	if err != nil {
-		return err
-	}
-	name, hasName := getPostForm(c, "name")
-	if !hasName {
-		return errInvalidForm
-	}
-	enabled, _ := getPostForm(c, "enabled")
-	disabled := enabled != "on"
-	data := make([]byte, file.Size)
-	f, err := file.Open()
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	_, err = f.Read(data)
-	if err != nil {
-		return err
-	}
-	data, err = minifyCSS(data)
-	if err != nil {
-		return err
-	}
-	err = db.Theme{}.Add(db.Theme{
-		Name: name, Content: string(data), Disabled: disabled,
-	})
-	if err != nil {
-		return err
-	}
-	reloadThemes()
-	return nil
-}
-
-func updateTheme(c echo.Context) error {
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		return errInvalidID
-	}
-	name, hasName := getPostForm(c, "name")
-	if !hasName {
-		return errInvalidForm
-	}
-	enabled, _ := getPostForm(c, "enabled")
-	disabled := enabled != "on"
-	err = db.Theme{}.Update(id, db.Theme{
-		Name: name, Disabled: disabled,
-	})
-	if err != nil {
-		return err
-	}
-	reloadThemes()
-	return nil
-}
-
-func deleteTheme(c echo.Context) error {
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		return errInvalidID
-	}
-	err = db.Theme{}.RemoveID(id, db.Theme{})
-	if err != nil {
-		return err
-	}
-	reloadThemes()
-	return nil
-}
-
-func createBlacklist(c echo.Context) error {
-	host, hasHost := getPostForm(c, "host")
-	if !hasHost {
-		return errInvalidForm
-	}
-	v, err := url.Parse("https://" + host + "/")
-	if err != nil {
-		return err
-	}
-
-	enabled, _ := getPostForm(c, "enabled")
-	disabled := enabled != "on"
-	allowRead, _ := getPostForm(c, "allow-read")
-	err = db.Blacklist{}.Add(db.Blacklist{
-		Disabled:  disabled,
-		Host:      v.Hostname(),
-		AllowRead: allowRead == "on",
-	})
-	if err != nil {
-		return err
-	}
-	dnsbl.ClearCache()
-	return nil
-}
-
-func deleteBlacklist(c echo.Context) error {
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		return errInvalidID
-	}
-	err = db.Blacklist{}.RemoveID(id, db.Blacklist{})
-	if err != nil {
-		return err
-	}
-	dnsbl.ClearCache()
-	return nil
-}
-
-func updateBlacklist(c echo.Context) error {
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		return errInvalidID
-	}
-	host, hasHost := getPostForm(c, "host")
-	if !hasHost {
-		return errInvalidForm
-	}
-	enabled, _ := getPostForm(c, "enabled")
-	disabled := enabled != "on"
-	allowRead, _ := getPostForm(c, "allow-read")
-	err = db.Blacklist{}.Update(id, db.Blacklist{
-		Host: host, Disabled: disabled, AllowRead: allowRead == "on",
-	})
-	if err != nil {
-		return err
-	}
-	dnsbl.ClearCache()
-	return nil
-}
-
-func addBan(c echo.Context) error {
-	ip, hasIP := getPostForm(c, "ip")
-	if !hasIP {
-		return errInvalidForm
-	}
-	board, _ := getPostForm(c, "board")
+func addBan(ip, board, expiration string) error {
 	boardID, err := strconv.Atoi(board)
 	if err != nil {
 		return err
 	}
-	expiry, hasExpiry := getPostForm(c, "expiration")
 	duration := int64(3600)
-	if hasExpiry {
-		expiration, err := time.Parse("2006-01-02T03:04", expiry)
+	if expiration != "" {
+		v, err := time.Parse("2006-01-02T03:04", expiration)
 		if err == nil {
-			duration = expiration.Unix() - time.Now().Unix()
+			duration = v.Unix() - time.Now().Unix()
 		}
 	}
 	return db.BanIP(ip, duration, uint(boardID))
-}
-
-func deleteBan(c echo.Context) error {
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		return errInvalidID
-	}
-	return db.RemoveBan(uint(id))
 }
 
 func asOwner(f func(db.Board, echo.Context) error) echo.HandlerFunc {
@@ -602,32 +445,6 @@ func updateMember(v db.Board, c echo.Context) error {
 	name := c.Request().PostFormValue("name")
 	rank := c.Request().PostFormValue("rank")
 	return v.UpdateMember(name, rank)
-}
-
-func addAccount(c echo.Context) error {
-	name := c.Request().PostFormValue("name")
-	password := c.Request().PostFormValue("password")
-	rank := c.Request().PostFormValue("rank")
-	return db.CreateAccount(name, password, rank, false)
-}
-
-func updateAccount(c echo.Context) error {
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		return errInvalidID
-	}
-	name := c.Request().PostFormValue("name")
-	password := c.Request().PostFormValue("password")
-	rank := c.Request().PostFormValue("rank")
-	return db.UpdateAccount(id, name, password, rank)
-}
-
-func deleteAccount(c echo.Context) error {
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		return errInvalidID
-	}
-	return db.RemoveAccount(uint(id))
 }
 
 func restartStandard(c echo.Context) error {
@@ -773,6 +590,6 @@ func rateLimits(c echo.Context) error {
 	if err := db.UpdateConfig(); err != nil {
 		return err
 	}
-	reloadRatelimits()
+	ratelimit.Reload()
 	return nil
 }

@@ -1,6 +1,5 @@
 //go:build !cgo
-
-package web
+package media
 
 import (
 	"github.com/anthonynsimon/bild/imgio"
